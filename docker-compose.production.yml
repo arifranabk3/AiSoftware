@@ -1,0 +1,61 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: command_center_gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - command_center_net
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: command_center_api
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_DB_NAME=${MONGODB_DB_NAME:-ai_command_center}
+      - JWT_SECRET=${JWT_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - MASTER_ENCRYPTION_KEY=${MASTER_ENCRYPTION_KEY}
+      - OWNER_PHONE_NUMBER=${OWNER_PHONE_NUMBER}
+    expose:
+      - "3001"
+    networks:
+      - command_center_net
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    container_name: command_center_worker
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_DB_NAME=${MONGODB_DB_NAME:-ai_command_center}
+      - REDIS_URL=${REDIS_URL}
+      - MASTER_ENCRYPTION_KEY=${MASTER_ENCRYPTION_KEY}
+      - OWNER_PHONE_NUMBER=${OWNER_PHONE_NUMBER}
+    networks:
+      - command_center_net
+
+networks:
+  command_center_net:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
