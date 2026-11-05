@@ -5,8 +5,9 @@ export const environmentSchema = z.object({
   PORT: z.coerce.number().default(3001),
   WEB_PORT: z.coerce.number().default(3000),
 
-  // Database (MongoDB) & Cache (Redis)
+  // Database (MongoDB Atlas) & Cache (Redis)
   MONGODB_URI: z.string().default('mongodb://127.0.0.1:27017/ai_command_center'),
+  MONGODB_DB_NAME: z.string().default('ai_command_center'),
   DATABASE_URL: z.string().optional(),
   REDIS_URL: z.string().default('redis://127.0.0.1:6379'),
 

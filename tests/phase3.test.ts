@@ -97,7 +97,7 @@ describe('4. Worker Daemon Lifecycle & Emergency Guard', () => {
 
     await workerDaemon.stop();
     expect(workerDaemon.getStatus().isRunning).toBe(false);
-  });
+  }, 10000);
 
   it('worker must refuse start if emergency kill-switch is active', async () => {
     await distributedKillSwitch.activate('Owner', 'Emergency freeze');

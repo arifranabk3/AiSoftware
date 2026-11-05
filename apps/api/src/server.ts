@@ -13,7 +13,7 @@ import {
   ChainedAuditLogEntry
 } from '@ai-command-center/security';
 import { validateEnvironment } from '@ai-command-center/config';
-import { dbService } from '@ai-command-center/database';
+import { mongoDbService } from '@ai-command-center/database';
 
 export async function buildServer(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -208,7 +208,7 @@ export async function buildServer(): Promise<FastifyInstance> {
   app.get('/api/v1/system/health', async (_req, reply) => {
     let dbConnected = false;
     try {
-      dbConnected = dbService.getStatus().isConnected;
+      dbConnected = mongoDbService.getStatus().isConnected;
     } catch {
       dbConnected = false;
     }
