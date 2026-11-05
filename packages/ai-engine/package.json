@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@ai-command-center/shared": "*",
-    "@ai-command-center/config": "*"
+    "@ai-command-center/config": "*",
+    "@ai-command-center/security": "*"
   }
 }
