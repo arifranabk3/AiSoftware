@@ -8,9 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build:packages && npm run build:apps",
-    "build:packages": "npm run --workspace=@ai-command-center/shared build && npm run --workspace=@ai-command-center/config build && npm run --workspace=@ai-command-center/security build && npm run --workspace=@ai-command-center/database build && npm run --workspace=@ai-command-center/integrations build && npm run --workspace=@ai-command-center/ai-engine build && npm run --workspace=@ai-command-center/automation build",
-    "build:apps": "npm run --workspace=@ai-command-center/api build && npm run --workspace=@ai-command-center/worker build && npm run --workspace=@ai-command-center/web build",
+    "build": "npm run --workspace=@ai-command-center/web build",
     "check-types": "tsc -b",
     "lint": "eslint .",
     "format:check": "prettier --check .",
@@ -56,7 +54,7 @@
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.69.0",
     "mongodb": "^7.8.0",
-    "next": "^15.1.12",
+    "next": "15.3.9",
     "playwright": "^1.64.1",
     "postcss": "^8.5.1",
     "postcss-selector-parser": "^7.1.7",

@@ -1,4 +1,4 @@
-import { DepartmentId } from './departments.js';
+import { DepartmentId } from './departments';
 
 export enum PermissionLevel {
   READ_ONLY = 'READ_ONLY',
