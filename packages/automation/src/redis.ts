@@ -14,7 +14,8 @@ export class RedisConnectionManager {
     return RedisConnectionManager.instance;
   }
 
-  public getClient(redisUrl = 'redis://127.0.0.1:6379'): Redis {
+  public getClient(redisUrl?: string): Redis {
+    const url = redisUrl || process.env.REDIS_URL || 'redis://127.0.0.1:6379';
     if (!this.client) {
       const options: RedisOptions = {
         maxRetriesPerRequest: null,
@@ -28,7 +29,7 @@ export class RedisConnectionManager {
         lazyConnect: true
       };
 
-      this.client = new Redis(redisUrl, options);
+      this.client = new Redis(url, options);
 
       this.client.on('connect', () => {
         this.isConnected = true;
