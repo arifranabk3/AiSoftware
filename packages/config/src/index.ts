@@ -5,8 +5,9 @@ export const environmentSchema = z.object({
   PORT: z.coerce.number().default(3001),
   WEB_PORT: z.coerce.number().default(3000),
 
-  // Database & Cache
-  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  // Database (MongoDB) & Cache (Redis)
+  MONGODB_URI: z.string().default('mongodb://127.0.0.1:27017/ai_command_center'),
+  DATABASE_URL: z.string().optional(),
   REDIS_URL: z.string().default('redis://127.0.0.1:6379'),
 
   // Auth & Security
@@ -21,7 +22,7 @@ export const environmentSchema = z.object({
   OWNER_PHONE_NUMBER: z.string().min(8, 'OWNER_PHONE_NUMBER required for WhatsApp alerts'),
   OWNER_EMAIL: z.string().email().optional(),
 
-  // Zero-Cost External Providers (Placeholders/Optional for Phase 1)
+  // Zero-Cost External Providers
   GEMINI_API_KEY: z.string().optional(),
   GROQ_API_KEY: z.string().optional(),
   HUGGING_FACE_TOKEN: z.string().optional(),
@@ -53,6 +54,6 @@ export function getSanitizedConfig(config: Environment): Record<string, unknown>
     GEMINI_API_KEY: config.GEMINI_API_KEY ? '***MASKED***' : undefined,
     GROQ_API_KEY: config.GROQ_API_KEY ? '***MASKED***' : undefined,
     HUGGING_FACE_TOKEN: config.HUGGING_FACE_TOKEN ? '***MASKED***' : undefined,
-    DATABASE_URL: config.DATABASE_URL.replace(/:\/\/.*@/, '://***:***@')
+    MONGODB_URI: config.MONGODB_URI.replace(/:\/\/.*@/, '://***:***@')
   };
 }

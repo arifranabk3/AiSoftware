@@ -72,6 +72,11 @@ export const CEO_ORCHESTRATOR: OrchestratorProfile = {
  * 55 Dedicated Specialist Profiles across 7 Departments
  * Role numbers: 1 to 55
  */
+
+/**
+ * 55 Dedicated Specialist Profiles across 7 Departments
+ * Role numbers: 1 to 55
+ */
 export const SPECIALIST_PROFILES: SpecialistProfile[] = [
   // --- DEPARTMENT 1: EXECUTIVE & STRATEGY (5 Specialists) ---
   {

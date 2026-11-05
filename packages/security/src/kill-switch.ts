@@ -5,11 +5,19 @@ export interface KillSwitchState {
   reason?: string;
 }
 
+declare global {
+  // eslint-disable-next-line no-var
+  var __AI_COMMAND_CENTER_KILL_SWITCH__: KillSwitchState | undefined;
+}
+
 export class EmergencyKillSwitch {
   private static instance: EmergencyKillSwitch;
-  private state: KillSwitchState = { isHalted: false };
 
-  private constructor() {}
+  private constructor() {
+    if (!globalThis.__AI_COMMAND_CENTER_KILL_SWITCH__) {
+      globalThis.__AI_COMMAND_CENTER_KILL_SWITCH__ = { isHalted: false };
+    }
+  }
 
   public static getInstance(): EmergencyKillSwitch {
     if (!EmergencyKillSwitch.instance) {
@@ -19,11 +27,11 @@ export class EmergencyKillSwitch {
   }
 
   public getState(): Readonly<KillSwitchState> {
-    return { ...this.state };
+    return { ...(globalThis.__AI_COMMAND_CENTER_KILL_SWITCH__ || { isHalted: false }) };
   }
 
   public activate(haltedBy: string, reason: string): KillSwitchState {
-    this.state = {
+    globalThis.__AI_COMMAND_CENTER_KILL_SWITCH__ = {
       isHalted: true,
       haltedAt: new Date().toISOString(),
       haltedBy,
@@ -33,16 +41,17 @@ export class EmergencyKillSwitch {
   }
 
   public deactivate(): KillSwitchState {
-    this.state = {
+    globalThis.__AI_COMMAND_CENTER_KILL_SWITCH__ = {
       isHalted: false
     };
     return this.getState();
   }
 
   public assertOperational(): void {
-    if (this.state.isHalted) {
+    const current = globalThis.__AI_COMMAND_CENTER_KILL_SWITCH__;
+    if (current?.isHalted) {
       throw new Error(
-        `EMERGENCY HALT ACTIVE: System operations are frozen by ${this.state.haltedBy ?? 'Owner'} (Reason: ${this.state.reason ?? 'Safety halt'}).`
+        `EMERGENCY HALT ACTIVE: System operations are frozen by ${current.haltedBy ?? 'Owner'} (Reason: ${current.reason ?? 'Safety halt'}).`
       );
     }
   }
