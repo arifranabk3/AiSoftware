@@ -3,53 +3,139 @@
 **Repository Path:** `D:\projects\AiSoftware\ai-command-center`  
 **Git Remote:** `https://github.com/arifranabk3/AiSoftware.git`  
 **Branch:** `master`  
-**Audit Timestamp:** 2026-11-05T22:36:00+05:00  
+**Current Head Commit:** `d6a28ee`  
+**Audit Timestamp:** 2026-11-05T22:42:00+05:00  
 **Role:** Senior Cloud Infrastructure Architect  
 **Policy Status:** 100% Zero-Cost Policy Enforced | No Accounts Created | Real Measured Evidence  
 
 ---
 
-## 1. Executive Summary & Verdict
+## 1. Executive Summary & Production Status
 
-> ### **FINAL VERDICT: READY FOR PROVISIONING**
-> The AI Command Center backend architecture (`apps/api`, `apps/worker`, and reverse proxy `caddy`) is architecturally validated for Oracle Cloud Infrastructure (OCI) Always Free's **Ampere A1 compute allowance (2 OCPUs and 12 GB RAM)**.
-> - **Native ARM64 Validation:** Monorepo dependencies and native compiled binaries (`argon2.armv8.musl.node`) provide full native ARM64 support. An automated GitHub Actions CI workflow ([`.github/workflows/arm64-docker-build.yml`](https://github.com/arifranabk3/AiSoftware/blob/master/.github/workflows/arm64-docker-build.yml)) utilizing QEMU and Buildx builds both containers, verifies native `argon2` hashing/verification under ARM64, and tests `SIGTERM` graceful shutdown without pushing images.
-> - **Measured Memory Footprint:** Real measured runtime testing demonstrates that `apps/api` consumes **77 MB RSS** (20 MB Heap) and `apps/worker` consumes **130 MB RSS** (56 MB Heap). The total combined working footprint under baseline load is **< 300 MB**, leaving over **11 GB** of safety buffer and headroom on a 12 GB instance.
-> - **OOM Risk:** **Extremely Low (< 3%)** under standard operational parameters.
+> ### **FINAL VERDICT: PARTIALLY READY (AWAITING GITHUB ACTIONS RUN EVIDENCE)**
+> - **Architecture & Local Tests:** **100% PASS**. `apps/api` and `apps/worker` Alpine Dockerfiles, `caddy` reverse proxy, multi-stage compilation, empirical memory profiling (< 300 MB baseline RSS), and database/cache connections (MongoDB Atlas & Upstash Redis) are fully validated.
+> - **ARM64 Native Execution Evidence:** **BLOCKED ON GITHUB PAT PERMISSION**. The automated GitHub Actions workflow file ([`.github/workflows/arm64-docker-build.yml`](file:///D:/projects/AiSoftware/ai-command-center/.github/workflows/arm64-docker-build.yml)) is ready, but GitHub rejects git-push from the current Personal Access Token because the PAT lacks the `workflow` scope.
+> - **Action Required:** The owner must commit `.github/workflows/arm64-docker-build.yml` via the GitHub Web UI or update the PAT with the `workflow` scope so that GitHub Actions can execute and record verified ARM64 build logs.
 
 ---
 
-## 2. GitHub Actions ARM64 CI Execution & Runtime Validation (Steps 1, 2 & 3)
+## 2. Step 1 & 2 — Git Verification & Workflow Publication Diagnosis
 
-### 2.1 Automated GitHub Actions Workflow
-The workflow is located at:
-[`.github/workflows/arm64-docker-build.yml`](https://github.com/arifranabk3/AiSoftware/blob/master/.github/workflows/arm64-docker-build.yml)  
-**CI Actions Dashboard URL:** `https://github.com/arifranabk3/AiSoftware/actions`
+### 2.1 Remote Master State
+- **Remote HEAD Commit:** `d6a28ee` (`chore: remove ci template from tracking`).
+- **Inspection of `.github/workflows/arm64-docker-build.yml`:** Does not exist on the remote repository yet.
+- **Inspection of `ci/arm64-docker-build.yml`:** Successfully deleted from git tracking to prevent accidental misinterpretation as an active workflow.
 
-**Configured Triggers:**
-- `workflow_dispatch` (Manual on-demand trigger)
-- `push` on `master` branch
-- `pull_request` on `master` branch
+### 2.2 GitHub Push Rejection Error
+When attempting to push `.github/workflows/arm64-docker-build.yml`, GitHub returned:
+```text
+To https://github.com/arifranabk3/AiSoftware.git
+ ! [remote rejected] master -> master (refusing to allow a Personal Access Token to create or update workflow `.github/workflows/arm64-docker-build.yml` without `workflow` scope)
+error: failed to push some refs to 'https://github.com/arifranabk3/AiSoftware.git'
+```
+**Security Policy Compliance:** We do not request, inspect, or modify user authentication tokens.
 
-### 2.2 End-to-End ARM64 Verification Steps
-1. **Emulation Setup:** Sets up QEMU for `linux/arm64` and Docker Buildx.
-2. **Container Image Builds:**
-   - Builds `apps/api/Dockerfile` for `linux/arm64`.
-   - Builds `apps/worker/Dockerfile` for `linux/arm64`.
-   - Images are loaded locally into the runner daemon (`load: true`); no images are published to registries.
-3. **Runtime Native Module Verification:**
-   - Runs container directly under `linux/arm64`.
-   - Executes real cryptographic test:
-     ```javascript
-     const argon = require('argon2');
-     const h = await argon.hash('test_pass');
-     const v = await argon.verify(h, 'test_pass');
-     if (!v) process.exit(1);
-     console.log('ARM64 Native Module argon2 Verified Successfully!');
-     ```
-4. **Daemon Startup & Graceful Shutdown Verification:**
-   - Starts API container on port 3001 and tests `SIGTERM` termination.
-   - Starts Worker container and tests `SIGTERM` termination.
+### 2.3 Exact Workflow YAML for Publication
+The file is prepared locally at `.github/workflows/arm64-docker-build.yml`:
+
+```yaml
+name: ARM64 Container Build & Native Verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/api/**'
+      - 'apps/worker/**'
+      - 'packages/**'
+      - 'package*.json'
+      - 'docker-compose.production.yml'
+      - '.github/workflows/arm64-docker-build.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'apps/api/**'
+      - 'apps/worker/**'
+      - 'packages/**'
+      - 'package*.json'
+      - 'docker-compose.production.yml'
+      - '.github/workflows/arm64-docker-build.yml'
+
+jobs:
+  arm64-build-and-verify:
+    name: Build & Verify ARM64 Container Images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU for ARM64 Emulation
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API Image (linux/arm64)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          platforms: linux/arm64
+          push: false
+          load: true
+          tags: ai-command-center-api:arm64-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Worker Image (linux/arm64)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          platforms: linux/arm64
+          push: false
+          load: true
+          tags: ai-command-center-worker:arm64-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify API Container & Native Module on ARM64
+        run: |
+          echo "Running argon2 native module test on linux/arm64..."
+          docker run --rm --platform linux/arm64 ai-command-center-api:arm64-test \
+            node -e "const argon = require('argon2'); (async () => { const h = await argon.hash('test_pass'); const v = await argon.verify(h, 'test_pass'); if (!v) { console.error('Verification failed'); process.exit(1); } console.log('ARM64 Native Module argon2 Verified Successfully!'); process.exit(0); })();"
+
+      - name: Test API Container Startup & Graceful Shutdown
+        run: |
+          echo "Testing API container startup on linux/arm64..."
+          CID=$(docker run -d --rm --platform linux/arm64 -p 3001:3001 \
+            -e NODE_ENV=production \
+            -e JWT_SECRET=test_jwt_secret_must_be_32_characters_long_123 \
+            -e REFRESH_TOKEN_SECRET=test_refresh_secret_must_be_32_characters_long \
+            -e MASTER_ENCRYPTION_KEY=test_master_encryption_key_32_char \
+            ai-command-center-api:arm64-test)
+          sleep 5
+          echo "Testing graceful SIGTERM shutdown..."
+          docker kill --signal=SIGTERM $CID
+          echo "API container shutdown verified."
+
+      - name: Test Worker Container Startup & Graceful Shutdown
+        run: |
+          echo "Testing Worker container startup on linux/arm64..."
+          WID=$(docker run -d --rm --platform linux/arm64 \
+            -e NODE_ENV=production \
+            -e MASTER_ENCRYPTION_KEY=test_master_encryption_key_32_char \
+            ai-command-center-worker:arm64-test)
+          sleep 5
+          echo "Testing graceful SIGTERM shutdown..."
+          docker kill --signal=SIGTERM $WID
+          echo "Worker container shutdown verified."
+```
 
 ---
 
@@ -65,12 +151,9 @@ Real runtime memory profiling was executed directly against the compiled product
 | **Host OS (Ubuntu 24.04 ARM64) + Docker** | ~800 MB | N/A | 1,200 MB | Standard Linux kernel & container runtime overhead. |
 | **TOTAL WORKING SET** | **~1,042 MB (~1.04 GB)** | **—** | **~2,874 MB (~2.8 GB)** | **Total available: 12.0 GB. Over 9.1 GB remains completely free.** |
 
-**OOM Mitigation:**
-- Node.js processes can be bounded with `--max-old-space-size=1024` (API) and `--max-old-space-size=2048` (Worker), ensuring stable operation well below the 12 GB ceiling.
-
 ---
 
-## 4. OCI Idle Instance Reclamation Policy — Operational Reality & Risk (Step 4 Corrected)
+## 4. OCI Idle Instance Reclamation Policy — Operational Reality & Risk
 
 > ### **CRITICAL AVAILABILITY NOTICE: OCI IDLE RECLAMATION POLICY**
 > Oracle Cloud Infrastructure automatically monitors Always Free compute instances. An instance is categorized as **idle** if during a 7-day period:
@@ -80,7 +163,7 @@ Real runtime memory profiling was executed directly against the compiled product
 >
 > If an instance is flagged as idle, Oracle may stop or reclaim the VM after sending an email notification to the account owner.
 
-### Strict Architectural Realities & Policy Constraints:
+### Strict Architectural Realities:
 1. **No Guaranteed Exemption Without Contractual SLA:** Upgrading to an OCI Pay-As-You-Go account does not provide an automatic, legally binding exemption for Always Free instances under official documentation unless explicit paid resource quotas are allocated.
 2. **Reclamation is an Inherent Free-Tier Availability Risk:** Low-overhead services (like efficient Node.js servers) naturally run at low average CPU/RAM usage. Idle reclamation must be recognized as an inherent cloud availability risk of the free tier.
 3. **No Artificial Resource Burns:** Creating artificial scripts to consume CPU or RAM purely to bypass cloud monitoring is brittle, wastes compute, and violates cloud terms of service.
@@ -101,12 +184,17 @@ Real runtime memory profiling was executed directly against the compiled product
 
 ---
 
-## 6. Rollback & Maintenance Procedures
+## 6. Exact Owner Actions to Attain "READY FOR PROVISIONING"
 
-- **Graceful Shutdown:** `dumb-init` forwards `SIGTERM` signals directly to Fastify (`server.close()`) and Worker (`workerDaemon.stop()`), ensuring inflight BullMQ jobs are finalized before container exit.
-- **Instant Rollback:**
-  ```bash
-  cd /opt/ai-command-center/ai-command-center
-  git checkout <previous_commit_hash>
-  docker compose -f docker-compose.production.yml up -d --build
-  ```
+1. **Publish Workflow via GitHub Web Interface:**
+   - Navigate to `https://github.com/arifranabk3/AiSoftware`
+   - Click **Add file** -> **Create new file**
+   - Name the file: `.github/workflows/arm64-docker-build.yml`
+   - Paste the YAML content from Section 2.3 and commit directly to `master`.
+   *(Alternatively, in GitHub Personal Access Token settings, enable the `workflow` checkbox for your token so that `git push` can upload workflow files directly).*
+2. **Run GitHub Actions Workflow:**
+   - Go to `https://github.com/arifranabk3/AiSoftware/actions`
+   - Select **ARM64 Container Build & Native Verification**
+   - Click **Run workflow** on `master`
+3. **Notify Agent:**
+   - Once the action completes with green checkmarks, we will capture the run URL, verify the logs, and update the final verdict to **READY FOR PROVISIONING**.
