@@ -15,9 +15,8 @@ export interface ExecutionLimits {
   concurrencyLimit: number;
 }
 
-export interface SpecialistProfile {
+export interface OrchestratorProfile {
   id: string;
-  roleNumber: number;
   title: string;
   departmentId: DepartmentId;
   responsibilities: string[];
@@ -29,33 +28,55 @@ export interface SpecialistProfile {
   isActive: boolean;
 }
 
-export const SPECIALIST_PROFILES: SpecialistProfile[] = [
-  // --- EXECUTIVE (5 roles) ---
-  {
-    id: 'spec_ceo_orchestrator',
-    roleNumber: 1,
-    title: 'CEO Orchestrator',
-    departmentId: DepartmentId.EXECUTIVE,
-    responsibilities: [
-      'Autonomous coordination',
-      'High-level decision making',
-      'Task delegation across departments'
-    ],
-    skills: ['Strategic Planning', 'Orchestration', 'Multi-Agent Routing'],
-    allowedTools: ['task_dispatch', 'agent_query', 'system_status', 'escalate_owner'],
-    permissionLevel: PermissionLevel.ADMIN,
-    executionLimits: {
-      maxExecutionTimeMs: 60000,
-      maxTokensPerTask: 8192,
-      maxRetries: 3,
-      concurrencyLimit: 5
-    },
-    approvalRequired: false,
-    isActive: true
+export interface SpecialistProfile {
+  id: string;
+  roleNumber: number; // 1 to 55 strictly
+  title: string;
+  departmentId: DepartmentId;
+  responsibilities: string[];
+  skills: string[];
+  allowedTools: string[];
+  permissionLevel: PermissionLevel;
+  executionLimits: ExecutionLimits;
+  approvalRequired: boolean;
+  isActive: boolean;
+}
+
+/**
+ * 1 CEO Orchestrator (Separate from the 55 specialist roles)
+ */
+export const CEO_ORCHESTRATOR: OrchestratorProfile = {
+  id: 'ceo_orchestrator',
+  title: 'CEO Orchestrator',
+  departmentId: DepartmentId.EXECUTIVE,
+  responsibilities: [
+    'Autonomous coordination across all 7 departments',
+    'Strategic planning and meta-reasoning',
+    'Task delegation to 55 specialist roles',
+    'Portfolio health oversight and owner escalation'
+  ],
+  skills: ['Strategic Planning', 'Orchestration', 'Multi-Agent Routing', 'Enterprise Governance'],
+  allowedTools: ['task_dispatch', 'agent_query', 'system_status', 'escalate_owner'],
+  permissionLevel: PermissionLevel.ADMIN,
+  executionLimits: {
+    maxExecutionTimeMs: 60000,
+    maxTokensPerTask: 8192,
+    maxRetries: 3,
+    concurrencyLimit: 5
   },
+  approvalRequired: false,
+  isActive: true
+};
+
+/**
+ * 55 Dedicated Specialist Profiles across 7 Departments
+ * Role numbers: 1 to 55
+ */
+export const SPECIALIST_PROFILES: SpecialistProfile[] = [
+  // --- DEPARTMENT 1: EXECUTIVE & STRATEGY (5 Specialists) ---
   {
     id: 'spec_chief_of_staff',
-    roleNumber: 2,
+    roleNumber: 1,
     title: 'Chief of Staff',
     departmentId: DepartmentId.EXECUTIVE,
     responsibilities: [
@@ -77,7 +98,7 @@ export const SPECIALIST_PROFILES: SpecialistProfile[] = [
   },
   {
     id: 'spec_enterprise_strategist',
-    roleNumber: 3,
+    roleNumber: 2,
     title: 'Enterprise Strategist',
     departmentId: DepartmentId.EXECUTIVE,
     responsibilities: [
@@ -99,7 +120,7 @@ export const SPECIALIST_PROFILES: SpecialistProfile[] = [
   },
   {
     id: 'spec_operations_supervisor',
-    roleNumber: 4,
+    roleNumber: 3,
     title: 'Operations Supervisor',
     departmentId: DepartmentId.EXECUTIVE,
     responsibilities: ['Automated quality assurance of decisions', 'SLA monitoring'],
@@ -117,7 +138,7 @@ export const SPECIALIST_PROFILES: SpecialistProfile[] = [
   },
   {
     id: 'spec_hitl_gateway_manager',
-    roleNumber: 5,
+    roleNumber: 4,
     title: 'Human-in-the-Loop Gateway Manager',
     departmentId: DepartmentId.EXECUTIVE,
     responsibilities: [
@@ -137,8 +158,29 @@ export const SPECIALIST_PROFILES: SpecialistProfile[] = [
     approvalRequired: false,
     isActive: true
   },
+  {
+    id: 'spec_executive_communications',
+    roleNumber: 5,
+    title: 'Executive Communications Specialist',
+    departmentId: DepartmentId.EXECUTIVE,
+    responsibilities: [
+      'Synthesizing executive briefing digests for owner',
+      'Summarizing milestone completions'
+    ],
+    skills: ['Executive Synthesis', 'Clarity Formatting', 'Digest Generation'],
+    allowedTools: ['format_digest', 'prepare_owner_brief'],
+    permissionLevel: PermissionLevel.STANDARD_EXECUTE,
+    executionLimits: {
+      maxExecutionTimeMs: 30000,
+      maxTokensPerTask: 4096,
+      maxRetries: 2,
+      concurrencyLimit: 2
+    },
+    approvalRequired: false,
+    isActive: true
+  },
 
-  // --- ENGINEERING, ARCHITECTURE & DEVOPS (10 roles) ---
+  // --- DEPARTMENT 2: ENGINEERING, ARCHITECTURE & DEVOPS (10 Specialists) ---
   {
     id: 'spec_principal_architect',
     roleNumber: 6,
@@ -320,7 +362,7 @@ export const SPECIALIST_PROFILES: SpecialistProfile[] = [
     isActive: true
   },
 
-  // --- OPERATIONS & PROCESS AUTOMATION (8 roles) ---
+  // --- DEPARTMENT 3: OPERATIONS & PROCESS AUTOMATION (8 Specialists) ---
   {
     id: 'spec_workflow_automation_lead',
     roleNumber: 16,
@@ -482,7 +524,7 @@ export const SPECIALIST_PROFILES: SpecialistProfile[] = [
     isActive: true
   },
 
-  // --- PRODUCT, MARKETING & GROWTH (8 roles) ---
+  // --- DEPARTMENT 4: PRODUCT, MARKETING & GROWTH (8 Specialists) ---
   {
     id: 'spec_product_manager',
     roleNumber: 24,
@@ -636,7 +678,7 @@ export const SPECIALIST_PROFILES: SpecialistProfile[] = [
     isActive: true
   },
 
-  // --- FINANCE, MONETIZATION & COST CONTROL (8 roles) ---
+  // --- DEPARTMENT 5: FINANCE, MONETIZATION & COST CONTROL (8 Specialists) ---
   {
     id: 'spec_cfo_controller',
     roleNumber: 32,
@@ -793,7 +835,7 @@ export const SPECIALIST_PROFILES: SpecialistProfile[] = [
     isActive: true
   },
 
-  // --- BUSINESS DEV & APPLICATION DISCOVERY (8 roles) ---
+  // --- DEPARTMENT 6: BUSINESS DEV & APPLICATION DISCOVERY (8 Specialists) ---
   {
     id: 'spec_discovery_hunter',
     roleNumber: 40,
@@ -945,7 +987,7 @@ export const SPECIALIST_PROFILES: SpecialistProfile[] = [
     isActive: true
   },
 
-  // --- SECURITY, COMPLIANCE & AUDIT (8 roles) ---
+  // --- DEPARTMENT 7: SECURITY, COMPLIANCE & AUDIT (8 Specialists) ---
   {
     id: 'spec_ciso_architect',
     roleNumber: 48,
