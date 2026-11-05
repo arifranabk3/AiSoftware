@@ -1,4 +1,17 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+export function getApiBase(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  // When running in the browser during runtime in production, warn or guard if missing
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+    console.warn(
+      '[Config Warning] NEXT_PUBLIC_API_URL is not configured. API requests may fail.'
+    );
+  }
+  return 'http://localhost:3001/api/v1';
+}
+
+export const API_BASE = getApiBase();
 
 export interface SystemHealthResponse {
   status: 'HEALTHY' | 'HALTED';
