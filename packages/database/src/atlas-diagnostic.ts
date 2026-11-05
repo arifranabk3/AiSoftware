@@ -1,6 +1,13 @@
 import dns from 'dns';
 import { promisify } from 'util';
-import { mongoDbService, initializeDatabaseIndexes } from '@ai-command-center/database';
+import dotenv from 'dotenv';
+import path from 'path';
+import { mongoDbService } from './mongodb.js';
+import { initializeDatabaseIndexes } from './init-indexes.js';
+
+// Automatically load local .env if present
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
 
 const resolveDns = promisify(dns.resolve);
 
@@ -11,7 +18,12 @@ export async function runAtlasDiagnostic(mongoUri?: string, dbName = 'ai_command
   console.log('       MONGODB ATLAS SYSTEM CONNECTIVITY AUDIT       ');
   console.log('====================================================');
 
-  if (!uri || uri.includes('<username>') || uri.includes('<password>')) {
+  if (
+    !uri ||
+    uri.includes('<username>') ||
+    uri.includes('<password>') ||
+    uri.includes('<cluster>')
+  ) {
     console.log('[Phase F] MONGODB_URI not configured with real credentials in .env.');
     console.log('[Notice] Please enter real Atlas credentials into .env locally.');
     console.log('STATUS: PENDING OWNER ATLAS CREDENTIALS INPUT');
@@ -83,7 +95,11 @@ export async function runAtlasDiagnostic(mongoUri?: string, dbName = 'ai_command
   return { success: true };
 }
 
-if (process.argv[1]?.includes('diagnostic') || process.argv[1]?.includes('atlas_diagnostic')) {
+if (
+  process.argv[1]?.includes('diagnostic') ||
+  process.argv[1]?.includes('atlas-diagnostic') ||
+  process.argv[1]?.includes('atlas_diagnostic')
+) {
   runAtlasDiagnostic().catch((err) => {
     console.error('Atlas diagnostic failed:', err);
     process.exit(1);
