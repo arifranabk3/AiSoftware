@@ -269,7 +269,7 @@ export async function buildServer(): Promise<FastifyInstance> {
     { preHandler: authenticate },
     async (req, reply) => {
       const user = (req as unknown as { user: { userId: string } }).user;
-      const updated = killSwitch.deactivate();
+      const updated = await killSwitch.deactivate(user.userId);
 
       // Record audit event
       const auditEntry = {

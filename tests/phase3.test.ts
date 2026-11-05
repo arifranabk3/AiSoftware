@@ -1,12 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  redisManager,
-  CommandQueueName,
-  schedulerEngine,
-  safeBrowser
-} from '../packages/automation/src/index.js';
-import { killSwitch } from '../packages/security/src/index.js';
+import { distributedKillSwitch } from '@ai-command-center/security';
+import { redisManager, schedulerEngine, safeBrowser } from '@ai-command-center/automation';
 import { workerDaemon } from '../apps/worker/src/index.js';
+import { CommandQueueName } from '../packages/automation/src/queues.js';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('1. Redis Infrastructure & Failure Resilience', () => {
   it('should handle unreachable Redis cleanly without unhandled crash', async () => {
@@ -28,11 +24,11 @@ describe('2. BullMQ Queue Topologies & Job Options', () => {
 });
 
 describe('3. Autonomous Scheduler Engine & Duplicate Prevention', () => {
-  beforeEach(() => {
-    killSwitch.deactivate();
+  beforeEach(async () => {
+    await distributedKillSwitch.deactivate('Owner');
   });
 
-  it('should register tasks and enforce minute-level duplicate prevention', () => {
+  it('should register tasks and enforce minute-level duplicate prevention', async () => {
     schedulerEngine.registerTask({
       id: 'task_daily_discovery',
       name: 'Daily Business Discovery',
@@ -47,7 +43,13 @@ describe('3. Autonomous Scheduler Engine & Duplicate Prevention', () => {
     const timestampMinute = '2026-11-05T09:00';
 
     // First check should be true
-    expect(schedulerEngine.shouldExecute('task_daily_discovery', timestampMinute)).toBe(true);
+    expect(
+      await schedulerEngine.acquireExecutionLease(
+        'task_daily_discovery',
+        timestampMinute,
+        'worker_1'
+      )
+    ).toBe(true);
 
     // Execute once
     const execution = schedulerEngine.markExecuted('task_daily_discovery', timestampMinute);
@@ -55,24 +57,36 @@ describe('3. Autonomous Scheduler Engine & Duplicate Prevention', () => {
     expect(execution.idempotencyKey).toBe('task_daily_discovery:2026-11-05T09:00');
 
     // Duplicate check in the same minute should be false
-    expect(schedulerEngine.shouldExecute('task_daily_discovery', timestampMinute)).toBe(false);
+    expect(
+      await schedulerEngine.acquireExecutionLease(
+        'task_daily_discovery',
+        timestampMinute,
+        'worker_2'
+      )
+    ).toBe(false);
 
     // Next minute should be eligible again
-    expect(schedulerEngine.shouldExecute('task_daily_discovery', '2026-11-05T09:01')).toBe(true);
+    expect(
+      await schedulerEngine.acquireExecutionLease(
+        'task_daily_discovery',
+        '2026-11-05T09:01',
+        'worker_1'
+      )
+    ).toBe(true);
   });
 
-  it('scheduler must halt when emergency kill-switch is active', () => {
-    killSwitch.activate('Owner', 'Safety freeze');
-    expect(() => schedulerEngine.shouldExecute('task_daily_discovery', '2026-11-05T09:00')).toThrow(
-      'EMERGENCY HALT ACTIVE'
-    );
-    killSwitch.deactivate();
+  it('scheduler must halt when emergency kill-switch is active', async () => {
+    await distributedKillSwitch.activate('Owner', 'Safety freeze');
+    await expect(
+      schedulerEngine.acquireExecutionLease('task_daily_discovery', '2026-11-05T09:00', 'worker_1')
+    ).rejects.toThrow('EMERGENCY HALT ACTIVE');
+    await distributedKillSwitch.deactivate('Owner');
   });
 });
 
 describe('4. Worker Daemon Lifecycle & Emergency Guard', () => {
-  beforeEach(() => {
-    killSwitch.deactivate();
+  beforeEach(async () => {
+    await distributedKillSwitch.deactivate('Owner');
   });
 
   it('worker daemon should start and stop cleanly', async () => {
@@ -86,9 +100,9 @@ describe('4. Worker Daemon Lifecycle & Emergency Guard', () => {
   });
 
   it('worker must refuse start if emergency kill-switch is active', async () => {
-    killSwitch.activate('Owner', 'Emergency freeze');
+    await distributedKillSwitch.activate('Owner', 'Emergency freeze');
     await expect(workerDaemon.start()).rejects.toThrow('EMERGENCY HALT ACTIVE');
-    killSwitch.deactivate();
+    await distributedKillSwitch.deactivate('Owner');
   });
 });
 

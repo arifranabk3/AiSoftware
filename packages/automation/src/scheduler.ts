@@ -1,4 +1,5 @@
-import { killSwitch } from '@ai-command-center/security';
+import { Db } from 'mongodb';
+import { distributedKillSwitch } from '@ai-command-center/security';
 import { BaseTaskPayload } from './queues.js';
 
 export interface ScheduledTaskDefinition {
@@ -13,32 +14,79 @@ export interface ScheduledTaskDefinition {
   lastRunAt?: string;
 }
 
-export class AutonomousSchedulerEngine {
+export interface DistributedExecutionLockDocument {
+  _id: string; // `${taskId}:${timestampMinute}`
+  taskId: string;
+  lockedAt: Date;
+  expiresAt: Date;
+  lockedBy: string; // Worker / process ID
+  status: 'PENDING' | 'EXECUTING' | 'COMPLETED' | 'FAILED';
+}
+
+export class DistributedSchedulerEngine {
   private scheduledTasks = new Map<string, ScheduledTaskDefinition>();
-  private executedRuns = new Set<string>(); // Set of `${taskId}:${timestampMinute}` to prevent duplicates
+  private activeDb: Db | null = null;
+  private localLocks = new Set<string>();
+
+  public setDb(db: Db): void {
+    this.activeDb = db;
+  }
 
   public registerTask(task: ScheduledTaskDefinition): void {
     this.scheduledTasks.set(task.id, task);
   }
 
-  public shouldExecute(taskId: string, currentMinuteTimestamp: string): boolean {
-    killSwitch.assertOperational();
+  /**
+   * Distributed atomic lock acquisition:
+   * Uses MongoDB unique index on `_id` (`${taskId}:${timestampMinute}`) to guarantee that
+   * only ONE process across multiple nodes can acquire the execution lease.
+   */
+  public async acquireExecutionLease(
+    taskId: string,
+    currentMinuteTimestamp: string,
+    workerId: string
+  ): Promise<boolean> {
+    await distributedKillSwitch.verifyOperational();
 
     const task = this.scheduledTasks.get(taskId);
     if (!task || !task.isActive) {
       return false;
     }
 
-    const idempotencyKey = `${taskId}:${currentMinuteTimestamp}`;
-    if (this.executedRuns.has(idempotencyKey)) {
-      return false; // Prevent duplicate run in the same minute
+    const lockKey = `${taskId}:${currentMinuteTimestamp}`;
+
+    if (this.activeDb) {
+      try {
+        const collection =
+          this.activeDb.collection<DistributedExecutionLockDocument>('scheduler_locks');
+        const lockDoc: DistributedExecutionLockDocument = {
+          _id: lockKey,
+          taskId,
+          lockedAt: new Date(),
+          expiresAt: new Date(Date.now() + 60000), // 1-minute lease
+          lockedBy: workerId,
+          status: 'EXECUTING'
+        };
+
+        // Atomic insertion: fails with duplicate key error if another process already acquired it
+        await collection.insertOne(lockDoc);
+        return true;
+      } catch (err: unknown) {
+        // E11000 duplicate key error means another scheduler instance already locked this execution
+        return false;
+      }
     }
 
+    // Fallback for standalone in-memory mode
+    if (this.localLocks.has(lockKey)) {
+      return false;
+    }
+    this.localLocks.add(lockKey);
     return true;
   }
 
   public markExecuted(taskId: string, currentMinuteTimestamp: string): BaseTaskPayload {
-    killSwitch.assertOperational();
+    distributedKillSwitch.assertOperational();
 
     const task = this.scheduledTasks.get(taskId);
     if (!task) {
@@ -46,7 +94,6 @@ export class AutonomousSchedulerEngine {
     }
 
     const idempotencyKey = `${taskId}:${currentMinuteTimestamp}`;
-    this.executedRuns.add(idempotencyKey);
     task.lastRunAt = new Date().toISOString();
 
     return {
@@ -66,4 +113,5 @@ export class AutonomousSchedulerEngine {
   }
 }
 
-export const schedulerEngine = new AutonomousSchedulerEngine();
+export const distributedScheduler = new DistributedSchedulerEngine();
+export const schedulerEngine = distributedScheduler; // Backward compatibility

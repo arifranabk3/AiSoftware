@@ -1,4 +1,4 @@
-import { killSwitch } from '@ai-command-center/security';
+import { distributedKillSwitch } from '@ai-command-center/security';
 import { redisManager } from '@ai-command-center/automation';
 import { mongoDbService } from '@ai-command-center/database';
 
@@ -10,7 +10,7 @@ export class AutonomousWorkerDaemon {
     console.log('[Worker] Starting autonomous background worker daemon...');
 
     // 1. Check emergency kill switch
-    killSwitch.assertOperational();
+    await distributedKillSwitch.verifyOperational();
 
     // 2. Redis & Mongo health checks
     const redisHealth = await redisManager.checkHealth();
@@ -26,7 +26,7 @@ export class AutonomousWorkerDaemon {
     // 3. Heartbeat loop
     this.heartbeatInterval = setInterval(() => {
       try {
-        killSwitch.assertOperational();
+        distributedKillSwitch.assertOperational();
         // Worker heartbeat tick
       } catch (err: unknown) {
         console.warn(`[Worker] Halting active loop: ${(err as Error).message}`);
@@ -51,7 +51,7 @@ export class AutonomousWorkerDaemon {
   public getStatus(): { isRunning: boolean; killSwitchHalted: boolean } {
     return {
       isRunning: this.isRunning,
-      killSwitchHalted: killSwitch.getState().isHalted
+      killSwitchHalted: distributedKillSwitch.getState().isHalted
     };
   }
 }

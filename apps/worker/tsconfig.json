@@ -7,7 +7,8 @@
     { "path": "../../packages/database" },
     { "path": "../../packages/ai-engine" },
     { "path": "../../packages/automation" },
-    { "path": "../../packages/integrations" }
+    { "path": "../../packages/integrations" },
+    { "path": "../../packages/security" }
   ],
   "include": ["src/**/*"]
 }

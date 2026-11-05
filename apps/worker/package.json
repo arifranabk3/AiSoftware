@@ -13,6 +13,7 @@
     "@ai-command-center/database": "*",
     "@ai-command-center/ai-engine": "*",
     "@ai-command-center/automation": "*",
-    "@ai-command-center/integrations": "*"
+    "@ai-command-center/integrations": "*",
+    "@ai-command-center/security": "*"
   }
 }
