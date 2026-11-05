@@ -55,9 +55,9 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-graphite-950 text-graphite-200">
+    <div className="flex flex-col md:flex-row min-h-screen bg-graphite-950 text-graphite-200 overflow-x-hidden w-full">
       {/* Sidebar Navigation */}
-      <aside className="w-64 border-r border-graphite-700 bg-graphite-900 flex flex-col">
+      <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-graphite-700 bg-graphite-900 flex flex-col shrink-0">
         <div className="p-5 border-b border-graphite-700 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="h-3 w-3 rounded-full bg-orange-accent animate-pulse" />
@@ -152,8 +152,8 @@ export default function DashboardPage() {
       {/* Main Panel Content */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="h-16 border-b border-graphite-700 bg-graphite-900/90 px-8 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        <header className="min-h-16 py-3 border-b border-graphite-700 bg-graphite-900/90 px-4 md:px-8 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-lg font-medium text-white">
               {activeTab === 'OVERVIEW' && 'Enterprise Dashboard Overview'}
               {activeTab === 'CEO_VISUALIZER' && 'Autonomous CEO Orchestrator State Machine'}

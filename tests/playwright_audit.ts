@@ -94,13 +94,22 @@ async function runAudit() {
 
   // Terminate next server
   console.log('\nShutting down Next.js test server...');
-  nextServer.kill();
+  if (nextServer.pid) {
+    try {
+      spawn('taskkill', ['/pid', nextServer.pid.toString(), '/f', '/t']);
+    } catch {
+      nextServer.kill();
+    }
+  } else {
+    nextServer.kill();
+  }
 
   console.log('\n================ AUDIT SUMMARY ================');
   for (const r of auditResults) {
     console.log(`Viewport: ${r.viewport} | Overflow: ${r.hasOverflow ? 'FAIL' : 'PASS'} | File: ${r.path}`);
   }
   console.log('================================================');
+  process.exit(0);
 }
 
 runAudit().catch((err) => {
