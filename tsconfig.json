@@ -9,7 +9,6 @@
     { "path": "./packages/ai-engine" },
     { "path": "./packages/automation" },
     { "path": "./apps/api" },
-    { "path": "./apps/worker" },
-    { "path": "./apps/web" }
+    { "path": "./apps/worker" }
   ]
 }
