@@ -1,0 +1,11 @@
+{
+  "name": "@ai-command-center/web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@ai-command-center/shared": "*"
+  }
+}

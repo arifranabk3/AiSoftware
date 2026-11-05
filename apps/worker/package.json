@@ -1,0 +1,18 @@
+{
+  "name": "@ai-command-center/worker",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@ai-command-center/shared": "*",
+    "@ai-command-center/config": "*",
+    "@ai-command-center/database": "*",
+    "@ai-command-center/ai-engine": "*",
+    "@ai-command-center/automation": "*",
+    "@ai-command-center/integrations": "*"
+  }
+}

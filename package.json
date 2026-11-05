@@ -1,0 +1,35 @@
+{
+  "name": "ai-command-center",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Enterprise-Grade Autonomous AI Command Center",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run --workspaces build",
+    "check-types": "tsc -b",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "prisma:generate": "npm run generate --workspace=@ai-command-center/database",
+    "prisma:validate": "npm run validate --workspace=@ai-command-center/database"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "eslint": "^9.19.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.4"
+  },
+  "keywords": [
+    "autonomous-agents",
+    "command-center",
+    "enterprise-ai",
+    "zero-cost"
+  ],
+  "author": "Enterprise Architecture Team",
+  "license": "UNLICENSED"
+}

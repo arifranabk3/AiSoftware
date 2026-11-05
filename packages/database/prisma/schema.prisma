@@ -1,0 +1,460 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. User
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String
+  name         String
+  isActive     Boolean    @default(true)
+  isOwner      Boolean    @default(false)
+  userRoles    UserRole[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+// 2. Role
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  code        String       @unique
+  description String?
+  userRoles   UserRole[]
+  permissions Permission[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// 3. Permission
+model Permission {
+  id          String   @id @default(uuid())
+  roleId      String
+  role        Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  action      String
+  resource    String
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@unique([roleId, action, resource])
+}
+
+// 4. UserRole
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String
+  roleId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, roleId])
+}
+
+// 5. Department
+model Department {
+  id          String       @id
+  name        String       @unique
+  code        String       @unique
+  description String
+  specialists Specialist[]
+  tasks       Task[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// 6. Specialist
+model Specialist {
+  id               String            @id
+  roleNumber       Int               @unique
+  title            String
+  departmentId     String
+  department       Department        @relation(fields: [departmentId], references: [id])
+  responsibilities String[]
+  allowedTools     String[]
+  permissionLevel  String
+  approvalRequired Boolean           @default(false)
+  isActive         Boolean           @default(true)
+  skills           SpecialistSkill[]
+  tasks            Task[]
+  executions       TaskExecution[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+// 7. SpecialistSkill
+model SpecialistSkill {
+  id           String     @id @default(uuid())
+  specialistId String
+  specialist   Specialist @relation(fields: [specialistId], references: [id], onDelete: Cascade)
+  skillName    String
+  createdAt    DateTime   @default(now())
+
+  @@unique([specialistId, skillName])
+}
+
+// 8. Task
+model Task {
+  id             String          @id @default(uuid())
+  title          String
+  description    String?
+  departmentId   String
+  department     Department      @relation(fields: [departmentId], references: [id])
+  specialistId   String
+  specialist     Specialist      @relation(fields: [specialistId], references: [id])
+  status         String          @default("PENDING")
+  priority       Int             @default(3)
+  inputPayload   Json
+  outputResult   Json?
+  errorMessage   String?
+  executions     TaskExecution[]
+  approvals      ApprovalRequest[]
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([status])
+  @@index([departmentId])
+  @@index([specialistId])
+}
+
+// 9. TaskExecution
+model TaskExecution {
+  id           String     @id @default(uuid())
+  taskId       String
+  task         Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  specialistId String
+  specialist   Specialist @relation(fields: [specialistId], references: [id])
+  status       String
+  logs         String?
+  durationMs   Int?
+  tokensUsed   Int        @default(0)
+  createdAt    DateTime   @default(now())
+
+  @@index([taskId])
+}
+
+// 10. Workflow
+model Workflow {
+  id              String              @id @default(uuid())
+  name            String              @unique
+  description     String?
+  triggerType     String
+  cronExpression  String?
+  isActive        Boolean             @default(true)
+  steps           WorkflowStep[]
+  executions      WorkflowExecution[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+// 11. WorkflowStep
+model WorkflowStep {
+  id               String   @id @default(uuid())
+  workflowId       String
+  workflow         Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  stepIndex        Int
+  name             String
+  specialistId     String
+  payloadTemplate  Json
+  requiresApproval Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  @@unique([workflowId, stepIndex])
+}
+
+// 12. WorkflowExecution
+model WorkflowExecution {
+  id          String    @id @default(uuid())
+  workflowId  String
+  workflow    Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  status      String
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  errorLogs   String?
+
+  @@index([workflowId])
+}
+
+// 13. AIProvider
+model AIProvider {
+  id              String                  @id
+  type            String                  @unique
+  name            String
+  isFreeTier      Boolean                 @default(true)
+  rateLimitRPM    Int                     @default(15)
+  dailyQuotaLimit Int                     @default(1000)
+  isEnabled       Boolean                 @default(true)
+  models          AIModelConfiguration[]
+  usageRecords    APIUsageRecord[]
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+}
+
+// 14. AIModelConfiguration
+model AIModelConfiguration {
+  id           String     @id @default(uuid())
+  providerId   String
+  provider     AIProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  modelName    String
+  contextLimit Int
+  isDefault    Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+
+  @@unique([providerId, modelName])
+}
+
+// 15. Integration
+model Integration {
+  id           String   @id @default(uuid())
+  name         String   @unique
+  serviceType  String
+  status       String   @default("DISABLED")
+  isFreeTier   Boolean  @default(true)
+  configEncrypted String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// 16. BusinessPortfolio
+model BusinessPortfolio {
+  id            String                @id @default(uuid())
+  name          String
+  niche         String
+  description   String?
+  status        String                @default("ACTIVE")
+  opportunities BusinessOpportunity[]
+  contentAssets ContentAsset[]
+  revenues      RevenueRecord[]
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+}
+
+// 17. BusinessOpportunity
+model BusinessOpportunity {
+  id                 String              @id @default(uuid())
+  portfolioId        String?
+  portfolio          BusinessPortfolio?  @relation(fields: [portfolioId], references: [id])
+  title              String
+  companyName        String
+  sourceUrl          String?
+  estimatedValueUSD  Decimal             @default(0) @db.Decimal(12, 2)
+  currency           String              @default("USD")
+  matchScore         Int                 @default(0)
+  status             String              @default("DISCOVERED")
+  pitchSummary       String?
+  applications       CompanyApplication[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([status])
+}
+
+// 18. ContentAsset
+model ContentAsset {
+  id          String               @id @default(uuid())
+  portfolioId String?
+  portfolio   BusinessPortfolio?   @relation(fields: [portfolioId], references: [id])
+  title       String
+  bodyContent String
+  assetType   String
+  status      String               @default("DRAFT")
+  schedules   PublishingSchedule[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+// 19. PublishingSchedule
+model PublishingSchedule {
+  id             String       @id @default(uuid())
+  contentAssetId String
+  contentAsset   ContentAsset @relation(fields: [contentAssetId], references: [id], onDelete: Cascade)
+  platform       String
+  scheduledAt    DateTime
+  publishedAt    DateTime?
+  status         String       @default("PENDING")
+  createdAt      DateTime     @default(now())
+}
+
+// 20. AffiliateProgram
+model AffiliateProgram {
+  id           String             @id @default(uuid())
+  programName  String             @unique
+  networkName  String
+  portalUrl    String?
+  affiliateUrl String
+  commissionRate String
+  status       String             @default("ACTIVE")
+  commissions  CommissionRecord[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+// 21. CompanyApplication
+model CompanyApplication {
+  id             String              @id @default(uuid())
+  opportunityId  String
+  opportunity    BusinessOpportunity @relation(fields: [opportunityId], references: [id])
+  proposalText   String
+  submittedAt    DateTime?
+  status         String              @default("DRAFTED")
+  receiptToken   String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+}
+
+// 22. ApprovalRequest
+model ApprovalRequest {
+  id          String    @id @default(uuid())
+  taskId      String
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  actionName  String
+  details     Json
+  status      String    @default("PENDING")
+  reason      String?
+  requestedAt DateTime  @default(now())
+  decidedAt   DateTime?
+  decidedBy   String?
+
+  @@index([status])
+}
+
+// 23. RevenueRecord
+model RevenueRecord {
+  id                 String                     @id @default(uuid())
+  portfolioId        String?
+  portfolio          BusinessPortfolio?         @relation(fields: [portfolioId], references: [id])
+  amount             Decimal                    @db.Decimal(12, 2)
+  currency           String                     @default("USD")
+  source             String
+  idempotencyKey     String                     @unique
+  verificationStatus String                     @default("UNVERIFIED")
+  receivedAt         DateTime
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+
+  @@index([verificationStatus])
+}
+
+// 24. CommissionRecord
+model CommissionRecord {
+  id                 String           @id @default(uuid())
+  affiliateProgramId String
+  affiliateProgram   AffiliateProgram @relation(fields: [affiliateProgramId], references: [id])
+  amount             Decimal          @db.Decimal(12, 2)
+  currency           String           @default("USD")
+  idempotencyKey     String           @unique
+  status             String           @default("PENDING")
+  clearedAt          DateTime?
+  createdAt          DateTime         @default(now())
+
+  @@index([status])
+}
+
+// 25. ExpenseRecord
+model ExpenseRecord {
+  id             String   @id @default(uuid())
+  amount         Decimal  @default(0) @db.Decimal(12, 2)
+  currency       String   @default("USD")
+  purpose        String
+  idempotencyKey String   @unique
+  approvedBy     String
+  createdAt      DateTime @default(now())
+}
+
+// 26. PayoutRecord
+model PayoutRecord {
+  id             String    @id @default(uuid())
+  amount         Decimal   @db.Decimal(12, 2)
+  currency       String    @default("USD")
+  destination    String
+  idempotencyKey String    @unique
+  status         String    @default("PENDING")
+  processedAt    DateTime?
+  createdAt      DateTime  @default(now())
+}
+
+// 27. Notification
+model Notification {
+  id          String    @id @default(uuid())
+  channel     String
+  recipient   String
+  title       String
+  body        String
+  isDelivered Boolean   @default(false)
+  sentAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([channel, isDelivered])
+}
+
+// 28. AuditLog
+model AuditLog {
+  id            String   @id @default(uuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  specialistId  String?
+  action        String
+  entityType    String
+  entityId      String
+  previousState Json?
+  newState      Json?
+  ipAddress     String?
+  userAgent     String?
+  hashSignature String
+  createdAt     DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+// 29. APIUsageRecord
+model APIUsageRecord {
+  id           String     @id @default(uuid())
+  providerId   String
+  provider     AIProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  endpoint     String
+  tokensUsed   Int        @default(0)
+  costIncurred Decimal    @default(0) @db.Decimal(6, 4)
+  calledAt     DateTime   @default(now())
+
+  @@index([providerId, calledAt])
+}
+
+// 30. CostPolicy
+model CostPolicy {
+  id               String   @id @default(uuid())
+  policyName       String   @unique
+  isPaidBlocked    Boolean  @default(true)
+  monthlyBudgetUSD Decimal  @default(0) @db.Decimal(6, 2)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// 31. QuotaRecord
+model QuotaRecord {
+  id               String   @id @default(uuid())
+  providerName     String   @unique
+  maxDailyRequests Int
+  usedToday        Int      @default(0)
+  resetDate        DateTime
+  isExhausted      Boolean  @default(false)
+  updatedAt        DateTime @updatedAt
+}
+
+// 32. SystemSetting
+model SystemSetting {
+  id          String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
