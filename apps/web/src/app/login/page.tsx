@@ -43,7 +43,9 @@ export default function LoginPage() {
             <Lock className="h-6 w-6" />
           </div>
           <h2 className="text-xl font-bold text-white tracking-wide">OWNER AUTHENTICATION</h2>
-          <p className="text-xs text-graphite-400">Sign in to access the Enterprise AI Command Center</p>
+          <p className="text-xs text-graphite-400">
+            Sign in to access the Enterprise AI Command Center
+          </p>
         </div>
 
         {error && (
@@ -69,7 +71,9 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-graphite-400">Argon2id Master Password</label>
+            <label className="text-xs font-medium text-graphite-400">
+              Argon2id Master Password
+            </label>
             <div className="relative">
               <Lock className="h-4 w-4 absolute left-3 top-3 text-graphite-400" />
               <input
@@ -104,4 +108,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

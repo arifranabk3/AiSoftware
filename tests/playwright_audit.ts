@@ -12,10 +12,10 @@ const VIEWPORTS = [
   { name: 'desktop_1920', width: 1920, height: 1080 },
   { name: 'laptop_1366', width: 1366, height: 768 },
   { name: 'tablet_768', width: 768, height: 1024 },
-  { name: 'mobile_390', width: 390, height: 844 },
+  { name: 'mobile_390', width: 390, height: 844 }
 ];
 
-async function waitForServer(url: string, timeoutMs: number = 30000): Promise<boolean> {
+async function waitForServer(url: string, timeoutMs = 30000): Promise<boolean> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
@@ -31,14 +31,22 @@ async function waitForServer(url: string, timeoutMs: number = 30000): Promise<bo
   return false;
 }
 
-async function runAudit() {
-  console.log('--- STARTING PLAYWRIGHT VIEWPORT & UI AUDIT ---');
+interface ViewportAuditResult {
+  viewport: string;
+  path: string;
+  loginPath: string;
+  hasOverflow: boolean;
+  consoleErrors: string[];
+  failedRequests: string[];
+}
 
-  // Start Next.js production server
+async function runAudit() {
+  console.log('--- STARTING PLAYWRIGHT DETAILED VIEWPORT & DIAGNOSTIC AUDIT ---');
+
   const webDir = path.resolve('apps/web');
   const nextServer: ChildProcess = spawn('cmd.exe', ['/c', 'npx', 'next', 'start', '-p', '3000'], {
     cwd: webDir,
-    stdio: 'pipe',
+    stdio: 'pipe'
   });
 
   nextServer.stdout?.on('data', (d) => process.stdout.write(`[next] ${d}`));
@@ -47,52 +55,74 @@ async function runAudit() {
   console.log('Waiting for Next.js web dashboard on http://localhost:3000 ...');
   const ready = await waitForServer('http://localhost:3000');
   if (!ready) {
-    nextServer.kill();
+    if (nextServer.pid) {
+      spawn('taskkill', ['/pid', nextServer.pid.toString(), '/f', '/t']);
+    }
     throw new Error('Next.js server failed to respond within 30s');
   }
   console.log('Next.js web dashboard is UP and ready!');
 
   const browser = await chromium.launch({ headless: true });
-
-  const auditResults: Array<{ viewport: string; path: string; hasOverflow: boolean }> = [];
+  const auditResults: ViewportAuditResult[] = [];
 
   for (const vp of VIEWPORTS) {
     console.log(`\nAuditing viewport: ${vp.name} (${vp.width}x${vp.height})...`);
     const context = await browser.newContext({
       viewport: { width: vp.width, height: vp.height },
-      deviceScaleFactor: 1,
+      deviceScaleFactor: 1
     });
     const page = await context.newPage();
+
+    const consoleErrors: string[] = [];
+    const failedRequests: string[] = [];
+
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    page.on('requestfailed', (req) => {
+      failedRequests.push(
+        `${req.method()} ${req.url()} - ${req.failure()?.errorText || 'Unknown'}`
+      );
+    });
 
     // 1. Visit main dashboard
     await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
 
-    // Check for horizontal overflow (critical for responsive design)
+    // Check horizontal overflow
     const hasHorizontalOverflow = await page.evaluate(() => {
       return document.documentElement.scrollWidth > window.innerWidth;
     });
 
     const screenshotPath = path.join(SCREENSHOT_DIR, `${vp.name}.png`);
     await page.screenshot({ path: screenshotPath, fullPage: false });
-    console.log(`Saved screenshot: ${screenshotPath} | Horizontal Overflow: ${hasHorizontalOverflow}`);
 
-    auditResults.push({
-      viewport: `${vp.width}x${vp.height} (${vp.name})`,
-      path: screenshotPath,
-      hasOverflow: hasHorizontalOverflow,
-    });
-
-    // 2. Also capture login page
+    // 2. Visit dedicated login page
     await page.goto('http://localhost:3000/login', { waitUntil: 'networkidle' });
     const loginScreenshotPath = path.join(SCREENSHOT_DIR, `login_${vp.name}.png`);
     await page.screenshot({ path: loginScreenshotPath, fullPage: false });
 
     await context.close();
+
+    auditResults.push({
+      viewport: `${vp.width}x${vp.height} (${vp.name})`,
+      path: screenshotPath,
+      loginPath: loginScreenshotPath,
+      hasOverflow: hasHorizontalOverflow,
+      consoleErrors,
+      failedRequests
+    });
+
+    console.log(
+      `Saved screenshot: ${screenshotPath} | Overflow: ${hasHorizontalOverflow} | Errors: ${consoleErrors.length} | Failed reqs: ${failedRequests.length}`
+    );
   }
 
   await browser.close();
 
-  // Terminate next server
+  // Terminate next server cleanly
   console.log('\nShutting down Next.js test server...');
   if (nextServer.pid) {
     try {
@@ -104,10 +134,16 @@ async function runAudit() {
     nextServer.kill();
   }
 
+  const resultsJsonPath = path.join(SCREENSHOT_DIR, 'playwright_report.json');
+  fs.writeFileSync(resultsJsonPath, JSON.stringify(auditResults, null, 2));
+
   console.log('\n================ AUDIT SUMMARY ================');
   for (const r of auditResults) {
-    console.log(`Viewport: ${r.viewport} | Overflow: ${r.hasOverflow ? 'FAIL' : 'PASS'} | File: ${r.path}`);
+    console.log(
+      `Viewport: ${r.viewport} | Overflow: ${r.hasOverflow ? 'FAIL' : 'PASS'} | Console Errors: ${r.consoleErrors.length} | Failed Requests: ${r.failedRequests.length}`
+    );
   }
+  console.log('Report saved to:', resultsJsonPath);
   console.log('================================================');
   process.exit(0);
 }
@@ -116,4 +152,3 @@ runAudit().catch((err) => {
   console.error('Audit failed:', err);
   process.exit(1);
 });
-
