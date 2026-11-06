@@ -300,4 +300,23 @@ export async function startApiServer() {
   const port = Number(process.env.PORT) || 3001;
   await server.listen({ port, host: '0.0.0.0' });
   console.log(`API Server listening on port ${port}`);
+
+  const shutdown = async () => {
+    console.log('[API] Graceful shutdown initiated...');
+    await server.close();
+    await mongoDbService.disconnect();
+    console.log('[API] Server closed cleanly.');
+    process.exit(0);
+  };
+
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+}
+
+// Auto-run if executed directly as entrypoint
+if (process.argv[1]?.includes('apps/api') || process.argv[1]?.includes('apps\\api')) {
+  startApiServer().catch((err: unknown) => {
+    console.error('[API Fatal]', err);
+    process.exit(1);
+  });
 }
