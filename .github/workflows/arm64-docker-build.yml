@@ -34,8 +34,8 @@ jobs:
           - 6379:6379
         options: >-
           --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
+          --health-interval 5s
+          --health-timeout 3s
           --health-retries 5
       mongodb:
         image: mongo:7.0
@@ -43,8 +43,8 @@ jobs:
           - 27017:27017
         options: >-
           --health-cmd "echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27017/test --quiet"
-          --health-interval 10s
-          --health-timeout 5s
+          --health-interval 5s
+          --health-timeout 3s
           --health-retries 5
 
     steps:
@@ -85,6 +85,7 @@ jobs:
 
       - name: Verify Native argon2 Cryptographic Operations on ARM64
         run: |
+          set -euo pipefail
           echo "Executing argon2 hash, positive verify, and negative verify under linux/arm64..."
           docker run --rm --platform linux/arm64 ai-command-center-api:arm64-test \
             node -e "const argon = require('argon2'); (async () => {
@@ -105,8 +106,18 @@ jobs:
 
       - name: Test API Container Startup, Health Endpoint & Graceful Shutdown
         run: |
+          set -euo pipefail
           echo "Starting API container on linux/arm64..."
-          CID=$(docker run -d --platform linux/arm64 \
+          API_CID=""
+          cleanup_api() {
+            if [ -n "$API_CID" ]; then
+              echo "Cleaning up API container $API_CID..."
+              docker rm -f "$API_CID" >/dev/null 2>&1 || true
+            fi
+          }
+          trap cleanup_api EXIT
+
+          API_CID=$(docker run -d --platform linux/arm64 \
             --network host \
             -e NODE_ENV=production \
             -e PORT=3001 \
@@ -116,36 +127,79 @@ jobs:
             -e MONGODB_URI="mongodb://127.0.0.1:27017/ai_command_center" \
             ai-command-center-api:arm64-test)
 
-          echo "Container ID: $CID"
-          sleep 8
+          echo "Container started: $API_CID"
 
-          echo "Inspecting API container logs:"
-          docker logs $CID
+          echo "Bounded readiness polling for API health endpoint (max 30s)..."
+          READY=0
+          for i in $(seq 1 30); do
+            RUNNING=$(docker inspect -f '{{.State.Running}}' "$API_CID" 2>/dev/null || echo "false")
+            if [ "$RUNNING" != "true" ]; then
+              echo "[FAIL] API container exited unexpectedly before becoming ready!"
+              docker logs "$API_CID"
+              exit 1
+            fi
+            if HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/api/v1/system/health); then
+              if [ "$HTTP_STATUS" = "200" ]; then
+                echo "[PASS] API endpoint ready and returned HTTP 200 after ${i}s."
+                READY=1
+                break
+              fi
+            fi
+            sleep 1
+          done
 
-          echo "Verifying API process is alive..."
-          RUNNING=$(docker inspect -f '{{.State.Running}}' $CID)
-          if [ "$RUNNING" != "true" ]; then
-            echo "[FAIL] API container exited unexpectedly."
-            docker logs $CID
+          if [ "$READY" -ne 1 ]; then
+            echo "[FAIL] Timed out waiting for API health endpoint to return HTTP 200."
+            docker logs "$API_CID"
             exit 1
           fi
 
-          echo "Testing API health check endpoint..."
-          curl -f http://127.0.0.1:3001/api/v1/system/health || (echo "[FAIL] Health endpoint unreachable"; docker logs $CID; exit 1)
-
           echo "Sending SIGTERM to API container..."
-          docker kill --signal=SIGTERM $CID
-          sleep 3
+          docker kill --signal=SIGTERM "$API_CID"
 
-          EXIT_CODE=$(docker inspect -f '{{.State.ExitCode}}' $CID)
-          echo "API Container exit code: $EXIT_CODE"
-          echo "[PASS] API container started, served health probe, and responded to SIGTERM cleanly."
-          docker rm -f $CID
+          echo "Waiting for API process clean exit (max 10s)..."
+          EXIT_DETECTED=0
+          for i in $(seq 1 10); do
+            RUNNING=$(docker inspect -f '{{.State.Running}}' "$API_CID")
+            if [ "$RUNNING" != "true" ]; then
+              EXIT_DETECTED=1
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "$EXIT_DETECTED" -ne 1 ]; then
+            echo "[FAIL] API container did not exit within 10s after SIGTERM."
+            docker logs "$API_CID"
+            exit 1
+          fi
+
+          API_EXIT_CODE=$(docker inspect -f '{{.State.ExitCode}}' "$API_CID")
+          echo "API Container exit code: $API_EXIT_CODE"
+          if [ "$API_EXIT_CODE" -ne 0 ]; then
+            echo "[FAIL] API container exit code was $API_EXIT_CODE (expected 0)."
+            docker logs "$API_CID"
+            exit 1
+          fi
+
+          echo "Inspecting API shutdown logs:"
+          docker logs "$API_CID"
+          echo "[PASS] API container passed startup, readiness, HTTP 200 health verification, and SIGTERM clean shutdown."
 
       - name: Test Worker Container Startup, Dependency Initialization & Graceful Shutdown
         run: |
+          set -euo pipefail
           echo "Starting Worker container on linux/arm64..."
-          WID=$(docker run -d --platform linux/arm64 \
+          WORKER_WID=""
+          cleanup_worker() {
+            if [ -n "$WORKER_WID" ]; then
+              echo "Cleaning up Worker container $WORKER_WID..."
+              docker rm -f "$WORKER_WID" >/dev/null 2>&1 || true
+            fi
+          }
+          trap cleanup_worker EXIT
+
+          WORKER_WID=$(docker run -d --platform linux/arm64 \
             --network host \
             -e NODE_ENV=production \
             -e MONGODB_URI="mongodb://127.0.0.1:27017/ai_command_center" \
@@ -153,37 +207,60 @@ jobs:
             -e MASTER_ENCRYPTION_KEY=test_master_encryption_key_32_char \
             ai-command-center-worker:arm64-test)
 
-          echo "Worker Container ID: $WID"
-          sleep 8
+          echo "Worker container started: $WORKER_WID"
 
-          echo "Inspecting Worker container logs:"
-          docker logs $WID
+          echo "Bounded readiness polling for Worker dependency connections (max 30s)..."
+          CONNECTED=0
+          for i in $(seq 1 30); do
+            WRUNNING=$(docker inspect -f '{{.State.Running}}' "$WORKER_WID" 2>/dev/null || echo "false")
+            if [ "$WRUNNING" != "true" ]; then
+              echo "[FAIL] Worker container exited unexpectedly before initializing dependencies!"
+              docker logs "$WORKER_WID"
+              exit 1
+            fi
+            LOGS=$(docker logs "$WORKER_WID" 2>&1 || true)
+            if echo "$LOGS" | grep -q "Redis Status: CONNECTED" && echo "$LOGS" | grep -q "MongoDB Status: CONNECTED"; then
+              echo "[PASS] Worker confirmed both Redis and MongoDB are CONNECTED after ${i}s."
+              CONNECTED=1
+              break
+            fi
+            sleep 1
+          done
 
-          echo "Verifying Worker process is alive..."
-          WRUNNING=$(docker inspect -f '{{.State.Running}}' $WID)
-          if [ "$WRUNNING" != "true" ]; then
-            echo "[FAIL] Worker container exited unexpectedly."
-            docker logs $WID
-            exit 1
-          fi
-
-          echo "Checking dependency connection logs (Redis and MongoDB must report CONNECTED)..."
-          LOGS=$(docker logs $WID 2>&1)
-          if ! echo "$LOGS" | grep -q "Redis Status: CONNECTED"; then
-            echo "[FAIL] Worker did not connect to test Redis service."
-            exit 1
-          fi
-          if ! echo "$LOGS" | grep -q "MongoDB Status: CONNECTED"; then
-            echo "[FAIL] Worker did not connect to test MongoDB service."
+          if [ "$CONNECTED" -ne 1 ]; then
+            echo "[FAIL] Worker failed to connect to Redis and MongoDB within 30s."
+            docker logs "$WORKER_WID"
             exit 1
           fi
 
           echo "Sending SIGTERM to Worker container..."
-          docker kill --signal=SIGTERM $WID
-          sleep 3
+          docker kill --signal=SIGTERM "$WORKER_WID"
 
-          WEXIT_CODE=$(docker inspect -f '{{.State.ExitCode}}' $WID)
-          echo "Worker Container exit code: $WEXIT_CODE"
-          docker logs $WID | grep -q "Worker daemon stopped cleanly." || echo "Worker shutdown acknowledged."
-          echo "[PASS] Worker container successfully initialized Redis + MongoDB dependencies and gracefully shut down."
-          docker rm -f $WID
+          echo "Waiting for Worker clean exit (max 10s)..."
+          W_EXIT_DETECTED=0
+          for i in $(seq 1 10); do
+            WRUNNING=$(docker inspect -f '{{.State.Running}}' "$WORKER_WID")
+            if [ "$WRUNNING" != "true" ]; then
+              W_EXIT_DETECTED=1
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "$W_EXIT_DETECTED" -ne 1 ]; then
+            echo "[FAIL] Worker container did not exit within 10s after SIGTERM."
+            docker logs "$WORKER_WID"
+            exit 1
+          fi
+
+          WORKER_EXIT_CODE=$(docker inspect -f '{{.State.ExitCode}}' "$WORKER_WID")
+          echo "Worker Container exit code: $WORKER_EXIT_CODE"
+          if [ "$WORKER_EXIT_CODE" -ne 0 ]; then
+            echo "[FAIL] Worker container exit code was $WORKER_EXIT_CODE (expected 0)."
+            docker logs "$WORKER_WID"
+            exit 1
+          fi
+
+          echo "Inspecting Worker shutdown logs:"
+          docker logs "$WORKER_WID"
+          echo "[PASS] Worker container successfully initialized Redis + MongoDB dependencies and shut down with exit code 0."
