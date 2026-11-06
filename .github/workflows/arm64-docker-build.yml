@@ -121,9 +121,9 @@ jobs:
             --network host \
             -e NODE_ENV=production \
             -e PORT=3001 \
-            -e JWT_SECRET=test_jwt_secret_must_be_32_characters_long_123 \
-            -e REFRESH_TOKEN_SECRET=test_refresh_secret_must_be_32_characters_long \
-            -e MASTER_ENCRYPTION_KEY=test_master_encryption_key_32_char \
+            -e JWT_SECRET=c8f5e3d7a9b1c4e2f6a8b0d2e4f7a1c3b5d7e9f1a3b5c7d9e1f3a5b7c9d1e3f5 \
+            -e REFRESH_TOKEN_SECRET=f1a3b5c7d9e1f3a5b7c9d1e3f5c8f5e3d7a9b1c4e2f6a8b0d2e4f7a1c3b5d7e9 \
+            -e MASTER_ENCRYPTION_KEY=9a1b3c5d7e9f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d3e5f7a9b1c3d5e7f9a1b \
             -e MONGODB_URI="mongodb://127.0.0.1:27017/ai_command_center" \
             ai-command-center-api:arm64-test)
 
@@ -204,7 +204,9 @@ jobs:
             -e NODE_ENV=production \
             -e MONGODB_URI="mongodb://127.0.0.1:27017/ai_command_center" \
             -e REDIS_URL="redis://127.0.0.1:6379" \
-            -e MASTER_ENCRYPTION_KEY=test_master_encryption_key_32_char \
+            -e JWT_SECRET=c8f5e3d7a9b1c4e2f6a8b0d2e4f7a1c3b5d7e9f1a3b5c7d9e1f3a5b7c9d1e3f5 \
+            -e REFRESH_TOKEN_SECRET=f1a3b5c7d9e1f3a5b7c9d1e3f5c8f5e3d7a9b1c4e2f6a8b0d2e4f7a1c3b5d7e9 \
+            -e MASTER_ENCRYPTION_KEY=9a1b3c5d7e9f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d3e5f7a9b1c3d5e7f9a1b \
             ai-command-center-worker:arm64-test)
 
           echo "Worker container started: $WORKER_WID"
