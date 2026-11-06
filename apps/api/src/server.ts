@@ -31,9 +31,12 @@ export async function buildServer(): Promise<FastifyInstance> {
   const inMemoryAuditChain: ChainedAuditLogEntry[] = [];
   let latestHash = 'GENESIS_HASH_0000000000000000000000000000000000000000000000000000000000000000';
 
-  // Seed default owner credentials
-  const defaultOwnerPassword = 'OwnerSecurePass123!';
-  const defaultOwnerEmail = 'owner@ai-command-center.local';
+  // Determine owner credentials: in production, disallow predictable fallback if custom password supplied
+  const defaultOwnerPassword =
+    process.env.NODE_ENV === 'production' && process.env.OWNER_INITIAL_PASSWORD
+      ? process.env.OWNER_INITIAL_PASSWORD
+      : 'OwnerSecurePass123!';
+  const defaultOwnerEmail = process.env.OWNER_EMAIL || 'owner@ai-command-center.local';
   const defaultOwnerId = 'usr_owner_root_001';
   const ownerPassHash = await hashPassword(defaultOwnerPassword);
 
@@ -44,7 +47,7 @@ export async function buildServer(): Promise<FastifyInstance> {
     isOwner: true
   });
 
-  // Seed into persistent MongoDB if connected
+  // Seed into persistent MongoDB if connected and no owner currently exists
   try {
     if (mongoDbService.getStatus().isConnected) {
       const db = mongoDbService.getDb();

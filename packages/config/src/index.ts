@@ -22,6 +22,7 @@ export const environmentSchema = z.object({
   // Owner Controls
   OWNER_PHONE_NUMBER: z.string().min(8, 'OWNER_PHONE_NUMBER required for WhatsApp alerts'),
   OWNER_EMAIL: z.string().email().optional(),
+  OWNER_INITIAL_PASSWORD: z.string().min(12, 'OWNER_INITIAL_PASSWORD must be at least 12 characters').optional(),
 
   // Frontend URL for strict CORS in production
   FRONTEND_URL: z.string().default('http://localhost:3000'),
@@ -87,6 +88,27 @@ export const environmentSchema = z.object({
     checkEntropy(data.JWT_SECRET, 'JWT_SECRET');
     checkEntropy(data.REFRESH_TOKEN_SECRET, 'REFRESH_TOKEN_SECRET');
     checkEntropy(data.MASTER_ENCRYPTION_KEY, 'MASTER_ENCRYPTION_KEY');
+
+    // In production, require distinct secrets for access and refresh tokens
+    if (data.JWT_SECRET === data.REFRESH_TOKEN_SECRET) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'JWT_SECRET and REFRESH_TOKEN_SECRET must be distinct cryptographic keys',
+        path: ['REFRESH_TOKEN_SECRET']
+      });
+    }
+
+    // In production, reject predictable default owner password
+    if (data.OWNER_INITIAL_PASSWORD) {
+      const lowerPass = data.OWNER_INITIAL_PASSWORD.toLowerCase();
+      if (lowerPass.includes('ownersecurepass') || lowerPass.includes('password123') || lowerPass.includes('admin')) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'OWNER_INITIAL_PASSWORD contains predictable or default credentials in production mode',
+          path: ['OWNER_INITIAL_PASSWORD']
+        });
+      }
+    }
   }
 });
 
@@ -109,6 +131,7 @@ export function getSanitizedConfig(config: Environment): Record<string, unknown>
     JWT_SECRET: '***MASKED***',
     REFRESH_TOKEN_SECRET: '***MASKED***',
     MASTER_ENCRYPTION_KEY: '***MASKED***',
+    OWNER_INITIAL_PASSWORD: config.OWNER_INITIAL_PASSWORD ? '***MASKED***' : undefined,
     GEMINI_API_KEY: config.GEMINI_API_KEY ? '***MASKED***' : undefined,
     GROQ_API_KEY: config.GROQ_API_KEY ? '***MASKED***' : undefined,
     HUGGING_FACE_TOKEN: config.HUGGING_FACE_TOKEN ? '***MASKED***' : undefined,
