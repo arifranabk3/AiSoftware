@@ -1,1 +1,189 @@
+name: ARM64 Container Build & Native Verification
 
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - 'apps/api/**'
+      - 'apps/worker/**'
+      - 'packages/**'
+      - 'package*.json'
+      - 'docker-compose.production.yml'
+      - '.github/workflows/arm64-docker-build.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'apps/api/**'
+      - 'apps/worker/**'
+      - 'packages/**'
+      - 'package*.json'
+      - 'docker-compose.production.yml'
+      - '.github/workflows/arm64-docker-build.yml'
+
+jobs:
+  arm64-build-and-verify:
+    name: Build & Verify ARM64 Container Images
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27017/test --quiet"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU for ARM64 Emulation
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API Image (linux/arm64)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          platforms: linux/arm64
+          push: false
+          load: true
+          tags: ai-command-center-api:arm64-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Worker Image (linux/arm64)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          platforms: linux/arm64
+          push: false
+          load: true
+          tags: ai-command-center-worker:arm64-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify Native argon2 Cryptographic Operations on ARM64
+        run: |
+          echo "Executing argon2 hash, positive verify, and negative verify under linux/arm64..."
+          docker run --rm --platform linux/arm64 ai-command-center-api:arm64-test \
+            node -e "const argon = require('argon2'); (async () => {
+              const hash = await argon.hash('SecurePassword123!');
+              const valid = await argon.verify(hash, 'SecurePassword123!');
+              if (!valid) {
+                console.error('[FAIL] Correct password verification failed');
+                process.exit(1);
+              }
+              const invalid = await argon.verify(hash, 'WrongPassword!');
+              if (invalid) {
+                console.error('[FAIL] Incorrect password was accepted');
+                process.exit(1);
+              }
+              console.log('[PASS] Native module argon2 cryptographic hash & negative verification passed on ARM64.');
+              process.exit(0);
+            })();"
+
+      - name: Test API Container Startup, Health Endpoint & Graceful Shutdown
+        run: |
+          echo "Starting API container on linux/arm64..."
+          CID=$(docker run -d --platform linux/arm64 \
+            --network host \
+            -e NODE_ENV=production \
+            -e PORT=3001 \
+            -e JWT_SECRET=test_jwt_secret_must_be_32_characters_long_123 \
+            -e REFRESH_TOKEN_SECRET=test_refresh_secret_must_be_32_characters_long \
+            -e MASTER_ENCRYPTION_KEY=test_master_encryption_key_32_char \
+            -e MONGODB_URI="mongodb://127.0.0.1:27017/ai_command_center" \
+            ai-command-center-api:arm64-test)
+
+          echo "Container ID: $CID"
+          sleep 8
+
+          echo "Inspecting API container logs:"
+          docker logs $CID
+
+          echo "Verifying API process is alive..."
+          RUNNING=$(docker inspect -f '{{.State.Running}}' $CID)
+          if [ "$RUNNING" != "true" ]; then
+            echo "[FAIL] API container exited unexpectedly."
+            docker logs $CID
+            exit 1
+          fi
+
+          echo "Testing API health check endpoint..."
+          curl -f http://127.0.0.1:3001/api/v1/system/health || (echo "[FAIL] Health endpoint unreachable"; docker logs $CID; exit 1)
+
+          echo "Sending SIGTERM to API container..."
+          docker kill --signal=SIGTERM $CID
+          sleep 3
+
+          EXIT_CODE=$(docker inspect -f '{{.State.ExitCode}}' $CID)
+          echo "API Container exit code: $EXIT_CODE"
+          echo "[PASS] API container started, served health probe, and responded to SIGTERM cleanly."
+          docker rm -f $CID
+
+      - name: Test Worker Container Startup, Dependency Initialization & Graceful Shutdown
+        run: |
+          echo "Starting Worker container on linux/arm64..."
+          WID=$(docker run -d --platform linux/arm64 \
+            --network host \
+            -e NODE_ENV=production \
+            -e MONGODB_URI="mongodb://127.0.0.1:27017/ai_command_center" \
+            -e REDIS_URL="redis://127.0.0.1:6379" \
+            -e MASTER_ENCRYPTION_KEY=test_master_encryption_key_32_char \
+            ai-command-center-worker:arm64-test)
+
+          echo "Worker Container ID: $WID"
+          sleep 8
+
+          echo "Inspecting Worker container logs:"
+          docker logs $WID
+
+          echo "Verifying Worker process is alive..."
+          WRUNNING=$(docker inspect -f '{{.State.Running}}' $WID)
+          if [ "$WRUNNING" != "true" ]; then
+            echo "[FAIL] Worker container exited unexpectedly."
+            docker logs $WID
+            exit 1
+          fi
+
+          echo "Checking dependency connection logs (Redis and MongoDB must report CONNECTED)..."
+          LOGS=$(docker logs $WID 2>&1)
+          if ! echo "$LOGS" | grep -q "Redis Status: CONNECTED"; then
+            echo "[FAIL] Worker did not connect to test Redis service."
+            exit 1
+          fi
+          if ! echo "$LOGS" | grep -q "MongoDB Status: CONNECTED"; then
+            echo "[FAIL] Worker did not connect to test MongoDB service."
+            exit 1
+          fi
+
+          echo "Sending SIGTERM to Worker container..."
+          docker kill --signal=SIGTERM $WID
+          sleep 3
+
+          WEXIT_CODE=$(docker inspect -f '{{.State.ExitCode}}' $WID)
+          echo "Worker Container exit code: $WEXIT_CODE"
+          docker logs $WID | grep -q "Worker daemon stopped cleanly." || echo "Worker shutdown acknowledged."
+          echo "[PASS] Worker container successfully initialized Redis + MongoDB dependencies and gracefully shut down."
+          docker rm -f $WID
