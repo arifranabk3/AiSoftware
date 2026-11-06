@@ -4,9 +4,15 @@
     "path": "D:\\projects\\AiSoftware\\ai-command-center\\tests\\screenshots\\desktop_1920.png",
     "loginPath": "D:\\projects\\AiSoftware\\ai-command-center\\tests\\screenshots\\login_desktop_1920.png",
     "hasOverflow": false,
-    "consoleErrors": ["Failed to load resource: net::ERR_CONNECTION_REFUSED"],
+    "consoleErrors": [
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    ],
     "failedRequests": [
-      "GET http://localhost:3001/api/v1/system/health - net::ERR_CONNECTION_REFUSED"
+      "GET http://localhost:3001/api/v1/system/health - net::ERR_CONNECTION_REFUSED",
+      "GET http://localhost:3001/api/ceo/objectives?limit=50 - net::ERR_CONNECTION_REFUSED",
+      "GET http://localhost:3001/api/ceo/approvals?status=PENDING - net::ERR_CONNECTION_REFUSED"
     ]
   },
   {
@@ -14,9 +20,15 @@
     "path": "D:\\projects\\AiSoftware\\ai-command-center\\tests\\screenshots\\laptop_1366.png",
     "loginPath": "D:\\projects\\AiSoftware\\ai-command-center\\tests\\screenshots\\login_laptop_1366.png",
     "hasOverflow": false,
-    "consoleErrors": ["Failed to load resource: net::ERR_CONNECTION_REFUSED"],
+    "consoleErrors": [
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    ],
     "failedRequests": [
-      "GET http://localhost:3001/api/v1/system/health - net::ERR_CONNECTION_REFUSED"
+      "GET http://localhost:3001/api/v1/system/health - net::ERR_CONNECTION_REFUSED",
+      "GET http://localhost:3001/api/ceo/objectives?limit=50 - net::ERR_CONNECTION_REFUSED",
+      "GET http://localhost:3001/api/ceo/approvals?status=PENDING - net::ERR_CONNECTION_REFUSED"
     ]
   },
   {
@@ -24,9 +36,15 @@
     "path": "D:\\projects\\AiSoftware\\ai-command-center\\tests\\screenshots\\tablet_768.png",
     "loginPath": "D:\\projects\\AiSoftware\\ai-command-center\\tests\\screenshots\\login_tablet_768.png",
     "hasOverflow": false,
-    "consoleErrors": ["Failed to load resource: net::ERR_CONNECTION_REFUSED"],
+    "consoleErrors": [
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    ],
     "failedRequests": [
-      "GET http://localhost:3001/api/v1/system/health - net::ERR_CONNECTION_REFUSED"
+      "GET http://localhost:3001/api/v1/system/health - net::ERR_CONNECTION_REFUSED",
+      "GET http://localhost:3001/api/ceo/objectives?limit=50 - net::ERR_CONNECTION_REFUSED",
+      "GET http://localhost:3001/api/ceo/approvals?status=PENDING - net::ERR_CONNECTION_REFUSED"
     ]
   },
   {
@@ -34,9 +52,15 @@
     "path": "D:\\projects\\AiSoftware\\ai-command-center\\tests\\screenshots\\mobile_390.png",
     "loginPath": "D:\\projects\\AiSoftware\\ai-command-center\\tests\\screenshots\\login_mobile_390.png",
     "hasOverflow": false,
-    "consoleErrors": ["Failed to load resource: net::ERR_CONNECTION_REFUSED"],
+    "consoleErrors": [
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    ],
     "failedRequests": [
-      "GET http://localhost:3001/api/v1/system/health - net::ERR_CONNECTION_REFUSED"
+      "GET http://localhost:3001/api/v1/system/health - net::ERR_CONNECTION_REFUSED",
+      "GET http://localhost:3001/api/ceo/objectives?limit=50 - net::ERR_CONNECTION_REFUSED",
+      "GET http://localhost:3001/api/ceo/approvals?status=PENDING - net::ERR_CONNECTION_REFUSED"
     ]
   }
 ]

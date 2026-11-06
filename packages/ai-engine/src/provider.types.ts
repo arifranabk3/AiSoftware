@@ -5,6 +5,8 @@ export enum ProviderType {
   OLLAMA_LOCAL = 'OLLAMA_LOCAL'
 }
 
+export type ExecutionMode = 'MOCK' | 'REAL';
+
 export interface PromptRequest {
   systemPrompt?: string;
   userPrompt: string;
@@ -13,16 +15,39 @@ export interface PromptRequest {
   responseFormat?: 'text' | 'json';
 }
 
+export interface AIExecutionMetadata {
+  provider: ProviderType;
+  model: string;
+  mode: ExecutionMode;
+  timestamp: string;
+  success: boolean;
+  tokensUsed?: number;
+  promptTokens?: number;
+  completionTokens?: number;
+  latencyMs?: number;
+  error?: string;
+}
+
 export interface AIResponse {
   content: string;
   tokensUsed?: number;
   model: string;
   provider: ProviderType;
+  mode: ExecutionMode;
+  metadata: AIExecutionMetadata;
+}
+
+export interface ProviderHealth {
+  isHealthy: boolean;
+  mode: ExecutionMode;
+  details?: string;
+  latencyMs?: number;
+  availableModels?: string[];
 }
 
 export interface IAIProvider {
   type: ProviderType;
   isEnabled: boolean;
   generateText(request: PromptRequest): Promise<AIResponse>;
-  checkHealth(): Promise<{ isHealthy: boolean; details?: string }>;
+  checkHealth(): Promise<ProviderHealth>;
 }

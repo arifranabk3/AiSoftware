@@ -98,3 +98,15 @@ export interface PaginatedResult<T> {
   skip: number;
 }
 
+export interface UserDocument {
+  _id: string; // Mongo ID or userId
+  userId: string;
+  email: string;
+  passwordHash: string;
+  isOwner: boolean;
+  role: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+

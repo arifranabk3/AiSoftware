@@ -11,6 +11,7 @@
     "@ai-command-center/shared": "*",
     "@ai-command-center/config": "*",
     "@ai-command-center/database": "*",
-    "@ai-command-center/security": "*"
+    "@ai-command-center/security": "*",
+    "@ai-command-center/automation": "*"
   }
 }

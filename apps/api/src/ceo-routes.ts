@@ -1,0 +1,850 @@
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { randomUUID } from 'node:crypto';
+import {
+  mongoDbService,
+  ObjectiveRepository,
+  OrchestratorTaskRepository,
+  ApprovalRepository,
+  ObjectiveStatus,
+  TaskStatus,
+  ApprovalStatus,
+  BusinessObjectiveDocument
+} from '@ai-command-center/database';
+import { checkPermission, calculateAuditHash, ChainedAuditLogEntry, distributedKillSwitch } from '@ai-command-center/security';
+import { taskDispatcherService, BaseTaskPayload } from '@ai-command-center/automation';
+import {
+  CreateObjectiveSchema,
+  ListObjectivesQuerySchema,
+  ExecuteObjectiveSchema,
+  ListApprovalsQuerySchema,
+  ApproveApprovalSchema,
+  RejectApprovalSchema
+} from './ceo-schemas.js';
+
+export interface CeoRoutesOptions {
+  authenticate: (req: FastifyRequest, reply: FastifyReply) => Promise<unknown>;
+  recordAudit?: (entry: {
+    userId?: string;
+    action: string;
+    entityType: string;
+    entityId: string;
+    newState?: Record<string, unknown>;
+  }) => void;
+}
+
+interface RequestUser {
+  userId: string;
+  email: string;
+  isOwner: boolean;
+  role: string;
+  permissions?: string[];
+}
+
+function getUser(req: FastifyRequest): RequestUser {
+  return (req as unknown as { user: RequestUser }).user;
+}
+
+export async function registerCeoRoutes(
+  app: FastifyInstance,
+  options: CeoRoutesOptions
+): Promise<void> {
+  const { authenticate, recordAudit } = options;
+
+  // Repositories provider helper — uses active mongo connection
+  function getRepos() {
+    const db = mongoDbService.getDb();
+    return {
+      objectiveRepo: new ObjectiveRepository(db),
+      taskRepo: new OrchestratorTaskRepository(db),
+      approvalRepo: new ApprovalRepository(db)
+    };
+  }
+
+  // Pre-handler hook verifying RBAC permission for action and resource
+  function requirePermission(action: string, resource: string) {
+    return async (req: FastifyRequest, reply: FastifyReply) => {
+      const user = getUser(req);
+      const userContext = {
+        userId: user.userId,
+        isOwner: user.isOwner,
+        permissions: user.permissions || []
+      };
+
+      if (!checkPermission(userContext, action, resource)) {
+        return reply.status(403).send({
+          error: 'FORBIDDEN',
+          message: `Access denied. Requires permission ${action}:${resource}`
+        });
+      }
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // 1. POST /api/ceo/objectives — Create Business Objective
+  // -------------------------------------------------------------------------
+  app.post(
+    '/api/ceo/objectives',
+    {
+      preHandler: [authenticate, requirePermission('create', 'objective')]
+    },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const parseResult = CreateObjectiveSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return reply.status(400).send({
+          error: 'VALIDATION_ERROR',
+          message: 'Invalid objective payload',
+          details: parseResult.error.format()
+        });
+      }
+
+      const user = getUser(req);
+      const data = parseResult.data;
+      const objectiveId = `obj_${randomUUID()}`;
+
+      const { objectiveRepo } = getRepos();
+      const created = await objectiveRepo.create({
+        objectiveId,
+        title: data.title,
+        description: data.description,
+        ownerId: user.userId,
+        status: ObjectiveStatus.DRAFT,
+        priority: data.priority,
+        departmentIds: data.departmentIds,
+        metadata: {
+          ...data.metadata,
+          createdByEmail: user.email
+        }
+      });
+
+      if (recordAudit) {
+        recordAudit({
+          userId: user.userId,
+          action: 'OBJECTIVE_CREATED',
+          entityType: 'BusinessObjective',
+          entityId: objectiveId,
+          newState: {
+            title: created.title,
+            status: created.status,
+            priority: created.priority
+          }
+        });
+      }
+
+      return reply.status(201).send({
+        success: true,
+        data: created
+      });
+    }
+  );
+
+  // -------------------------------------------------------------------------
+  // 2. GET /api/ceo/objectives — List Business Objectives with Pagination & Ownership Filter
+  // -------------------------------------------------------------------------
+  app.get(
+    '/api/ceo/objectives',
+    {
+      preHandler: [authenticate, requirePermission('read', 'objective')]
+    },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const parseResult = ListObjectivesQuerySchema.safeParse(req.query);
+      if (!parseResult.success) {
+        return reply.status(400).send({
+          error: 'VALIDATION_ERROR',
+          message: 'Invalid query parameters',
+          details: parseResult.error.format()
+        });
+      }
+
+      const user = getUser(req);
+      const query = parseResult.data;
+      const filter: Partial<BusinessObjectiveDocument> = {};
+
+      if (query.status) {
+        filter.status = query.status as ObjectiveStatus;
+      }
+
+      // Tenant / Ownership boundary: Non-owners only see their own objectives
+      if (!user.isOwner) {
+        filter.ownerId = user.userId;
+      } else if (query.ownerId) {
+        filter.ownerId = query.ownerId;
+      }
+
+      const { objectiveRepo } = getRepos();
+      const result = await objectiveRepo.list(filter, {
+        limit: query.limit,
+        skip: query.skip,
+        sortBy: query.sortBy,
+        sortOrder: query.sortOrder
+      });
+
+      return reply.status(200).send({
+        success: true,
+        data: result.items,
+        pagination: {
+          total: result.total,
+          limit: result.limit,
+          skip: result.skip,
+          hasMore: result.skip + result.items.length < result.total
+        }
+      });
+    }
+  );
+
+  // -------------------------------------------------------------------------
+  // 3. GET /api/ceo/objectives/:id — Get Objective Details with Sub-Tasks
+  // -------------------------------------------------------------------------
+  app.get(
+    '/api/ceo/objectives/:id',
+    {
+      preHandler: [authenticate, requirePermission('read', 'objective')]
+    },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const { id } = req.params as { id: string };
+      const user = getUser(req);
+      const { objectiveRepo, taskRepo } = getRepos();
+
+      const objective = await objectiveRepo.findById(id);
+      if (!objective) {
+        return reply.status(404).send({
+          error: 'NOT_FOUND',
+          message: `Objective '${id}' was not found`
+        });
+      }
+
+      // Tenant / Ownership boundary check
+      if (!user.isOwner && objective.ownerId !== user.userId) {
+        return reply.status(403).send({
+          error: 'FORBIDDEN',
+          message: 'You do not have access to view this objective'
+        });
+      }
+
+      // Fetch all sub-tasks belonging to this objective
+      const tasksResult = await taskRepo.list({ objectiveId: id }, { limit: 100, sortBy: 'createdAt', sortOrder: 'asc' });
+
+      return reply.status(200).send({
+        success: true,
+        data: {
+          ...objective,
+          tasks: tasksResult.items
+        }
+      });
+    }
+  );
+
+  // -------------------------------------------------------------------------
+  // 4. POST /api/ceo/objectives/:id/execute — Execute Objective (Pending Queue Dispatch)
+  // -------------------------------------------------------------------------
+  app.post(
+    '/api/ceo/objectives/:id/execute',
+    {
+      preHandler: [authenticate, requirePermission('execute', 'objective')]
+    },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const { id } = req.params as { id: string };
+      const parseResult = ExecuteObjectiveSchema.safeParse(req.body || {});
+      if (!parseResult.success) {
+        return reply.status(400).send({
+          error: 'VALIDATION_ERROR',
+          message: 'Invalid execution payload',
+          details: parseResult.error.format()
+        });
+      }
+
+      const user = getUser(req);
+      const { objectiveRepo, taskRepo } = getRepos();
+
+      const objective = await objectiveRepo.findById(id);
+      if (!objective) {
+        return reply.status(404).send({
+          error: 'NOT_FOUND',
+          message: `Objective '${id}' was not found`
+        });
+      }
+
+      if (!user.isOwner && objective.ownerId !== user.userId) {
+        return reply.status(403).send({
+          error: 'FORBIDDEN',
+          message: 'You do not have permission to execute this objective'
+        });
+      }
+
+      const body = parseResult.data;
+      const idempotencyKey = body.idempotencyKey || `exec_${randomUUID()}`;
+
+      // Check if an execution task with this idempotencyKey already exists
+      const existingTask = await taskRepo.findByIdempotencyKey(idempotencyKey);
+      if (existingTask) {
+        // Case B: Retry same objective with same key K -> Return existing execution with consistent 202 Accepted
+        if (existingTask.objectiveId === id) {
+          return reply.status(202).send({
+            success: true,
+            message: 'Objective execution registered and queued for autonomous dispatch',
+            objectiveId: id,
+            status: ObjectiveStatus.ACTIVE,
+            idempotencyKey,
+            isReplay: true,
+            initialTask: {
+              taskId: existingTask.taskId,
+              status: existingTask.status,
+              departmentId: existingTask.departmentId,
+              specialistId: existingTask.specialistId
+            }
+          });
+        }
+
+        // Case C: Same key K used with a different objective -> 409 Conflict
+        return reply.status(409).send({
+          error: 'IDEMPOTENCY_CONFLICT',
+          message: `Idempotency key '${idempotencyKey}' was already used for a different objective '${existingTask.objectiveId}'`
+        });
+      }
+
+      // Case D: Different key with an already active objective -> 409 Conflict
+      if (objective.status === ObjectiveStatus.ACTIVE) {
+        return reply.status(409).send({
+          error: 'CONFLICT',
+          message: `Objective '${id}' is already actively executing`,
+          currentStatus: objective.status
+        });
+      }
+
+      if (objective.status === ObjectiveStatus.COMPLETED) {
+        return reply.status(400).send({
+          error: 'INVALID_STATE',
+          message: `Objective '${id}' has already completed. Re-execution of completed objectives is not supported.`
+        });
+      }
+
+      if (objective.status === ObjectiveStatus.CANCELLED) {
+        return reply.status(400).send({
+          error: 'INVALID_STATE',
+          message: `Objective '${id}' has been cancelled and cannot be executed.`
+        });
+      }
+
+      // Decompose initial orchestration task in PENDING state
+      const initialTaskId = `tsk_${randomUUID()}`;
+      const primaryDepartment = objective.departmentIds[0] || 'EXECUTIVE';
+
+      let createdTask;
+      try {
+        // Case E: Concurrent requests race at the database unique index on metadata.idempotencyKey
+        createdTask = await taskRepo.create({
+          taskId: initialTaskId,
+          objectiveId: id,
+          departmentId: primaryDepartment,
+          specialistId: 'spec_ceo_orchestrator',
+          title: `Decompose and Coordinate: ${objective.title}`,
+          description: objective.description,
+          status: TaskStatus.PENDING,
+          priority: objective.priority,
+          input: {
+            objectiveId: id,
+            title: objective.title,
+            departmentIds: objective.departmentIds,
+            executionNotes: body.executionNotes || null
+          },
+          maxAttempts: 3,
+          metadata: {
+            idempotencyKey,
+            queuedForPhase7_3: true,
+            requestedBy: user.userId
+          }
+        });
+      } catch (err: unknown) {
+        // Duplicate key race condition caught by MongoDB unique index
+        if (typeof err === 'object' && err !== null && (err as { code?: number }).code === 11000) {
+          const concurrentTask = await taskRepo.findByIdempotencyKey(idempotencyKey);
+          if (concurrentTask && concurrentTask.objectiveId === id) {
+            return reply.status(202).send({
+              success: true,
+              message: 'Objective execution registered and queued for autonomous dispatch',
+              objectiveId: id,
+              status: ObjectiveStatus.ACTIVE,
+              idempotencyKey,
+              isReplay: true,
+              initialTask: {
+                taskId: concurrentTask.taskId,
+                status: concurrentTask.status,
+                departmentId: concurrentTask.departmentId,
+                specialistId: concurrentTask.specialistId
+              }
+            });
+          }
+          return reply.status(409).send({
+            error: 'IDEMPOTENCY_CONFLICT',
+            message: `Concurrent request conflict on idempotency key '${idempotencyKey}'`
+          });
+        }
+        throw err;
+      }
+
+      // Transition objective status to ACTIVE atomically
+      await objectiveRepo.updateStatus(id, ObjectiveStatus.ACTIVE, objective.status);
+
+      // Dispatch to BullMQ Queue (Reliable Outbox Pattern)
+      const dispatchResult = await taskDispatcherService.dispatchCeoTask({
+        taskId: initialTaskId,
+        objectiveId: id,
+        specialistId: 'spec_ceo_orchestrator',
+        departmentId: primaryDepartment,
+        action: 'EXECUTE_OBJECTIVE',
+        idempotencyKey,
+        priority: objective.priority,
+        data: {
+          objectiveId: id,
+          title: objective.title,
+          description: objective.description,
+          departmentIds: objective.departmentIds,
+          executionNotes: body.executionNotes || null
+        },
+        createdAt: new Date().toISOString()
+      });
+
+      // Update task dispatch status
+      if (dispatchResult.dispatched) {
+        await taskRepo.updateStatus(initialTaskId, TaskStatus.QUEUED);
+      }
+
+      if (recordAudit) {
+        recordAudit({
+          userId: user.userId,
+          action: 'OBJECTIVE_EXECUTED',
+          entityType: 'BusinessObjective',
+          entityId: id,
+          newState: {
+            status: ObjectiveStatus.ACTIVE,
+            initialTaskId,
+            idempotencyKey,
+            queueDispatched: dispatchResult.dispatched,
+            jobId: dispatchResult.jobId
+          }
+        });
+      }
+
+      // Case A: First request with key K -> Return 202 Accepted
+      return reply.status(202).send({
+        success: true,
+        message: 'Objective execution registered and queued for autonomous dispatch',
+        objectiveId: id,
+        status: ObjectiveStatus.ACTIVE,
+        idempotencyKey,
+        dispatchedToQueue: dispatchResult.dispatched,
+        initialTask: {
+          taskId: createdTask.taskId,
+          status: dispatchResult.dispatched ? TaskStatus.QUEUED : TaskStatus.PENDING,
+          departmentId: createdTask.departmentId,
+          specialistId: createdTask.specialistId
+        }
+      });
+    }
+  );
+
+  // -------------------------------------------------------------------------
+  // 5. GET /api/ceo/tasks/:id — Get Specific Orchestrator Task
+  // -------------------------------------------------------------------------
+  app.get(
+    '/api/ceo/tasks/:id',
+    {
+      preHandler: [authenticate, requirePermission('read', 'task')]
+    },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const { id } = req.params as { id: string };
+      const user = getUser(req);
+      const { taskRepo, objectiveRepo } = getRepos();
+
+      const task = await taskRepo.findById(id);
+      if (!task) {
+        return reply.status(404).send({
+          error: 'NOT_FOUND',
+          message: `Task '${id}' was not found`
+        });
+      }
+
+      // Verify tenant / ownership boundary via parent objective
+      if (!user.isOwner) {
+        const parentObj = await objectiveRepo.findById(task.objectiveId);
+        if (!parentObj || parentObj.ownerId !== user.userId) {
+          return reply.status(403).send({
+            error: 'FORBIDDEN',
+            message: 'You do not have access to view this task'
+          });
+        }
+      }
+
+      return reply.status(200).send({
+        success: true,
+        data: task
+      });
+    }
+  );
+
+  // -------------------------------------------------------------------------
+  // 6. GET /api/ceo/approvals — List Approval Requests (Read-Only)
+  // -------------------------------------------------------------------------
+  app.get(
+    '/api/ceo/approvals',
+    {
+      preHandler: [authenticate, requirePermission('read', 'approval')]
+    },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const parseResult = ListApprovalsQuerySchema.safeParse(req.query);
+      if (!parseResult.success) {
+        return reply.status(400).send({
+          error: 'VALIDATION_ERROR',
+          message: 'Invalid query parameters',
+          details: parseResult.error.format()
+        });
+      }
+
+      const query = parseResult.data;
+      const filter: Record<string, unknown> = {};
+
+      if (query.status) filter.status = query.status;
+      if (query.objectiveId) filter.objectiveId = query.objectiveId;
+      if (query.taskId) filter.taskId = query.taskId;
+      if (query.riskLevel) filter.riskLevel = query.riskLevel;
+
+      const { approvalRepo } = getRepos();
+      const result = await approvalRepo.list(filter, {
+        limit: query.limit,
+        skip: query.skip,
+        sortBy: query.sortBy,
+        sortOrder: query.sortOrder
+      });
+
+      return reply.status(200).send({
+        success: true,
+        data: result.items,
+        pagination: {
+          total: result.total,
+          limit: result.limit,
+          skip: result.skip,
+          hasMore: result.skip + result.items.length < result.total
+        }
+      });
+    }
+  );
+
+  // -------------------------------------------------------------------------
+  // 7. GET /api/ceo/approvals/:id — Get Specific Approval Request (Read-Only)
+  // -------------------------------------------------------------------------
+  app.get(
+    '/api/ceo/approvals/:id',
+    {
+      preHandler: [authenticate, requirePermission('read', 'approval')]
+    },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const { id } = req.params as { id: string };
+      const { approvalRepo } = getRepos();
+
+      const approval = await approvalRepo.findById(id);
+      if (!approval) {
+        return reply.status(404).send({
+          error: 'NOT_FOUND',
+          message: `Approval request '${id}' was not found`
+        });
+      }
+
+      return reply.status(200).send({
+        success: true,
+        data: approval
+      });
+    }
+  );
+
+  // -------------------------------------------------------------------------
+  // 8. POST /api/ceo/approvals/:id/approve — Human Owner Approval & Task Resumption
+  // -------------------------------------------------------------------------
+  app.post(
+    '/api/ceo/approvals/:id/approve',
+    {
+      preHandler: [authenticate]
+    },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const { id } = req.params as { id: string };
+      const user = getUser(req);
+
+      // 1. Enforce strict Owner-Only approval authority
+      if (!user.isOwner) {
+        return reply.status(403).send({
+          error: 'FORBIDDEN',
+          message: 'Only the authenticated Owner has authority to approve high-risk actions'
+        });
+      }
+
+      const parseResult = ApproveApprovalSchema.safeParse(req.body || {});
+      if (!parseResult.success) {
+        return reply.status(400).send({
+          error: 'VALIDATION_ERROR',
+          message: 'Invalid approval payload',
+          details: parseResult.error.format()
+        });
+      }
+
+      const { approvalRepo, taskRepo, objectiveRepo } = getRepos();
+
+      // 2. Fetch Approval Request
+      const approval = await approvalRepo.findById(id);
+      if (!approval) {
+        return reply.status(404).send({
+          error: 'NOT_FOUND',
+          message: `Approval request '${id}' was not found`
+        });
+      }
+
+      // 3. Idempotency & State Checks
+      if (approval.status === ApprovalStatus.APPROVED) {
+        return reply.status(200).send({
+          success: true,
+          message: 'Approval decision was already recorded (idempotent replay)',
+          data: approval,
+          isReplay: true
+        });
+      }
+
+      if (approval.status === ApprovalStatus.REJECTED) {
+        return reply.status(409).send({
+          error: 'CONFLICT',
+          message: `Cannot approve request '${id}' because it was already REJECTED.`
+        });
+      }
+
+      if (approval.status === ApprovalStatus.EXPIRED || approval.status === ApprovalStatus.CANCELLED) {
+        return reply.status(409).send({
+          error: 'CONFLICT',
+          message: `Cannot approve request '${id}' because it is ${approval.status}.`
+        });
+      }
+
+      // 4. Validate Target Task & Parent Objective
+      const task = await taskRepo.findById(approval.taskId);
+      if (!task) {
+        return reply.status(404).send({
+          error: 'TASK_NOT_FOUND',
+          message: `Associated task '${approval.taskId}' was not found`
+        });
+      }
+
+      if (task.status === TaskStatus.CANCELLED) {
+        return reply.status(409).send({
+          error: 'TASK_CANCELLED',
+          message: `Cannot resume task '${task.taskId}' because it was cancelled.`
+        });
+      }
+
+      if (task.status === TaskStatus.COMPLETED) {
+        return reply.status(409).send({
+          error: 'TASK_COMPLETED',
+          message: `Task '${task.taskId}' is already COMPLETED.`
+        });
+      }
+
+      // 5. Emergency Kill-Switch Guard
+      try {
+        distributedKillSwitch.assertOperational();
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return reply.status(503).send({
+          error: 'KILL_SWITCH_ACTIVE',
+          message: `Cannot resume execution while Emergency Kill-Switch is active: ${msg}`
+        });
+      }
+
+      // 6. Atomic Decision Recording in Database
+      const decisionRecorded = await approvalRepo.recordDecision(
+        id,
+        ApprovalStatus.APPROVED,
+        user.userId,
+        parseResult.data.reason
+      );
+
+      if (!decisionRecorded) {
+        return reply.status(409).send({
+          error: 'CONCURRENT_MODIFICATION',
+          message: `Approval '${id}' state changed concurrently.`
+        });
+      }
+
+      // 7. Update Task Status to QUEUED with approval metadata
+      await taskRepo.updateStatus(task.taskId, TaskStatus.QUEUED, undefined, {
+        output: {
+          approvedBy: user.userId,
+          approvedAt: new Date().toISOString(),
+          decisionReason: parseResult.data.reason
+        }
+      });
+
+      // 8. Safe Task Resumption via BullMQ Dispatch (Preserves original taskId)
+      const objective = await objectiveRepo.findById(task.objectiveId);
+      const payload: BaseTaskPayload = {
+        taskId: task.taskId,
+        objectiveId: task.objectiveId,
+        specialistId: task.specialistId,
+        departmentId: task.departmentId,
+        action: 'RESUME_AFTER_APPROVAL',
+        idempotencyKey: (task.metadata?.idempotencyKey as string) || `res_${task.taskId}`,
+        priority: task.priority,
+        data: {
+          ...task.input,
+          title: task.title,
+          description: task.description,
+          approvedBy: user.userId,
+          approvedAt: new Date().toISOString(),
+          isResumedExecution: true
+        },
+        createdAt: new Date().toISOString()
+      };
+
+      const dispatchResult = await taskDispatcherService.dispatchCeoTask(payload);
+
+      if (recordAudit) {
+        recordAudit({
+          userId: user.userId,
+          action: 'APPROVAL_GRANTED',
+          entityType: 'ApprovalRequest',
+          entityId: id,
+          newState: {
+            approvalId: id,
+            status: ApprovalStatus.APPROVED,
+            taskId: task.taskId,
+            resumedQueueDispatched: dispatchResult.dispatched,
+            reason: parseResult.data.reason
+          }
+        });
+      }
+
+      return reply.status(200).send({
+        success: true,
+        message: 'Approval granted and task safely queued for autonomous resumption',
+        data: {
+          approvalId: id,
+          status: ApprovalStatus.APPROVED,
+          taskId: task.taskId,
+          objectiveId: task.objectiveId,
+          resumedQueueDispatched: dispatchResult.dispatched,
+          reviewedBy: user.userId,
+          reviewedAt: new Date().toISOString()
+        }
+      });
+    }
+  );
+
+  // -------------------------------------------------------------------------
+  // 9. POST /api/ceo/approvals/:id/reject — Human Owner Rejection
+  // -------------------------------------------------------------------------
+  app.post(
+    '/api/ceo/approvals/:id/reject',
+    {
+      preHandler: [authenticate]
+    },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const { id } = req.params as { id: string };
+      const user = getUser(req);
+
+      // 1. Enforce strict Owner-Only authority
+      if (!user.isOwner) {
+        return reply.status(403).send({
+          error: 'FORBIDDEN',
+          message: 'Only the authenticated Owner has authority to reject high-risk actions'
+        });
+      }
+
+      const parseResult = RejectApprovalSchema.safeParse(req.body || {});
+      if (!parseResult.success) {
+        return reply.status(400).send({
+          error: 'VALIDATION_ERROR',
+          message: 'Invalid rejection payload',
+          details: parseResult.error.format()
+        });
+      }
+
+      const { approvalRepo, taskRepo, objectiveRepo } = getRepos();
+
+      // 2. Fetch Approval Request
+      const approval = await approvalRepo.findById(id);
+      if (!approval) {
+        return reply.status(404).send({
+          error: 'NOT_FOUND',
+          message: `Approval request '${id}' was not found`
+        });
+      }
+
+      // 3. Idempotency & State Checks
+      if (approval.status === ApprovalStatus.REJECTED) {
+        return reply.status(200).send({
+          success: true,
+          message: 'Approval rejection was already recorded (idempotent replay)',
+          data: approval,
+          isReplay: true
+        });
+      }
+
+      if (approval.status === ApprovalStatus.APPROVED) {
+        return reply.status(409).send({
+          error: 'CONFLICT',
+          message: `Cannot reject request '${id}' because it was already APPROVED.`
+        });
+      }
+
+      if (approval.status === ApprovalStatus.EXPIRED || approval.status === ApprovalStatus.CANCELLED) {
+        return reply.status(409).send({
+          error: 'CONFLICT',
+          message: `Cannot reject request '${id}' because it is ${approval.status}.`
+        });
+      }
+
+      // 4. Atomic Decision Recording
+      const decisionRecorded = await approvalRepo.recordDecision(
+        id,
+        ApprovalStatus.REJECTED,
+        user.userId,
+        parseResult.data.reason
+      );
+
+      if (!decisionRecorded) {
+        return reply.status(409).send({
+          error: 'CONCURRENT_MODIFICATION',
+          message: `Approval '${id}' state changed concurrently.`
+        });
+      }
+
+      // 5. Cancel Associated Task Safely (Never dispatch to BullMQ)
+      await taskRepo.cancel(approval.taskId, `Rejected by Owner: ${parseResult.data.reason}`);
+
+      // Fail parent objective if applicable
+      await objectiveRepo.updateStatus(approval.objectiveId, ObjectiveStatus.FAILED);
+
+      if (recordAudit) {
+        recordAudit({
+          userId: user.userId,
+          action: 'APPROVAL_REJECTED',
+          entityType: 'ApprovalRequest',
+          entityId: id,
+          newState: {
+            approvalId: id,
+            status: ApprovalStatus.REJECTED,
+            taskId: approval.taskId,
+            reason: parseResult.data.reason
+          }
+        });
+      }
+
+      return reply.status(200).send({
+        success: true,
+        message: 'Approval rejected and task safely stopped',
+        data: {
+          approvalId: id,
+          status: ApprovalStatus.REJECTED,
+          taskId: approval.taskId,
+          objectiveId: approval.objectiveId,
+          reviewedBy: user.userId,
+          reviewedAt: new Date().toISOString(),
+          decisionReason: parseResult.data.reason
+        }
+      });
+    }
+  );
+}

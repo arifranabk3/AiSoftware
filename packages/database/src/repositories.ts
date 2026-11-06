@@ -3,6 +3,7 @@ import {
   BusinessObjectiveDocument,
   OrchestratorTaskDocument,
   ApprovalRequestDocument,
+  UserDocument,
   ObjectiveStatus,
   TaskStatus,
   ApprovalStatus,
@@ -117,13 +118,13 @@ export class OrchestratorTaskRepository {
   }
 
   public async create(
-    doc: Omit<OrchestratorTaskDocument, '_id' | 'createdAt' | 'updatedAt' | 'attemptCount'>
+    doc: Omit<OrchestratorTaskDocument, '_id' | 'createdAt' | 'updatedAt' | 'attemptCount'> & { attemptCount?: number }
   ): Promise<OrchestratorTaskDocument> {
     const now = new Date();
     const fullDoc: OrchestratorTaskDocument = {
       _id: doc.taskId,
       ...doc,
-      attemptCount: 0,
+      attemptCount: doc.attemptCount !== undefined ? doc.attemptCount : 0,
       createdAt: now,
       updatedAt: now
     };
@@ -133,6 +134,10 @@ export class OrchestratorTaskRepository {
 
   public async findById(taskId: string): Promise<OrchestratorTaskDocument | null> {
     return this.collection.findOne({ taskId });
+  }
+
+  public async findByIdempotencyKey(idempotencyKey: string): Promise<OrchestratorTaskDocument | null> {
+    return this.collection.findOne({ 'metadata.idempotencyKey': idempotencyKey });
   }
 
   public async list(
@@ -381,4 +386,39 @@ export class ApprovalRepository {
     return res.modifiedCount > 0;
   }
 }
+
+export class UserRepository {
+  private collection: Collection<UserDocument>;
+
+  constructor(private db: Db) {
+    this.collection = db.collection<UserDocument>('users');
+  }
+
+  public async findByEmail(email: string): Promise<UserDocument | null> {
+    return this.collection.findOne({ email });
+  }
+
+  public async findById(userId: string): Promise<UserDocument | null> {
+    return this.collection.findOne({ userId });
+  }
+
+  public async create(
+    doc: Omit<UserDocument, '_id' | 'createdAt' | 'updatedAt'>
+  ): Promise<UserDocument> {
+    const now = new Date();
+    const fullDoc: UserDocument = {
+      _id: doc.userId,
+      ...doc,
+      createdAt: now,
+      updatedAt: now
+    };
+    await this.collection.insertOne(fullDoc);
+    return fullDoc;
+  }
+
+  public async count(): Promise<number> {
+    return this.collection.countDocuments();
+  }
+}
+
 

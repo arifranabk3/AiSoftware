@@ -13,6 +13,7 @@ export enum CommandQueueName {
 
 export interface BaseTaskPayload {
   taskId: string;
+  objectiveId?: string;
   specialistId: string;
   departmentId: string;
   action: string;

@@ -23,14 +23,71 @@ export const environmentSchema = z.object({
   OWNER_PHONE_NUMBER: z.string().min(8, 'OWNER_PHONE_NUMBER required for WhatsApp alerts'),
   OWNER_EMAIL: z.string().email().optional(),
 
-  // Zero-Cost External Providers
+  // Frontend URL for strict CORS in production
+  FRONTEND_URL: z.string().default('http://localhost:3000'),
+
+  // Zero-Cost External & Local Providers
+  AI_PROVIDER: z.enum(['MOCK', 'GEMINI_FLASH', 'GROQ_LLAMA', 'OLLAMA_LOCAL']).default('MOCK'),
   GEMINI_API_KEY: z.string().optional(),
   GROQ_API_KEY: z.string().optional(),
+  OLLAMA_BASE_URL: z.string().default('http://127.0.0.1:11434'),
+  OLLAMA_MODEL: z.string().default('llama3.2:1b'),
   HUGGING_FACE_TOKEN: z.string().optional(),
 
   // System Controls
   SYSTEM_EMERGENCY_HALT: z.coerce.boolean().default(false),
   ZERO_COST_STRICT_MODE: z.coerce.boolean().default(true)
+}).superRefine((data, ctx) => {
+  // Enforce High-Entropy & Reject Default/Known Placeholder Secrets in Production
+  if (data.NODE_ENV === 'production') {
+    const knownInsecurePatterns = [
+      'test_jwt_secret',
+      'test_refresh_secret',
+      'test_master_encryption_key',
+      '1234567890',
+      'password',
+      'changeme',
+      'secret'
+    ];
+
+    const checkEntropy = (val: string, fieldName: string) => {
+      const lower = val.toLowerCase();
+      for (const pattern of knownInsecurePatterns) {
+        if (lower.includes(pattern)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `${fieldName} contains insecure or default test pattern '${pattern}' in production mode`,
+            path: [fieldName]
+          });
+          return;
+        }
+      }
+
+      // Shannon entropy calculation to enforce randomness
+      const freq: Record<string, number> = {};
+      for (const char of val) {
+        freq[char] = (freq[char] || 0) + 1;
+      }
+      let entropy = 0;
+      for (const count of Object.values(freq)) {
+        const p = count / val.length;
+        entropy -= p * Math.log2(p);
+      }
+
+      // Minimum Shannon entropy requirement for 32-char cryptographic keys is 3.5 bits/char
+      if (entropy < 3.5) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `${fieldName} has low Shannon entropy (${entropy.toFixed(2)} bits/char; required >= 3.5) in production mode`,
+          path: [fieldName]
+        });
+      }
+    };
+
+    checkEntropy(data.JWT_SECRET, 'JWT_SECRET');
+    checkEntropy(data.REFRESH_TOKEN_SECRET, 'REFRESH_TOKEN_SECRET');
+    checkEntropy(data.MASTER_ENCRYPTION_KEY, 'MASTER_ENCRYPTION_KEY');
+  }
 });
 
 export type Environment = z.infer<typeof environmentSchema>;

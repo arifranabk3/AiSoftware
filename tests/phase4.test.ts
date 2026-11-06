@@ -12,8 +12,8 @@ import {
   GroqFreeProvider,
   OllamaLocalProvider
 } from '../packages/ai-engine/src/index.js';
-import { DepartmentId } from '../packages/shared/src/departments.js';
-import { distributedKillSwitch } from '../packages/security/src/kill-switch.js';
+import { DepartmentId } from '@ai-command-center/shared';
+import { distributedKillSwitch } from '@ai-command-center/security';
 
 describe('Phase 4: CEO Orchestrator, Department Dispatchers & AI Reasoning Engine', () => {
   beforeEach(async () => {

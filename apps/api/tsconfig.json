@@ -5,7 +5,8 @@
     { "path": "../../packages/shared" },
     { "path": "../../packages/config" },
     { "path": "../../packages/database" },
-    { "path": "../../packages/security" }
+    { "path": "../../packages/security" },
+    { "path": "../../packages/automation" }
   ],
   "include": ["src/**/*"]
 }

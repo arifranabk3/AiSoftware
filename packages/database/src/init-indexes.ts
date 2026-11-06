@@ -80,9 +80,13 @@ export async function initializeDatabaseIndexes(
   const otIdx3 = await tasks.createIndex({ departmentId: 1, status: 1 });
   const otIdx4 = await tasks.createIndex({ specialistId: 1, status: 1 });
   const otIdx5 = await tasks.createIndex({ parentTaskId: 1 });
+  const otIdx6 = await tasks.createIndex(
+    { 'metadata.idempotencyKey': 1 },
+    { unique: true, sparse: true }
+  );
   results.push({
     collection: 'orchestrator_tasks',
-    indexesCreated: [otIdx1, otIdx2, otIdx3, otIdx4, otIdx5]
+    indexesCreated: [otIdx1, otIdx2, otIdx3, otIdx4, otIdx5, otIdx6]
   });
 
   // 9. approval_requests collection
@@ -94,6 +98,15 @@ export async function initializeDatabaseIndexes(
   results.push({
     collection: 'approval_requests',
     indexesCreated: [arIdx1, arIdx2, arIdx3, arIdx4]
+  });
+
+  // 10. users collection (persistent user credentials and roles)
+  const users = db.collection('users');
+  const uIdx1 = await users.createIndex({ userId: 1 }, { unique: true });
+  const uIdx2 = await users.createIndex({ email: 1 }, { unique: true });
+  results.push({
+    collection: 'users',
+    indexesCreated: [uIdx1, uIdx2]
   });
 
   return results;

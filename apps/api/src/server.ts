@@ -13,7 +13,8 @@ import {
   ChainedAuditLogEntry
 } from '@ai-command-center/security';
 import { validateEnvironment } from '@ai-command-center/config';
-import { mongoDbService } from '@ai-command-center/database';
+import { mongoDbService, UserRepository } from '@ai-command-center/database';
+import { registerCeoRoutes } from './ceo-routes.js';
 
 export async function buildServer(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -21,8 +22,8 @@ export async function buildServer(): Promise<FastifyInstance> {
     trustProxy: true
   });
 
-  // Simulated in-memory store for demonstrations/testing when database is offline
-  const mockUsers = new Map<
+  // In-memory fallback and active token stores
+  const fallbackUsers = new Map<
     string,
     { id: string; email: string; passwordHash: string; isOwner: boolean }
   >();
@@ -30,14 +31,76 @@ export async function buildServer(): Promise<FastifyInstance> {
   const inMemoryAuditChain: ChainedAuditLogEntry[] = [];
   let latestHash = 'GENESIS_HASH_0000000000000000000000000000000000000000000000000000000000000000';
 
-  // Seed default owner in memory for testing
-  const ownerPassHash = await hashPassword('OwnerSecurePass123!');
-  mockUsers.set('owner@ai-command-center.local', {
-    id: 'usr_owner_root_001',
-    email: 'owner@ai-command-center.local',
+  // Seed default owner credentials
+  const defaultOwnerPassword = 'OwnerSecurePass123!';
+  const defaultOwnerEmail = 'owner@ai-command-center.local';
+  const defaultOwnerId = 'usr_owner_root_001';
+  const ownerPassHash = await hashPassword(defaultOwnerPassword);
+
+  fallbackUsers.set(defaultOwnerEmail, {
+    id: defaultOwnerId,
+    email: defaultOwnerEmail,
     passwordHash: ownerPassHash,
     isOwner: true
   });
+
+  // Seed into persistent MongoDB if connected
+  try {
+    if (mongoDbService.getStatus().isConnected) {
+      const db = mongoDbService.getDb();
+      const userRepo = new UserRepository(db);
+      const existingOwner = await userRepo.findByEmail(defaultOwnerEmail);
+      if (!existingOwner) {
+        await userRepo.create({
+          userId: defaultOwnerId,
+          email: defaultOwnerEmail,
+          passwordHash: ownerPassHash,
+          isOwner: true,
+          role: 'OWNER'
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('[API Warning] Could not seed user into MongoDB:', err);
+  }
+
+  // Audit recording helper function for MongoDB durability and in-memory chaining
+  const recordAuditEvent = async (entry: {
+    userId?: string;
+    action: string;
+    entityType: string;
+    entityId: string;
+    newState?: Record<string, unknown>;
+  }) => {
+    const auditEntry = {
+      userId: entry.userId || 'system',
+      action: entry.action,
+      entityType: entry.entityType,
+      entityId: entry.entityId,
+      newState: entry.newState,
+      timestamp: new Date().toISOString(),
+      previousHash: latestHash
+    };
+    const signature = calculateAuditHash(auditEntry);
+    latestHash = signature;
+    const fullEntry: ChainedAuditLogEntry = { ...auditEntry, hashSignature: signature };
+    inMemoryAuditChain.push(fullEntry);
+
+    try {
+      if (mongoDbService.getStatus().isConnected) {
+        const db = mongoDbService.getDb();
+        await db.collection('audit_logs').insertOne({
+          _id: signature as unknown as import('mongodb').ObjectId,
+          entryId: `aud_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          currentHash: signature,
+          ...fullEntry,
+          createdAt: new Date()
+        });
+      }
+    } catch {
+      // Non-fatal if database is momentarily unavailable
+    }
+  };
 
   const env = validateEnvironment({
     NODE_ENV: process.env.NODE_ENV || 'test',
@@ -50,12 +113,42 @@ export async function buildServer(): Promise<FastifyInstance> {
     OWNER_PHONE_NUMBER: process.env.OWNER_PHONE_NUMBER || '+1234567890'
   });
 
+  // Native Security Headers Hook
+  app.addHook('onSend', async (_req, reply, payload) => {
+    reply.header('X-Content-Type-Options', 'nosniff');
+    reply.header('X-Frame-Options', 'DENY');
+    reply.header('X-XSS-Protection', '1; mode=block');
+    reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+    reply.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    reply.header(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self';"
+    );
+    return payload;
+  });
+
   await app.register(fastifyCookie, {
     secret: env.JWT_SECRET
   });
 
   await app.register(fastifyCors, {
-    origin: true,
+    origin: (origin, cb) => {
+      // Allow requests with no origin (like mobile apps, curl, or same-origin)
+      if (!origin) {
+        cb(null, true);
+        return;
+      }
+      if (env.NODE_ENV === 'production') {
+        const allowed = env.FRONTEND_URL || 'http://localhost:3000';
+        if (origin === allowed) {
+          cb(null, true);
+        } else {
+          cb(new Error('CORS_ORIGIN_NOT_ALLOWED'), false);
+        }
+      } else {
+        cb(null, true);
+      }
+    },
     credentials: true
   });
 
@@ -94,7 +187,36 @@ export async function buildServer(): Promise<FastifyInstance> {
         .send({ error: 'BAD_REQUEST', message: 'Email and password required' });
     }
 
-    const user = mockUsers.get(body.email);
+    let user: { id: string; email: string; passwordHash: string; isOwner: boolean; role?: string } | null = null;
+
+    // Check persistent database first if connected
+    try {
+      if (mongoDbService.getStatus().isConnected) {
+        const db = mongoDbService.getDb();
+        const userRepo = new UserRepository(db);
+        const persistentUser = await userRepo.findByEmail(body.email);
+        if (persistentUser) {
+          user = {
+            id: persistentUser.userId,
+            email: persistentUser.email,
+            passwordHash: persistentUser.passwordHash,
+            isOwner: persistentUser.isOwner,
+            role: persistentUser.role
+          };
+        }
+      }
+    } catch {
+      // Fallback below
+    }
+
+    // Fallback to in-memory store if not found or DB disconnected
+    if (!user) {
+      const fb = fallbackUsers.get(body.email);
+      if (fb) {
+        user = { ...fb, role: 'OWNER' };
+      }
+    }
+
     if (!user) {
       return reply
         .status(401)
@@ -109,7 +231,7 @@ export async function buildServer(): Promise<FastifyInstance> {
     }
 
     const tokens = generateAuthTokens(
-      { userId: user.id, email: user.email, isOwner: user.isOwner, role: 'OWNER' },
+      { userId: user.id, email: user.email, isOwner: user.isOwner, role: user.role || 'OWNER' },
       env.JWT_SECRET,
       env.REFRESH_TOKEN_SECRET
     );
@@ -126,17 +248,12 @@ export async function buildServer(): Promise<FastifyInstance> {
     });
 
     // Record Audit Log
-    const auditEntry = {
+    await recordAuditEvent({
       userId: user.id,
       action: 'LOGIN_SUCCESS',
       entityType: 'User',
-      entityId: user.id,
-      timestamp: new Date().toISOString(),
-      previousHash: latestHash
-    };
-    const signature = calculateAuditHash(auditEntry);
-    latestHash = signature;
-    inMemoryAuditChain.push({ ...auditEntry, hashSignature: signature });
+      entityId: user.id
+    });
 
     return reply.status(200).send({
       message: 'Authentication successful',
@@ -244,18 +361,13 @@ export async function buildServer(): Promise<FastifyInstance> {
       const updated = killSwitch.activate(user.userId, body?.reason || 'Owner Manual Trigger');
 
       // Record audit event
-      const auditEntry = {
+      await recordAuditEvent({
         userId: user.userId,
         action: 'KILL_SWITCH_ACTIVATED',
         entityType: 'System',
         entityId: 'global',
-        newState: { isHalted: true, reason: body?.reason },
-        timestamp: new Date().toISOString(),
-        previousHash: latestHash
-      };
-      const signature = calculateAuditHash(auditEntry);
-      latestHash = signature;
-      inMemoryAuditChain.push({ ...auditEntry, hashSignature: signature });
+        newState: { isHalted: true, reason: body?.reason }
+      });
 
       return reply.status(200).send({
         message: 'EMERGENCY KILL-SWITCH ACTIVATED. Autonomous workers frozen.',
@@ -272,18 +384,13 @@ export async function buildServer(): Promise<FastifyInstance> {
       const updated = await killSwitch.deactivate(user.userId);
 
       // Record audit event
-      const auditEntry = {
+      await recordAuditEvent({
         userId: user.userId,
         action: 'KILL_SWITCH_DEACTIVATED',
         entityType: 'System',
         entityId: 'global',
-        newState: { isHalted: false },
-        timestamp: new Date().toISOString(),
-        previousHash: latestHash
-      };
-      const signature = calculateAuditHash(auditEntry);
-      latestHash = signature;
-      inMemoryAuditChain.push({ ...auditEntry, hashSignature: signature });
+        newState: { isHalted: false }
+      });
 
       return reply.status(200).send({
         message: 'Emergency kill-switch deactivated. Normal operations resumed.',
@@ -291,6 +398,14 @@ export async function buildServer(): Promise<FastifyInstance> {
       });
     }
   );
+
+  // Register Phase 7.2 / 7.3 CEO Orchestrator API Routes
+  await registerCeoRoutes(app, {
+    authenticate,
+    recordAudit: async (entry) => {
+      await recordAuditEvent(entry);
+    }
+  });
 
   return app;
 }

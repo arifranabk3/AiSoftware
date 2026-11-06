@@ -52,7 +52,7 @@ describe('Phase 7.1 — CEO Orchestrator Database Persistence Suite', () => {
 
       const taskIdx = results.find((r) => r.collection === 'orchestrator_tasks');
       expect(taskIdx).toBeDefined();
-      expect(taskIdx?.indexesCreated.length).toBe(5);
+      expect(taskIdx?.indexesCreated.length).toBe(6); // Includes unique idempotencyKey index
 
       const appIdx = results.find((r) => r.collection === 'approval_requests');
       expect(appIdx).toBeDefined();
