@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/login', '/api/'],
+        disallow: ['/dashboard', '/login', '/api/'],
       },
       {
         userAgent: 'Mediapartners-Google',
@@ -18,4 +18,3 @@ export default function robots(): MetadataRoute.Robots {
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }
-

@@ -27,7 +27,7 @@ export default function LoginPage() {
         throw new Error(json.message || 'Invalid credentials');
       }
 
-      window.location.href = '/';
+      window.location.href = '/dashboard';
     } catch (err: unknown) {
       setError((err as Error).message || 'Authentication failed');
     } finally {
