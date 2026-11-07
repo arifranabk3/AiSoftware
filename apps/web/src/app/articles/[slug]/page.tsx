@@ -23,19 +23,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const article = ARTICLES.find((a) => a.slug === slug);
   if (!article) return {};
 
+  const baseUrl = 'https://ai-software-theta.vercel.app';
+  const featuredImageUrl = `${baseUrl}${article.featuredImage.src}`;
+
   return {
     title: `${article.title} — AIsoftware Engineering`,
     description: article.description,
     keywords: article.keywords,
     alternates: {
-      canonical: `https://ai-software-theta.vercel.app/articles/${article.slug}`
+      canonical: `${baseUrl}/articles/${article.slug}`
     },
     openGraph: {
       title: article.title,
       description: article.description,
       type: 'article',
+      url: `${baseUrl}/articles/${article.slug}`,
       publishedTime: article.publishDate,
-      authors: [article.author]
+      authors: [article.author],
+      images: [
+        {
+          url: featuredImageUrl,
+          width: 1200,
+          height: 630,
+          alt: article.featuredImage.alt
+        }
+      ]
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: article.title,
+      description: article.description,
+      images: [featuredImageUrl]
     }
   };
 }
@@ -49,11 +67,13 @@ export default async function ArticleDetailPage({ params }: Props) {
   }
 
   // Schema.org Article Structured Data
+  const baseUrl = 'https://ai-software-theta.vercel.app';
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'TechArticle',
     headline: article.title,
     description: article.description,
+    image: `${baseUrl}${article.featuredImage.src}`,
     author: {
       '@type': 'Organization',
       name: article.author
@@ -62,7 +82,7 @@ export default async function ArticleDetailPage({ params }: Props) {
     publisher: {
       '@type': 'Organization',
       name: 'AIsoftware',
-      url: 'https://ai-software-theta.vercel.app/'
+      url: `${baseUrl}/`
     },
     keywords: article.keywords.join(', ')
   };
@@ -117,6 +137,23 @@ export default async function ArticleDetailPage({ params }: Props) {
               </div>
             </div>
           </header>
+
+          {/* Featured Hero Illustration */}
+          <figure className="rounded-3xl overflow-hidden border border-slate-200 bg-slate-950 shadow-md">
+            <div className="relative aspect-[1200/630] w-full overflow-hidden">
+              <img
+                src={article.featuredImage.src}
+                alt={article.featuredImage.alt}
+                className="w-full h-full object-cover block"
+                loading="eager"
+              />
+            </div>
+            {article.featuredImage.caption && (
+              <figcaption className="p-4 bg-slate-900/95 border-t border-slate-800 text-xs text-slate-300 text-center leading-relaxed font-sans">
+                {article.featuredImage.caption}
+              </figcaption>
+            )}
+          </figure>
 
           <div className="space-y-12 text-slate-700">
             {article.sections.map((section, sIdx) => (

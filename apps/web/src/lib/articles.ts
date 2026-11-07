@@ -20,6 +20,7 @@ export interface Article {
   readTime: string;
   category: string;
   keywords: string[];
+  featuredImage: ArticleImage;
   sections: ArticleSection[];
 }
 
@@ -43,6 +44,11 @@ export const ARTICLES: Article[] = [
       'qwen 2.5 local',
       'llama 3.2 local'
     ],
+    featuredImage: {
+      src: '/images/articles/featured-local-llm-architecture.svg',
+      alt: 'Local Quantized LLM Inference Architecture and Sovereign Compute Server',
+      caption: 'Featured: Sovereign multi-agent compute engine running 4-bit quantized local models via Ollama with zero marginal token cost.'
+    },
     sections: [
       {
         heading: '1. The Economic and Operational Reality of Cloud Token Billing',
@@ -119,6 +125,11 @@ export const ARTICLES: Article[] = [
       'cryptographic audit trail',
       'ai governance'
     ],
+    featuredImage: {
+      src: '/images/articles/featured-human-in-the-loop-safety.svg',
+      alt: 'Deterministic Human-in-the-Loop Approval Gateway and Cryptographic Safety Architecture',
+      caption: 'Featured: Non-bypassable human approval state machine and SHA-256 Merkle audit chain eliminating runaway autonomous agent risk.'
+    },
     sections: [
       {
         heading: '1. The Fallacy of Soft Prompt-Based Constraints in Autonomous Loops',
@@ -198,6 +209,11 @@ export const ARTICLES: Article[] = [
       'redis job queues',
       'idempotent agent execution'
     ],
+    featuredImage: {
+      src: '/images/articles/featured-distributed-queues-bullmq.svg',
+      alt: 'Asynchronous Redis BullMQ Queue Engine and Worker Telemetry Pipeline',
+      caption: 'Featured: Decoupled Fastify admission gateway, Redis BullMQ queue stream, and Server-Sent Events telemetry pipeline.'
+    },
     sections: [
       {
         heading: '1. The Architectural Failure of Synchronous HTTP in Autonomous Systems',

@@ -46,19 +46,24 @@
 
 ---
 
-## 2. PART B — BLOG CONTENT QUALITY AUDIT
+## 2. PART B — BLOG CONTENT QUALITY & FEATURED IMAGES AUDIT
 
-All 3 published technical articles were rigorously expanded with substantial, original technical depth and 2 high-resolution, custom architectural SVG diagrams per article (6 custom diagrams in total).
+All 3 published technical articles meet the strict length requirements (1,400–2,000 meaningful body words) and feature:
+1. **Exactly one unique, title-related featured/hero image** rendered prominently below the title and before the body.
+2. **At least two in-article architectural diagrams** embedded within relevant sections.
+3. Full Open Graph (`og:image`), Twitter Card, and Schema.org `TechArticle` structured data integration.
 
-### 2.1 Article Compliance Matrix
+### 2.1 Article Compliance & Visual Asset Matrix
 
-| Slug | Title | Rendered Body Word Count | Target Range | Status | Embedded Custom Visuals | Licensing & Source |
-| :--- | :--- | :---: | :---: | :---: | :---: | :--- |
-| `zero-cost-local-llm-architecture` | Zero-Cost Multi-Agent Engineering with Local Quantized LLMs: Architecture, Memory Management & Topology | **1,609 words** | 1,400–2,000 | **PASS** | 2 SVG Visuals:<br>1. `local-llm-topology.svg`<br>2. `quantization-benchmarks.svg` | Original Vector Visuals (AIsoftware Engineering, MIT / Free Use) |
-| `human-in-the-loop-agent-safety` | Deterministic Human-in-the-Loop Safety Gates for Autonomous Agents: State Machines & Cryptographic Auditing | **1,535 words** | 1,400–2,000 | **PASS** | 2 SVG Visuals:<br>1. `safety-state-machine.svg`<br>2. `cryptographic-audit-chain.svg` | Original Vector Visuals (AIsoftware Engineering, MIT / Free Use) |
-| `distributed-queues-bullmq-agents` | Architecting Queue-Backed Agent Pipelines with Fastify and BullMQ: Fault Tolerance, Idempotency & SSE Telemetry | **1,466 words** | 1,400–2,000 | **PASS** | 2 SVG Visuals:<br>1. `queue-worker-architecture.svg`<br>2. `idempotency-flow.svg` | Original Vector Visuals (AIsoftware Engineering, MIT / Free Use) |
+| Slug | Title | Body Word Count (1,400–2,000) | Featured Hero Image (1200x630 SVG) | In-Article Technical Diagrams (2 per post) | Licensing & Source | Status |
+| :--- | :--- | :---: | :--- | :--- | :--- | :---: |
+| `zero-cost-local-llm-architecture` | Zero-Cost Multi-Agent Engineering with Local Quantized LLMs: Architecture, Memory Management & Topology | **1,609 words** | `featured-local-llm-architecture.svg`<br>*(Local AI compute engine, Q4_K_M memory allocation, $0.00 token meter)* | 1. `local-llm-topology.svg`<br>2. `quantization-benchmarks.svg` | Original AIsoftware Vector Illustrations (MIT / Free License) | **PASS** |
+| `human-in-the-loop-agent-safety` | Deterministic Human-in-the-Loop Safety Gates for Autonomous Agents: State Machines & Cryptographic Auditing | **1,535 words** | `featured-human-in-the-loop-safety.svg`<br>*(Hardware cryptographic shield, PENDING_APPROVAL gate, SHA-256 chain)* | 1. `safety-state-machine.svg`<br>2. `cryptographic-audit-chain.svg` | Original AIsoftware Vector Illustrations (MIT / Free License) | **PASS** |
+| `distributed-queues-bullmq-agents` | Architecting Queue-Backed Agent Pipelines with Fastify and BullMQ: Fault Tolerance, Idempotency & SSE Telemetry | **1,466 words** | `featured-distributed-queues-bullmq.svg`<br>*(Redis BullMQ stream, queue locks, worker daemon telemetry)* | 1. `queue-worker-architecture.svg`<br>2. `idempotency-flow.svg` | Original AIsoftware Vector Illustrations (MIT / Free License) | **PASS** |
 
-*Word count verification methodology:* Evaluated via Node.js parsing strictly counting paragraph body words across all sections, excluding navigation headers, footers, metadata, and HTML tags.
+*Verification Details:*  
+- **Word count:** Paragraph words only; excludes title, metadata, author bio, headers, footers, and code syntax.  
+- **Images:** Stored in [`apps/web/public/images/articles/`](file:///d:/projects/AiSoftware/ai-command-center/apps/web/public/images/articles/), rendered with fixed aspect ratios (`aspect-[1200/630]`), descriptive alt tags, and figure captions.
 
 ---
 
@@ -90,9 +95,9 @@ All 3 published technical articles were rigorously expanded with substantial, or
      - `/` (Homepage)
      - `/about` (About Us)
      - `/articles` (Articles Hub)
-     - `/articles/zero-cost-local-llm-architecture` (SSG)
-     - `/articles/human-in-the-loop-agent-safety` (SSG)
-     - `/articles/distributed-queues-bullmq-agents` (SSG)
+     - `/articles/zero-cost-local-llm-architecture` (SSG with Featured Image)
+     - `/articles/human-in-the-loop-agent-safety` (SSG with Featured Image)
+     - `/articles/distributed-queues-bullmq-agents` (SSG with Featured Image)
      - `/contact` (Contact)
      - `/dashboard` (Executive Dashboard)
      - `/login` (Owner Portal)
@@ -109,4 +114,3 @@ All 3 published technical articles were rigorously expanded with substantial, or
    ```
    - **Exit Code:** `0` (11 passing tests across revenue pipelines, webhook signature verification, and storefront models).
    - Executive dashboard authentication and backend Fastify routes remain fully functional.
-

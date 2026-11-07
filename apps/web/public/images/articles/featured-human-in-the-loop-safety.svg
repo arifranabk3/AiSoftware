@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGradHero2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16" />
+      <stop offset="50%" stop-color="#022c22" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <filter id="shadowGlowGreen" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#10b981" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1200" height="630" fill="url(#bgGradHero2)" />
+
+  <!-- Subtle Architectural Grid Background -->
+  <g stroke="#134e4a" stroke-width="1" opacity="0.3">
+    <line x1="0" y1="105" x2="1200" y2="105" />
+    <line x1="0" y1="210" x2="1200" y2="210" />
+    <line x1="0" y1="315" x2="1200" y2="315" />
+    <line x1="0" y1="420" x2="1200" y2="420" />
+    <line x1="0" y1="525" x2="1200" y2="525" />
+    <line x1="150" y1="0" x2="150" y2="630" />
+    <line x1="300" y1="0" x2="300" y2="630" />
+    <line x1="450" y1="0" x2="450" y2="630" />
+    <line x1="600" y1="0" x2="600" y2="630" />
+    <line x1="750" y1="0" x2="750" y2="630" />
+    <line x1="900" y1="0" x2="900" y2="630" />
+    <line x1="1050" y1="0" x2="1050" y2="630" />
+  </g>
+
+  <!-- Left: Stylized Cryptographic Security Shield & Hardware Lock -->
+  <g filter="url(#shadowGlowGreen)">
+    <!-- Central Shield Geometry -->
+    <path d="M 280 140 L 440 180 L 440 350 C 440 440, 280 500, 280 500 C 280 500, 120 440, 120 350 L 120 180 Z" 
+          fill="#064e3b" stroke="#10b981" stroke-width="3" />
+    <path d="M 280 160 L 420 195 L 420 340 C 420 420, 280 475, 280 475 C 280 475, 140 420, 140 340 L 140 195 Z" 
+          fill="#022c22" stroke="#34d399" stroke-width="1.5" />
+
+    <!-- Lock Emblem Center -->
+    <rect x="235" y="275" width="90" height="80" rx="14" fill="#10b981" />
+    <path d="M 255 275 L 255 245 C 255 230, 305 230, 305 245 L 305 275" fill="none" stroke="#10b981" stroke-width="10" stroke-linecap="round" />
+    <circle cx="280" cy="310" r="8" fill="#064e3b" />
+    <path d="M 280 318 L 280 335" stroke="#064e3b" stroke-width="4" stroke-linecap="round" />
+
+    <!-- Shield Header Text -->
+    <text x="280" y="390" fill="#a7f3d0" font-family="system-ui, sans-serif" font-size="13" font-weight="800" text-anchor="middle" letter-spacing="1">DETERMINISTIC GUARD</text>
+    <text x="280" y="415" fill="#f8fafc" font-family="monospace" font-size="11" text-anchor="middle">Non-Bypassable Boundary</text>
+  </g>
+
+  <!-- Interactive State Flow Cards to the Right -->
+  <!-- Card 1: Autonomous Agent Proposes -->
+  <g>
+    <rect x="540" y="140" width="540" height="95" rx="16" fill="#0f172a" stroke="#334155" stroke-width="2" />
+    <rect x="540" y="140" width="10" height="95" rx="5" fill="#6366f1" />
+    <text x="575" y="175" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="16" font-weight="800">1. Autonomous Task Dispatch</text>
+    <text x="575" y="198" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">Specialist agent formulates operational side-effect</text>
+    <text x="575" y="218" fill="#818cf8" font-family="monospace" font-size="11">Classification: High-Risk Action (External Webhook / DB / Public Post)</text>
+  </g>
+
+  <!-- Connector Downward 1 to 2 -->
+  <path d="M 810 235 L 810 265" stroke="#f59e0b" stroke-width="3" stroke-dasharray="4" />
+  <polygon points="810,270 805,260 815,260" fill="#f59e0b" />
+
+  <!-- Card 2: PENDING_APPROVAL Gate (The Highlight) -->
+  <g>
+    <rect x="540" y="270" width="540" height="110" rx="16" fill="#1c1917" stroke="#f59e0b" stroke-width="2.5" />
+    <rect x="540" y="270" width="10" height="110" rx="5" fill="#f59e0b" />
+    <div xmlns="http://www.w3.org/1999/xhtml"></div>
+    <text x="575" y="305" fill="#fef08a" font-family="system-ui, sans-serif" font-size="16" font-weight="900">2. PENDING_APPROVAL (Hardware Frozen)</text>
+    <text x="575" y="330" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="13">Worker daemon completely halted • Storage state locked</text>
+    <text x="575" y="355" fill="#cbd5e1" font-family="monospace" font-size="11">Argon2id Session Signature Required by Authenticated Owner</text>
+  </g>
+
+  <!-- Connector Downward 2 to 3 -->
+  <path d="M 810 380 L 810 410" stroke="#10b981" stroke-width="3" />
+  <polygon points="810,415 805,405 815,405" fill="#10b981" />
+
+  <!-- Card 3: Cryptographic Audit Ledger -->
+  <g>
+    <rect x="540" y="415" width="540" height="95" rx="16" fill="#0f172a" stroke="#10b981" stroke-width="2" />
+    <rect x="540" y="415" width="10" height="95" rx="5" fill="#10b981" />
+    <text x="575" y="450" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="16" font-weight="800">3. Immutable SHA-256 Ledger Commit</text>
+    <text x="575" y="473" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">Full prompt payload, execution duration &amp; decision hash linked</text>
+    <text x="575" y="493" fill="#34d399" font-family="monospace" font-size="11">Merkle Chain Provenance: 100% Tamper-Evident Accountability</text>
+  </g>
+
+  <!-- Top Hero Category Tag -->
+  <rect x="120" y="65" width="220" height="36" rx="18" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+  <circle cx="138" cy="83" r="5" fill="#34d399" />
+  <text x="152" y="88" fill="#a7f3d0" font-family="system-ui, sans-serif" font-size="12" font-weight="700" letter-spacing="1">SAFETY &amp; GOVERNANCE</text>
+
+  <!-- Bottom Brand Mark -->
+  <text x="1080" y="585" fill="#475569" font-family="system-ui, sans-serif" font-size="13" font-weight="700" text-anchor="end">AIsoftware Engineering Library</text>
+</svg>
+

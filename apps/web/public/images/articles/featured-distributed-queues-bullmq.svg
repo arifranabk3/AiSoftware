@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGradHero3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16" />
+      <stop offset="50%" stop-color="#0c2d48" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="redisRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444" />
+      <stop offset="100%" stop-color="#b91c1c" />
+    </linearGradient>
+    <filter id="shadowGlowBlue" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#0284c7" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1200" height="630" fill="url(#bgGradHero3)" />
+
+  <!-- Subtle Architectural Grid Background -->
+  <g stroke="#075985" stroke-width="1" opacity="0.25">
+    <line x1="0" y1="105" x2="1200" y2="105" />
+    <line x1="0" y1="210" x2="1200" y2="210" />
+    <line x1="0" y1="315" x2="1200" y2="315" />
+    <line x1="0" y1="420" x2="1200" y2="420" />
+    <line x1="0" y1="525" x2="1200" y2="525" />
+    <line x1="150" y1="0" x2="150" y2="630" />
+    <line x1="300" y1="0" x2="300" y2="630" />
+    <line x1="450" y1="0" x2="450" y2="630" />
+    <line x1="600" y1="0" x2="600" y2="630" />
+    <line x1="750" y1="0" x2="750" y2="630" />
+    <line x1="900" y1="0" x2="900" y2="630" />
+    <line x1="1050" y1="0" x2="1050" y2="630" />
+  </g>
+
+  <!-- Left: Asynchronous Redis BullMQ Queue Stream Engine -->
+  <g filter="url(#shadowGlowBlue)">
+    <rect x="120" y="140" width="400" height="380" rx="20" fill="#0f172a" stroke="#0284c7" stroke-width="2.5" />
+    <rect x="120" y="140" width="400" height="10" rx="5" fill="#38bdf8" />
+
+    <!-- Redis Queue Header -->
+    <rect x="150" y="175" width="340" height="65" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+    <rect x="165" y="190" width="35" height="35" rx="8" fill="url(#redisRed)" />
+    <text x="215" y="207" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="15" font-weight="800">Redis Stream Ingestion</text>
+    <text x="215" y="225" fill="#38bdf8" font-family="monospace" font-size="11">BullMQ Queue Engine • Port 6379</text>
+
+    <!-- Active In-Flight Job Pipeline -->
+    <g>
+      <rect x="150" y="260" width="340" height="50" rx="8" fill="#0f172a" stroke="#0284c7" stroke-width="1.5" />
+      <circle cx="175" cy="285" r="8" fill="#10b981" />
+      <text x="195" y="282" fill="#f8fafc" font-family="monospace" font-size="12" font-weight="700">job_1042_seo_cluster</text>
+      <text x="195" y="297" fill="#94a3b8" font-family="monospace" font-size="10">Active Worker Lock • Atomic NX</text>
+      <text x="440" y="290" fill="#86efac" font-family="monospace" font-size="11" font-weight="700">RUNNING</text>
+    </g>
+
+    <g>
+      <rect x="150" y="325" width="340" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <circle cx="175" cy="350" r="8" fill="#f59e0b" />
+      <text x="195" y="347" fill="#cbd5e1" font-family="monospace" font-size="12">job_1043_market_analysis</text>
+      <text x="195" y="362" fill="#64748b" font-family="monospace" font-size="10">Scheduled Concurrency Slot</text>
+      <text x="440" y="355" fill="#fde047" font-family="monospace" font-size="11">QUEUED</text>
+    </g>
+
+    <g>
+      <rect x="150" y="390" width="340" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <circle cx="175" cy="415" r="8" fill="#64748b" />
+      <text x="195" y="412" fill="#94a3b8" font-family="monospace" font-size="12">job_1044_audit_summary</text>
+      <text x="195" y="427" fill="#64748b" font-family="monospace" font-size="10">Waiting in Backlog</text>
+      <text x="440" y="420" fill="#94a3b8" font-family="monospace" font-size="11">WAITING</text>
+    </g>
+
+    <rect x="150" y="455" width="340" height="40" rx="8" fill="#0c4a6e" />
+    <text x="170" y="480" fill="#e0f2fe" font-family="monospace" font-size="11" font-weight="700">Throughput: &lt; 5ms Fastify Admission</text>
+  </g>
+
+  <!-- Connectors to Worker Pool -->
+  <path d="M 520 285 L 640 220" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="4" />
+  <path d="M 520 285 L 640 330" stroke="#10b981" stroke-width="3" />
+  <path d="M 520 285 L 640 440" stroke="#818cf8" stroke-width="2.5" stroke-dasharray="4" />
+
+  <!-- Right: Worker Daemons and SSE Telemetry -->
+  <!-- Worker 1 -->
+  <g>
+    <rect x="640" y="175" width="440" height="90" rx="14" fill="#0f172a" stroke="#334155" stroke-width="2" />
+    <rect x="640" y="175" width="8" height="90" rx="4" fill="#38bdf8" />
+    <text x="670" y="210" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="16" font-weight="800">Worker Process A (Daemon #1)</text>
+    <text x="670" y="232" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">Dedicated Process • Concurrency Limit: 1</text>
+    <text x="670" y="250" fill="#38bdf8" font-family="monospace" font-size="11">Local Ollama Qwen 2.5 7B Inference Pipeline</text>
+  </g>
+
+  <!-- Worker 2 -->
+  <g>
+    <rect x="640" y="285" width="440" height="90" rx="14" fill="#0f172a" stroke="#10b981" stroke-width="2" />
+    <rect x="640" y="285" width="8" height="90" rx="4" fill="#10b981" />
+    <text x="670" y="320" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="16" font-weight="800">Worker Process B (I/O &amp; Scraping)</text>
+    <text x="670" y="342" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">High-Concurrency Pool • Backoff Exponential Retry</text>
+    <text x="670" y="360" fill="#86efac" font-family="monospace" font-size="11">Atomic Redis SETNX Idempotency Lock Active</text>
+  </g>
+
+  <!-- SSE Telemetry Bridge -->
+  <g>
+    <rect x="640" y="395" width="440" height="105" rx="14" fill="#032541" stroke="#0284c7" stroke-width="2" />
+    <text x="670" y="430" fill="#e0f2fe" font-family="system-ui, sans-serif" font-size="15" font-weight="800">Real-Time Server-Sent Events (SSE)</text>
+    <text x="670" y="452" fill="#93c5fd" font-family="system-ui, sans-serif" font-size="12">Streams progress to Executive Dashboard with 0 DB polling</text>
+    <text x="670" y="475" fill="#38bdf8" font-family="monospace" font-size="11">Route: /api/v1/events/stream • Live EventSource</text>
+  </g>
+
+  <!-- Top Hero Category Tag -->
+  <rect x="120" y="65" width="240" height="36" rx="18" fill="#082f49" stroke="#0284c7" stroke-width="1.5" />
+  <circle cx="138" cy="83" r="5" fill="#38bdf8" />
+  <text x="152" y="88" fill="#bae6fd" font-family="system-ui, sans-serif" font-size="12" font-weight="700" letter-spacing="1">DISTRIBUTED SYSTEMS</text>
+
+  <!-- Bottom Brand Mark -->
+  <text x="1080" y="585" fill="#475569" font-family="system-ui, sans-serif" font-size="13" font-weight="700" text-anchor="end">AIsoftware Engineering Library</text>
+</svg>
+
