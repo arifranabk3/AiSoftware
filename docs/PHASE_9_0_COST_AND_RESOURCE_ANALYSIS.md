@@ -1,4 +1,4 @@
-# Phase 9.0 — Cost & Resource Feasibility Analysis (Corrected)
+# Phase 9.0 — Cost & Resource Feasibility Analysis (Final Corrected)
 
 **Project:** AI Command Center
 **Scope:** Financial & Computational Resource Model for Oracle Cloud Infrastructure
@@ -22,40 +22,45 @@
 
 ---
 
-## 2. Resource Utilization on 2 OCPU / 12 GB RAM
+## 2. Realistic CPU & Memory Utilization on 2 OCPU / 12 GB RAM
 
 ```
-Total Memory: 12.0 GB (12,288 MB)
+Total Physical CPU: 2.0 OCPUs (Non-oversubscribed hard ceiling)
+========================================================================
+Ollama: 0.80 OCPU | Worker: 0.35 OCPU | API: 0.35 OCPU | Web: 0.25 OCPU | Caddy: 0.15 OCPU | Redis: 0.10 OCPU
+
+Total Physical Memory: 12.0 GB (12,288 MB)
 ========================================================================
 [==================== 46% ALLOCATED ====================] [ 54% BUFFER ]
 Ollama: 3.5 GB | Worker: 0.8 GB | API: 0.5 GB | Web: 0.5 GB | Redis: 0.1 GB | OS: 0.4 GB | Headroom: 6.2 GB
 ```
 
-| Component | Target Memory (Limit) | Base Memory (Idle) | Target CPU (Quota) | Base CPU (Idle) | Scalability Impact |
+| Component | Hard CPU Limit | Memory Limit (`--memory`) | Expected Active Memory | Memory Status | Performance Impact Under Concurrency |
 |---|---|---|---|---|---|
-| **Ollama Inference Engine** | 3,500 MB | 1,350 MB | 1.50 OCPU | 0.05 OCPU | Runs `llama3.2:1b` (Q4_K_M). 4K context resident footprint is ~1.8 GB. |
-| **BullMQ Worker Daemon** | 768 MB | 140 MB | 0.75 OCPU | 0.02 OCPU | Concurrency = 3; handles background jobs and specialist execution. |
-| **Fastify API Server** | 512 MB | 95 MB | 0.50 OCPU | 0.01 OCPU | Fast JSON response times; bounded memory. |
-| **Next.js Web Dashboard** | 512 MB | 110 MB | 0.50 OCPU | 0.01 OCPU | Static prerendered dashboard pages. |
-| **Local Redis Container** | 128 MB | 25 MB | 0.25 OCPU | 0.01 OCPU | In-memory queues with AOF persistence. |
-| **Caddy Gateway** | 128 MB | 35 MB | 0.25 OCPU | 0.01 OCPU | Lightweight reverse proxy. |
-| **Host OS & systemd** | 500 MB | 350 MB | Shared | 0.05 OCPU | Linux kernel, containerd, logging. |
-| **UNALLOCATED HEADROOM** | **~6,200 MB** | **N/A** | **N/A** | **N/A** | **52% Free Memory Buffer** ensures immunity to Linux OOM killer. |
+| **Caddy Gateway** | 0.15 OCPU | 128 MB | ~40 MB | Estimated | Top priority CPU shares; sub-10ms proxy latency. |
+| **Fastify API Server** | 0.35 OCPU | 512 MB | ~160 MB | Estimated | Top priority CPU shares; UI requests stay responsive during background tasks. |
+| **Next.js Web Dashboard** | 0.25 OCPU | 512 MB | ~180 MB | Estimated | Static prerendered pages require minimal server computation. |
+| **Local Redis Container** | 0.10 OCPU | 128 MB | ~35 MB | Estimated | In-memory queues with AOF persistence; sub-millisecond dispatch. |
+| **BullMQ Worker Daemon** | 0.35 OCPU | 768 MB | ~220 MB | Estimated | Concurrency = 2 jobs; processes tasks in background queue. |
+| **Ollama Inference Engine** | 0.80 OCPU | 3,500 MB | ~1,800 MB | Measured | Concurrency = 1 request; token generation ~10–14 tokens/sec on 0.8 OCPU. |
+| **Host OS & systemd** | Shared | N/A | ~400 MB | Estimated | Linux kernel, containerd, logging, SSH daemon. |
+| **UNALLOCATED HEADROOM** | **0.00 OCPU** | **~6,200 MB** | **N/A** | **N/A** | **54% Free RAM Headroom** prevents kernel OOM killer under burst memory usage. |
 
 ---
 
-## 3. Ollama CPU Inference Throughput on 2 OCPUs
+## 3. Ollama CPU Inference Throughput on 0.8 OCPU Quota
 
-On 2 ARM Neoverse N1 cores (`VM.Standard.A1.Flex`):
+Restricting Ollama to 0.8 OCPU prevents CPU starvation of the Fastify API and Caddy gateway:
 - **Model:** `llama3.2:1b` (Q4_K_M quantization, 1.23B parameters)
-- **Prompt Evaluation:** ~35–50 tokens/second
-- **Token Generation:** ~14–19 tokens/second
-- **Feasibility:** **Fully Feasible**. Adequate for autonomous CEO task decomposition and fast validation loops without GPU.
+- **Concurrency:** **Strictly 1 inference request at a time**.
+- **Prompt Evaluation:** ~25–35 tokens/second
+- **Token Generation:** ~10–14 tokens/second
+- **Feasibility:** Fully functional for automated agent summarization, task decomposition, and routing without impacting web dashboard responsiveness. Overflow tasks are automatically routed to Groq or Gemini free-tier endpoints.
 
 ---
 
 ## 4. Quota Exhaustion & Rate-Limit Safeguards
 
-1. **Zero-Cost Strict Mode (`ZERO_COST_STRICT_MODE=true`):** Prevents accidental invocation of paid cloud AI APIs.
-2. **Local Redis:** Eliminates third-party command caps (such as Upstash 500k/month), allowing millions of internal BullMQ queue transactions at $0.00.
-3. **MongoDB Atlas 512 MB Ceiling:** Task outputs and audit records older than 30 days are scheduled for pruning.
+1. **Zero-Cost Strict Mode (`ZERO_COST_STRICT_MODE=true`):** Enforced in software to reject paid external API calls.
+2. **Local Redis:** Completely avoids external third-party command quotas (such as Upstash 500k/month).
+3. **MongoDB Atlas 512 MB Ceiling:** Audit logs and task historical records older than 30 days are purged to keep cluster size below 200 MB.

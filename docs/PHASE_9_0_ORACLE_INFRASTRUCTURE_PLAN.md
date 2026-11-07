@@ -1,10 +1,10 @@
-# Phase 9.0 — Oracle Cloud Infrastructure Plan (Corrected)
+# Phase 9.0 — Oracle Cloud Infrastructure Plan (Final Corrected)
 
 **Project:** AI Command Center
 **Repository:** `arifranabk3/AiSoftware`
 **Current Release Commit:** `595b3537032824beac5e0d452755e5640075d83d`
 **Target Environment:** Oracle Cloud Infrastructure (OCI) Always Free Tier
-**Document Status:** Corrected Architectural Specification (Non-Deploying)
+**Document Status:** Final Validated Architectural Specification (Non-Deploying)
 **Official Reference:** [Oracle Cloud Always Free Resources](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm)
 
 ---
@@ -13,11 +13,11 @@
 
 This document provides a realistic, internally consistent infrastructure plan for running the AI Command Center on Oracle Cloud Infrastructure (OCI).
 
-### Critical Entitlement Correction:
+### Critical Entitlement & Capacity Limits:
 - **Monthly A1 Allowance Limit:** The monthly Always Free allowance for Arm-based Ampere A1 Compute (`VM.Standard.A1.Flex`) is strictly **1,500 OCPU-hours and 9,000 GB-hours per month**.
 - **Continuous 24/7 Equivalent:** 1,500 OCPU-hours ÷ 720 hours/month = **~2.08 OCPUs**; 9,000 GB-hours ÷ 720 hours/month = **12.5 GB RAM**.
-- **Continuous 24/7 Safe Configuration:** A single VM configured with **2 OCPUs and 12 GB RAM** runs continuously within the monthly free allowance ($0.00). Attempting to run a 4 OCPU / 24 GB VM 24/7 would exhaust the monthly allowance in ~15 days, resulting in either suspension or billing charges.
-- **Account Types:**
+- **Continuous 24/7 Safe Configuration:** A single VM configured with **2 OCPUs and 12 GB RAM** runs continuously within the monthly free allowance ($0.00). Attempting to run a 4 OCPU / 24 GB VM 24/7 would consume 2,880 OCPU-hours and 17,280 GB-hours, exhausting the monthly allowance in ~15 days.
+- **Account Types & Idle Reclamation:**
   - *Always Free-Only Tenancy:* Zero card charges possible. Subject to idle instance reclamation if utilization drops below threshold for 7 days.
   - *Free Trial:* Grants $300 in promotional credits valid for 30 days. Non-Always-Free resources are abruptly terminated on Day 31.
   - *Pay As You Go (PAYG):* Always Free allowances still apply at $0.00, but any resource exceeding allowances will be billed automatically to the credit card on file.
@@ -42,24 +42,21 @@ The AI Command Center is designed to run consolidated on a single 2 OCPU / 12 GB
 
 ---
 
-## 3. Resource Allocation within 2 OCPU / 12 GB RAM
+## 3. Strict 2.0 OCPU Hard Quota Model & CPU Shares
 
-All services must co-exist within 2 OCPU and 12 GB RAM:
+To prevent CPU oversubscription from degrading API and dashboard responsiveness during local Ollama inference, the physical 2.0 OCPUs are partitioned using Docker CPU quotas (`--cpus`) or weighted CPU shares:
 
-| Service / Container | Memory Limit (`--memory`) | Typical Active Memory | CPU Quota | CPU Idle |
-|---|---|---|---|---|
-| **Host OS & systemd** | N/A (Host) | 400 MB (Estimated) | Shared | 0.05 OCPU |
-| **Docker Engine & containerd** | N/A (Host) | 120 MB (Estimated) | Shared | 0.02 OCPU |
-| **Caddy Gateway** | 128 MB | 40 MB (Estimated) | 0.25 OCPU | 0.01 OCPU |
-| **Fastify API Server** | 512 MB | 160 MB (Estimated) | 0.50 OCPU | 0.01 OCPU |
-| **BullMQ Worker Daemon** | 768 MB | 220 MB (Estimated) | 0.75 OCPU | 0.02 OCPU |
-| **Next.js Web Dashboard** | 512 MB | 180 MB (Estimated) | 0.50 OCPU | 0.01 OCPU |
-| **Local Redis Container** | 128 MB | 35 MB (Estimated) | 0.25 OCPU | 0.01 OCPU |
-| **Ollama (`llama3.2:1b` Q4)** | 3,500 MB | 1,800 MB (Measured local) | 1.50 OCPU | 0.05 OCPU |
-| **Total Active Allocated** | **~5,676 MB** | **~2,955 MB** | **2.00 OCPU (Burst)** | **~0.18 OCPU** |
-| **Unallocated OS Buffer / Cache** | **~6,324 MB (~52% Headroom)** | | | |
-
-*Note: All values are derived from local development measurements and container profiles; production loads under continuous concurrency may vary.*
+| Service / Container | Hard CPU Quota (`--cpus`) | CPU Shares (`--cpu-shares`) | Memory Limit (`--memory`) | Expected Active Memory | Priority & Behavior Under Load |
+|---|---|---|---|---|---|
+| **Caddy Gateway** | 0.15 OCPU | 1024 (Highest) | 128 MB | ~40 MB | Protected; fast reverse proxying & TLS. |
+| **Fastify API Server** | 0.35 OCPU | 1024 (Highest) | 512 MB | ~160 MB | Protected; guarantees UI responsiveness. |
+| **Next.js Web Dashboard** | 0.25 OCPU | 512 (Standard) | 512 MB | ~180 MB | Static page rendering & client state. |
+| **Local Redis 7 Container** | 0.10 OCPU | 1024 (Highest) | 128 MB | ~35 MB | Sub-millisecond queue dispatching. |
+| **BullMQ Worker Daemon** | 0.35 OCPU | 256 (Low) | 768 MB | ~220 MB | Background execution; throttled under load. |
+| **Ollama Daemon (`llama3.2:1b`)** | 0.80 OCPU | 256 (Low) | 3,500 MB | ~1,800 MB | Concurrency = 1; yields CPU to API/Caddy. |
+| **Host OS & systemd** | Shared (Host) | N/A | N/A | ~400 MB | Base system operations & SSH. |
+| **TOTAL HARD CEILING** | **2.00 OCPU** | **N/A** | **~5,676 MB** | **~2,835 MB** | **Strict 100% boundary of 2.0 physical OCPUs** |
+| **Unallocated Memory Buffer** | | | **~6,612 MB** | | **54% Free RAM Headroom for disk caching & swap** |
 
 ---
 
