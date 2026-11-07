@@ -60,11 +60,56 @@ export const StorefrontListingSchema = z.object({
   updatedAt: z.string().datetime()
 });
 
+export interface WebhookEventRecord {
+  eventId: string;
+  source: 'LEMON_SQUEEZY' | 'GUMROAD';
+  eventName: string;
+  externalOrderId?: string;
+  status: 'PENDING' | 'CONFIRMED' | 'REFUNDED' | 'FAILED';
+  grossAmountUSD: number;
+  feeUSD: number;
+  netAmountUSD: number;
+  currency: string;
+  customerEmailMasked?: string;
+  isTest: boolean;
+  receivedAt: string;
+  processedAt?: string;
+}
+
 export class StorefrontRepository {
   private collection: Collection<StorefrontListing>;
+  private webhookEventsColl: Collection<WebhookEventRecord>;
 
   constructor(private db: Db) {
     this.collection = db.collection<StorefrontListing>('storefront_listings');
+    this.webhookEventsColl = db.collection<WebhookEventRecord>('storefront_webhook_events');
+  }
+
+  // --- Webhook Events Idempotency & Persistence ---
+  public async recordWebhookEvent(event: WebhookEventRecord): Promise<{ isDuplicate: boolean; event: WebhookEventRecord }> {
+    const existing = await this.webhookEventsColl.findOne({ eventId: event.eventId });
+    if (existing) {
+      const { _id, ...rest } = existing as any;
+      return { isDuplicate: true, event: rest as WebhookEventRecord };
+    }
+
+    await this.webhookEventsColl.insertOne({ ...event, _id: event.eventId as any });
+    return { isDuplicate: false, event };
+  }
+
+  public async getWebhookEventById(eventId: string): Promise<WebhookEventRecord | null> {
+    const doc = await this.webhookEventsColl.findOne({ eventId });
+    if (!doc) return null;
+    const { _id, ...rest } = doc as any;
+    return rest as WebhookEventRecord;
+  }
+
+  public async listWebhookEvents(filter: Partial<WebhookEventRecord> = {}): Promise<WebhookEventRecord[]> {
+    const docs = await this.webhookEventsColl.find(filter).sort({ receivedAt: -1 }).toArray();
+    return docs.map((doc) => {
+      const { _id, ...rest } = doc as any;
+      return rest as WebhookEventRecord;
+    });
   }
 
   public async upsertListing(listing: StorefrontListing): Promise<StorefrontListing> {

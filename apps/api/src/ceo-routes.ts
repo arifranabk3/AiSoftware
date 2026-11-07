@@ -13,7 +13,7 @@ import {
   ApprovalStatus,
   BusinessObjectiveDocument
 } from '@ai-command-center/database';
-import { checkPermission, calculateAuditHash, ChainedAuditLogEntry, distributedKillSwitch } from '@ai-command-center/security';
+import { checkPermission, calculateAuditHash, ChainedAuditLogEntry, distributedKillSwitch, verifyWebhookSignature, maskEmail } from '@ai-command-center/security';
 import { taskDispatcherService, BaseTaskPayload, activityService } from '@ai-command-center/automation';
 import { ActivityEventType } from '@ai-command-center/shared';
 import {
@@ -1097,6 +1097,108 @@ export async function registerCeoRoutes(
           listings,
           summary
         }
+      });
+    }
+  );
+
+  /**
+   * POST /api/ceo/storefront/webhooks/lemonsqueezy
+   * Secure webhook receiver for Lemon Squeezy order and refund verification.
+   * Enforces HMAC-SHA256 signature verification, idempotency, and data masking.
+   */
+  app.post(
+    '/api/ceo/storefront/webhooks/lemonsqueezy',
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
+      if (!secret) {
+        return reply.status(503).send({
+          success: false,
+          error: 'INTEGRATION_UNCONFIGURED',
+          message: 'Lemon Squeezy webhook secret is not configured on server.'
+        });
+      }
+
+      const signatureHeader = req.headers['x-signature'] as string | undefined;
+      const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+
+      const verification = verifyWebhookSignature(rawBody, signatureHeader, secret);
+      if (!verification.isValid) {
+        return reply.status(401).send({
+          success: false,
+          error: 'UNAUTHORIZED_WEBHOOK_SIGNATURE',
+          message: verification.error || 'Invalid webhook signature.'
+        });
+      }
+
+      const payload = req.body as any;
+      const eventName = payload?.meta?.event_name || 'unknown';
+      const orderData = payload?.data;
+      const orderId = orderData?.id ? String(orderData.id) : undefined;
+      const attributes = orderData?.attributes || {};
+
+      const eventId = `ls_evt_${orderId || randomUUID()}_${eventName}`;
+      const { storefrontRepo, revenueRepo } = getRepos();
+
+      // Convert cents to dollars if currency is USD
+      const totalCents = attributes.total || attributes.subtotal || 0;
+      const grossUSD = totalCents / 100;
+      // Standard Lemon Squeezy MoR fee model: 5% + $0.50
+      const feeUSD = grossUSD > 0 ? (grossUSD * 0.05) + 0.50 : 0;
+      const netUSD = Math.max(0, grossUSD - feeUSD);
+      const isTestOrder = Boolean(attributes.test_mode);
+
+      const isRefund = eventName === 'order_refunded' || attributes.refunded === true;
+      const status = isRefund ? 'REFUNDED' : 'CONFIRMED';
+
+      const emailRaw = attributes.user_email || attributes.customer_email;
+      const customerEmailMasked = emailRaw ? maskEmail(emailRaw) : undefined;
+
+      const recordRes = await storefrontRepo.recordWebhookEvent({
+        eventId,
+        source: 'LEMON_SQUEEZY',
+        eventName,
+        externalOrderId: orderId,
+        status,
+        grossAmountUSD: grossUSD,
+        feeUSD,
+        netAmountUSD: netUSD,
+        currency: attributes.currency || 'USD',
+        customerEmailMasked,
+        isTest: isTestOrder,
+        receivedAt: new Date().toISOString(),
+        processedAt: new Date().toISOString()
+      });
+
+      if (recordRes.isDuplicate) {
+        return reply.status(200).send({
+          success: true,
+          status: 'ALREADY_PROCESSED',
+          message: 'Duplicate event ignored.'
+        });
+      }
+
+      // Record verified revenue transaction only if not a test order
+      if (!isTestOrder && (eventName === 'order_created' || isRefund)) {
+        await revenueRepo.recordTransaction({
+          transactionId: `tx_${eventId}`,
+          channel: 'DIGITAL_PRODUCT' as any,
+          grossAmountUSD: grossUSD,
+          feeUSD,
+          netAmountUSD: netUSD,
+          status: isRefund ? 'REFUNDED' : 'CONFIRMED',
+          source: 'Lemon Squeezy',
+          externalReference: orderId,
+          occurredAt: attributes.created_at || new Date().toISOString(),
+          confirmedAt: new Date().toISOString()
+        });
+      }
+
+      return reply.status(200).send({
+        success: true,
+        status: 'PROCESSED',
+        eventId,
+        eventName,
+        verified: true
       });
     }
   );

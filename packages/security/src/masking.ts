@@ -60,3 +60,15 @@ export function redactSensitiveData(input: any): any {
 
   return input;
 }
+
+export function maskEmail(email: string): string {
+  if (!email || typeof email !== 'string') return '';
+  const parts = email.split('@');
+  if (parts.length !== 2) return '[REDACTED_EMAIL]';
+  const name = parts[0];
+  const domain = parts[1];
+  if (name.length <= 2) {
+    return `${name[0]}*@${domain}`;
+  }
+  return `${name[0]}${'*'.repeat(name.length - 2)}${name[name.length - 1]}@${domain}`;
+}
