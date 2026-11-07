@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0f1d" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+    <linearGradient id="accent-orange" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#ea580c" />
+    </linearGradient>
+    <linearGradient id="token-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.75" />
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#grid)" opacity="0.6" />
+
+  <!-- Outer Editorial Border -->
+  <rect x="30" y="30" width="1140" height="570" rx="16" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="8,6" />
+
+  <!-- Badge -->
+  <rect x="70" y="70" width="220" height="34" rx="17" fill="#1e293b" stroke="#f97316" stroke-width="1.5" />
+  <circle cx="90" cy="87" r="5" fill="#f97316" />
+  <text x="105" y="92" fill="#fed7aa" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" letter-spacing="1">ARCHITECTURAL FIELD GUIDE</text>
+
+  <!-- Title & Subtitle -->
+  <text x="70" y="150" fill="#f8fafc" font-family="system-ui, -apple-system, sans-serif" font-size="34" font-weight="800" letter-spacing="-0.5">Sliding-Window Token Buffer Management</text>
+  <text x="70" y="195" fill="#f97316" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" letter-spacing="-0.5">Preventing Context Window Overflow in Multi-Turn AI Agents</text>
+  <text x="70" y="235" fill="#94a3b8" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="400">Deterministic pruning, dynamic summary compaction, and token reserve allocation</text>
+
+  <!-- Diagram Visual Composition -->
+  <!-- Context Window Envelope (Total Capacity: 8192 Tokens) -->
+  <g transform="translate(70, 275)">
+    <!-- Container -->
+    <rect width="1060" height="250" rx="12" fill="#0f172a" stroke="#334155" stroke-width="2" />
+    <rect width="1060" height="32" rx="12" fill="#1e293b" />
+    <text x="20" y="21" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12" font-weight="700">AGENT ACTIVE CONTEXT BUFFER (MAX: 8,192 TOKENS)</text>
+    <text x="1040" y="21" fill="#f97316" font-family="monospace" font-size="12" font-weight="700" text-anchor="end">BUFFER HIGH-WATER MARK: 85%</text>
+
+    <!-- Zone 1: Immutable System & Tool Prompt -->
+    <rect x="20" y="50" width="220" height="175" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5" />
+    <rect x="20" y="50" width="220" height="26" rx="8" fill="#2563eb" />
+    <text x="130" y="68" fill="#ffffff" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">IMMUTABLE SYSTEM PROMPT</text>
+    <text x="35" y="100" fill="#93c5fd" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Fixed Anchor: 1,500 Tok</text>
+    <text x="35" y="125" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Core System Directives</text>
+    <text x="35" y="145" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• JSON Tool Schemas</text>
+    <text x="35" y="165" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Behavioral Boundary Rules</text>
+    <text x="35" y="200" fill="#10b981" font-family="monospace" font-size="10" font-weight="700">STATUS: PROTECTED (PINNED)</text>
+
+    <!-- Zone 2: Rolling Summary Node (Compacted History) -->
+    <rect x="260" y="50" width="240" height="175" rx="8" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5" />
+    <rect x="260" y="50" width="240" height="26" rx="8" fill="#7c3aed" />
+    <text x="380" y="68" fill="#ffffff" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">ROLLING CONTEXT SUMMARY</text>
+    <text x="275" y="100" fill="#c4b5fd" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Compacted: 1,200 Tok</text>
+    <text x="275" y="125" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Turns 1-24 Summarized</text>
+    <text x="275" y="145" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Critical Key-Value State</text>
+    <text x="275" y="165" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Objective Milestones Met</text>
+    <text x="275" y="200" fill="#8b5cf6" font-family="monospace" font-size="10" font-weight="700">COMPRESSION RATIO: 6.2 : 1</text>
+
+    <!-- Zone 3: Active Sliding Window (Recent Raw Turns) -->
+    <rect x="520" y="50" width="280" height="175" rx="8" fill="#1e293b" stroke="#10b981" stroke-width="1.5" />
+    <rect x="520" y="50" width="280" height="26" rx="8" fill="#059669" />
+    <text x="660" y="68" fill="#ffffff" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">ACTIVE SLIDING WINDOW</text>
+    <text x="535" y="100" fill="#6ee7b7" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Recent Turns: 3,200 Tok</text>
+    <text x="535" y="125" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Raw Turn N-3 (User Input)</text>
+    <text x="535" y="145" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Raw Turn N-2 (Tool Call)</text>
+    <text x="535" y="165" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Raw Turn N-1 (Tool Execution)</text>
+    <text x="535" y="200" fill="#10b981" font-family="monospace" font-size="10" font-weight="700">RETENTION POLICY: FIFO</text>
+
+    <!-- Zone 4: Reserved Generation Headroom -->
+    <rect x="820" y="50" width="220" height="175" rx="8" fill="#18181b" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4,4" />
+    <rect x="820" y="50" width="220" height="26" rx="8" fill="#ea580c" />
+    <text x="930" y="68" fill="#ffffff" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">OUTPUT HEADROOM RESERVE</text>
+    <text x="835" y="100" fill="#fdba74" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Safety Buffer: 2,292 Tok</text>
+    <text x="835" y="125" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Guaranteed Model Output</text>
+    <text x="835" y="145" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Prevents Mid-Token OOM</text>
+    <text x="835" y="165" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Protects JSON Parsing</text>
+    <text x="835" y="200" fill="#f97316" font-family="monospace" font-size="10" font-weight="700">HARD CEILING: NON-BREACHABLE</text>
+  </g>
+
+  <!-- Brand Signature -->
+  <text x="1110" y="580" fill="#475569" font-family="system-ui, sans-serif" font-size="13" font-weight="700" text-anchor="end">AIsoftware Engineering Architecture Library</text>
+</svg>
+

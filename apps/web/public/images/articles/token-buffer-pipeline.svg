@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad-buf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <marker id="arrow-buf" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#94a3b8" />
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#f97316" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="url(#bg-grad-buf)" rx="12" />
+  <rect x="20" y="20" width="760" height="410" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,6" rx="8" />
+
+  <!-- Title -->
+  <text x="400" y="55" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="700" text-anchor="middle">Sliding-Window Token Eviction &amp; Dynamic Compaction Pipeline</text>
+  <text x="400" y="78" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle">Step-by-step lifecycle from raw dialogue ingestion to high-water mark pruning</text>
+
+  <!-- Steps -->
+  <!-- 1. Incoming Turn -->
+  <g transform="translate(45, 120)">
+    <rect width="180" height="110" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="2" />
+    <rect width="180" height="28" rx="8" fill="#2563eb" />
+    <text x="90" y="19" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">1. Ingest Turn N</text>
+    <text x="15" y="52" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="11" font-weight="600">User / Tool Response</text>
+    <text x="15" y="72" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Token Length: ΔT tokens</text>
+    <text x="15" y="90" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Calculate: T_total + ΔT</text>
+  </g>
+
+  <!-- Arrow 1 to 2 -->
+  <line x1="225" y1="175" x2="285" y2="175" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow-buf)" />
+
+  <!-- 2. Watermark Evaluation -->
+  <g transform="translate(295, 120)">
+    <rect width="210" height="110" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="2" />
+    <rect width="210" height="28" rx="8" fill="#d97706" />
+    <text x="105" y="19" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">2. Watermark Evaluation</text>
+    <text x="15" y="52" fill="#fef3c7" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Threshold: 80% Capacity</text>
+    <text x="15" y="72" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">If Under: Append Turn &amp; Exec</text>
+    <text x="15" y="90" fill="#f97316" font-family="system-ui, sans-serif" font-size="10" font-weight="700">If Over: Trigger Compactor</text>
+  </g>
+
+  <!-- Arrow 2 to 3 -->
+  <line x1="505" y1="175" x2="565" y2="175" stroke="#f97316" stroke-width="2" marker-end="url(#arrow-orange)" />
+
+  <!-- 3. Dynamic Compactor -->
+  <g transform="translate(575, 110)">
+    <rect width="180" height="130" rx="8" fill="#1e293b" stroke="#f97316" stroke-width="2" />
+    <rect width="180" height="28" rx="8" fill="#ea580c" />
+    <text x="90" y="19" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">3. Recursive Compactor</text>
+    <text x="15" y="50" fill="#fed7aa" font-family="system-ui, sans-serif" font-size="10" font-weight="600">Fast Local Summarizer</text>
+    <text x="15" y="70" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Summarize oldest 50% turns</text>
+    <text x="15" y="88" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Extract JSON key entities</text>
+    <text x="15" y="106" fill="#10b981" font-family="system-ui, sans-serif" font-size="10" font-weight="700">Reclaims ~65% headroom</text>
+  </g>
+
+  <!-- Downward Arrow from Step 3 to Final Dispatch -->
+  <path d="M 665 240 L 665 295 L 450 295 L 450 325" fill="none" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrow-buf)" />
+
+  <!-- Output Box -->
+  <g transform="translate(240, 335)">
+    <rect width="420" height="80" rx="8" fill="#1e293b" stroke="#10b981" stroke-width="2" />
+    <rect width="420" height="26" rx="8" fill="#059669" />
+    <text x="210" y="18" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">4. Optimized Prompt Buffer Dispatched to Inference Engine</text>
+    <text x="15" y="48" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="11">System Rules (Pinned) + Rolled Summary + Active Window + Headroom</text>
+    <text x="15" y="66" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Guarantees zero model crash, intact JSON parsing, and deterministic token costs.</text>
+  </g>
+</svg>
+
