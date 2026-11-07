@@ -4,13 +4,17 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'AI Command Center — Autonomous Enterprise Platform',
-  description: 'Autonomous Enterprise Digital Business Management Platform'
+  description: 'Autonomous Enterprise Digital Business Management Platform',
+  other: {
+    'google-adsense-account': 'ca-pub-9578771297998223'
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <meta name="google-adsense-account" content="ca-pub-9578771297998223" />
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9578771297998223"
