@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /api/
+
+User-agent: Mediapartners-Google
+Allow: /
+
+Sitemap: https://ai-software-theta.vercel.app/sitemap.xml
+
