@@ -7,6 +7,7 @@ import {
   ApprovalRepository,
   ActivityRepository,
   RevenueRepository,
+  StorefrontRepository,
   ObjectiveStatus,
   TaskStatus,
   ApprovalStatus,
@@ -62,7 +63,8 @@ export async function registerCeoRoutes(
       taskRepo: new OrchestratorTaskRepository(db),
       approvalRepo: new ApprovalRepository(db),
       activityRepo: new ActivityRepository(db),
-      revenueRepo: new RevenueRepository(db)
+      revenueRepo: new RevenueRepository(db),
+      storefrontRepo: new StorefrontRepository(db)
     };
   }
 
@@ -1074,5 +1076,28 @@ export async function registerCeoRoutes(
       });
     }
   );
-}
 
+  /**
+   * GET /api/ceo/storefront/listings
+   * Real-time storefront listing telemetry, views, visitors, orders, and payout status
+   */
+  app.get(
+    '/api/ceo/storefront/listings',
+    {
+      preHandler: [authenticate, requirePermission('read', 'activity')]
+    },
+    async (_req: FastifyRequest, reply: FastifyReply) => {
+      const { storefrontRepo } = getRepos();
+      const listings = await storefrontRepo.listAll();
+      const summary = await storefrontRepo.getSummaryTelemetry();
+
+      return reply.status(200).send({
+        success: true,
+        data: {
+          listings,
+          summary
+        }
+      });
+    }
+  );
+}
