@@ -44,6 +44,9 @@ export default function ArticlesIndexPage() {
                   <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100">
                     {article.category}
                   </span>
+                  <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] border border-slate-200">
+                    {article.editorialStatus}
+                  </span>
                   <span className="flex items-center space-x-1">
                     <Clock className="h-3 w-3" />
                     <span>{article.readTime}</span>

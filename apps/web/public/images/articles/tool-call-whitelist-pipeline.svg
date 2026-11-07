@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgBoxInj2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#14532d" />
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" rx="16" fill="url(#bgBoxInj2)" stroke="#334155" stroke-width="2" />
+
+  <text x="40" y="50" fill="#34d399" font-family="system-ui, sans-serif" font-size="14" font-weight="700" letter-spacing="1.5">FIGURE 2: DUAL-CHANNEL TOOL CALL ISOLATION</text>
+  <text x="40" y="78" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="800">Deterministic Tool Whitelisting and Output Verification Pipeline</text>
+
+  <!-- Step 1: Model Output (JSON Structured) -->
+  <rect x="40" y="130" width="220" height="150" rx="12" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+  <rect x="40" y="130" width="220" height="6" rx="3" fill="#6366f1" />
+  <text x="55" y="160" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="700">1. Raw LLM Output</text>
+  <text x="55" y="185" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Tool Call Candidate</text>
+  <text x="55" y="208" fill="#cbd5e1" font-family="monospace" font-size="10">{ &quot;tool&quot;: &quot;execQuery&quot;,</text>
+  <text x="55" y="226" fill="#cbd5e1" font-family="monospace" font-size="10">  &quot;params&quot;: { &quot;id&quot;: &quot;...&quot; } }</text>
+  <text x="55" y="250" fill="#818cf8" font-family="system-ui" font-size="10" font-weight="600">Untrusted Output State</text>
+
+  <!-- Arrow -->
+  <path d="M 260 205 L 310 205" stroke="#34d399" stroke-width="2.5" />
+  <polygon points="315,205 305,200 305,210" fill="#34d399" />
+
+  <!-- Step 2: Strict Zod Whitelist & Guard -->
+  <rect x="315" y="130" width="230" height="150" rx="12" fill="#0f172a" stroke="#10b981" stroke-width="2" />
+  <text x="335" y="160" fill="#10b981" font-family="system-ui, sans-serif" font-size="14" font-weight="800">2. Deterministic Guard</text>
+  <text x="335" y="185" fill="#f8fafc" font-family="monospace" font-size="11">RBAC &amp; Schema Match:</text>
+  <text x="335" y="205" fill="#a7f3d0" font-family="monospace" font-size="10">• Specialist ID: spec_seo</text>
+  <text x="335" y="222" fill="#a7f3d0" font-family="monospace" font-size="10">• Allowed Tools: [fetchUrl, parse]</text>
+  <text x="335" y="240" fill="#fca5a5" font-family="monospace" font-size="10">• execQuery: DISALLOWED (Drop)</text>
+  <text x="335" y="262" fill="#10b981" font-family="system-ui" font-size="10" font-weight="700">Non-Bypassable TypeScript Check</text>
+
+  <!-- Arrow -->
+  <path d="M 545 205 L 595 205" stroke="#10b981" stroke-width="2.5" />
+  <polygon points="600,205 590,200 590,210" fill="#10b981" />
+
+  <!-- Step 3: Sandboxed Execution or Rejection -->
+  <rect x="600" y="130" width="160" height="150" rx="12" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+  <rect x="600" y="130" width="160" height="6" rx="3" fill="#10b981" />
+  <text x="615" y="160" fill="#86efac" font-family="system-ui, sans-serif" font-size="13" font-weight="800">3. Safe Output</text>
+  <text x="615" y="185" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="11">Result Delivered:</text>
+  <text x="615" y="208" fill="#d1fae5" font-family="monospace" font-size="10">• Only verified tools run</text>
+  <text x="615" y="226" fill="#d1fae5" font-family="monospace" font-size="10">• Sanitized response</text>
+  <text x="615" y="250" fill="#86efac" font-family="system-ui" font-size="10" font-weight="700">Zero Privilege Escalation</text>
+
+  <!-- Bottom Panel -->
+  <rect x="40" y="310" width="720" height="100" rx="12" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+  <text x="60" y="338" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="13" font-weight="700">When Prompt Injection Defenses Are NOT Needed:</text>
+  <text x="60" y="362" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Closed-loop deterministic agents that only read static trusted local documentation without web scraping, user input forms, or dynamic external API responses do not face indirect prompt injection vectors.</text>
+  <text x="60" y="388" fill="#10b981" font-family="monospace" font-size="11">&gt; Rule: Never grant an AI agent raw shell or SQL execution rights directly from prompt output.</text>
+</svg>

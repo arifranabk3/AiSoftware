@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="agent-node" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+    <linearGradient id="gate-node" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <linearGradient id="human-node" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="exec-node" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#7c3aed" />
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#94a3b8" />
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#10b981" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="url(#bg-grad)" rx="12" />
+  <rect x="20" y="20" width="760" height="410" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,6" rx="8" />
+
+  <!-- Title -->
+  <text x="400" y="55" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="700" text-anchor="middle">Multi-Signer Human Approval Pipeline for High-Risk Actions</text>
+  <text x="400" y="78" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle">Step-by-step cryptographic signature verification prior to destructive tool execution</text>
+
+  <!-- Flow Boxes -->
+  <!-- Step 1: Autonomous Agent Request -->
+  <g transform="translate(45, 120)">
+    <rect width="180" height="110" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="2" />
+    <rect width="180" height="28" rx="8" fill="url(#agent-node)" />
+    <text x="90" y="19" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">1. Agent Proposal</text>
+    <text x="15" y="52" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Action: DROP TABLE / WIRE</text>
+    <text x="15" y="72" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Target: prod_db_orders</text>
+    <text x="15" y="90" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Status: Halted at Gateway</text>
+  </g>
+
+  <!-- Arrow 1 to 2 -->
+  <line x1="225" y1="175" x2="285" y2="175" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- Step 2: Quorum Gate -->
+  <g transform="translate(295, 120)">
+    <rect width="210" height="110" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="2" />
+    <rect width="210" height="28" rx="8" fill="url(#gate-node)" />
+    <text x="105" y="19" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">2. Quorum Governance Gate</text>
+    <text x="15" y="52" fill="#fef3c7" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Policy: M-of-N Multi-Sig (2 of 3)</text>
+    <text x="15" y="72" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Signer 1 (SecOps): Pending</text>
+    <text x="15" y="90" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Signer 2 (DB Admin): Pending</text>
+  </g>
+
+  <!-- Arrow 2 to 3 -->
+  <line x1="505" y1="175" x2="565" y2="175" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- Step 3: Human Signers -->
+  <g transform="translate(575, 110)">
+    <rect width="180" height="130" rx="8" fill="#1e293b" stroke="#10b981" stroke-width="2" />
+    <rect width="180" height="28" rx="8" fill="url(#human-node)" />
+    <text x="90" y="19" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">3. Cryptographic Verification</text>
+    <text x="15" y="50" fill="#d1fae5" font-family="system-ui, sans-serif" font-size="10" font-weight="600">Ed25519 Token Signing</text>
+    <text x="15" y="70" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">SecOps: Signed [OK]</text>
+    <text x="15" y="88" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">DBAdmin: Signed [OK]</text>
+    <text x="15" y="106" fill="#10b981" font-family="system-ui, sans-serif" font-size="10" font-weight="700">Threshold Met: 2/2 Valid</text>
+  </g>
+
+  <!-- Downward Arrow from Step 3 to Final Execution -->
+  <path d="M 665 240 L 665 295 L 450 295 L 450 325" fill="none" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrow-green)" />
+
+  <!-- Final Execution Step -->
+  <g transform="translate(260, 335)">
+    <rect width="380" height="80" rx="8" fill="#1e293b" stroke="#8b5cf6" stroke-width="2" />
+    <rect width="380" height="26" rx="8" fill="url(#exec-node)" />
+    <text x="190" y="18" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">4. Atomic Tool Execution &amp; Immutable Audit Log</text>
+    <text x="15" y="48" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="11">Ephemeral Token Dispatched to Production Driver (Single-Use, 60s)</text>
+    <text x="15" y="66" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Cryptographic audit receipt appended to Merkle log; action finalized.</text>
+  </g>
+</svg>

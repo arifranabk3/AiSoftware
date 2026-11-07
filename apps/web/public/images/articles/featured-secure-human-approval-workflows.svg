@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGradApproval" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16" />
+      <stop offset="50%" stop-color="#1e1305" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <filter id="shadowAmberGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#f59e0b" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bgGradApproval)" />
+
+  <g stroke="#451a03" stroke-width="1" opacity="0.3">
+    <line x1="0" y1="105" x2="1200" y2="105" />
+    <line x1="0" y1="210" x2="1200" y2="210" />
+    <line x1="0" y1="315" x2="1200" y2="315" />
+    <line x1="0" y1="420" x2="1200" y2="420" />
+    <line x1="0" y1="525" x2="1200" y2="525" />
+    <line x1="150" y1="0" x2="150" y2="630" />
+    <line x1="300" y1="0" x2="300" y2="630" />
+    <line x1="450" y1="0" x2="450" y2="630" />
+    <line x1="600" y1="0" x2="600" y2="630" />
+    <line x1="750" y1="0" x2="750" y2="630" />
+    <line x1="900" y1="0" x2="900" y2="630" />
+    <line x1="1050" y1="0" x2="1050" y2="630" />
+  </g>
+
+  <!-- Left: Stylized Sovereign Multi-Sig Approval Gate Console -->
+  <g filter="url(#shadowAmberGlow)">
+    <rect x="120" y="140" width="380" height="380" rx="24" fill="#1c1917" stroke="#f59e0b" stroke-width="2.5" />
+    <rect x="120" y="140" width="380" height="10" rx="5" fill="#f59e0b" />
+
+    <!-- Terminal Approval Badge -->
+    <rect x="150" y="175" width="320" height="75" rx="10" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5" />
+    <circle cx="175" cy="212" r="10" fill="#f59e0b" />
+    <text x="195" y="210" fill="#fef08a" font-family="system-ui, sans-serif" font-size="14" font-weight="800">PENDING OWNER APPROVAL</text>
+    <text x="195" y="230" fill="#94a3b8" font-family="monospace" font-size="11">Task #1042 • Live Gateway Locked</text>
+
+    <!-- Blast Radius & Payload Box -->
+    <rect x="150" y="265" width="320" height="110" rx="10" fill="#292524" />
+    <text x="170" y="295" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="12" font-weight="700">Action: Dispatch Webhook to LemonSqueezy</text>
+    <text x="170" y="318" fill="#cbd5e1" font-family="monospace" font-size="11">Blast Radius: Financial Transaction</text>
+    <text x="170" y="340" fill="#fca5a5" font-family="monospace" font-size="11">Autonomous Execution: FORBIDDEN</text>
+    <text x="170" y="360" fill="#86efac" font-family="monospace" font-size="11">Required: Owner Auth Signature</text>
+
+    <!-- Owner Decision Trigger -->
+    <rect x="150" y="390" width="150" height="45" rx="8" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+    <text x="225" y="418" fill="#86efac" font-family="system-ui, sans-serif" font-size="13" font-weight="800" text-anchor="middle">APPROVE</text>
+
+    <rect x="320" y="390" width="150" height="45" rx="8" fill="#450a0a" stroke="#ef4444" stroke-width="1.5" />
+    <text x="395" y="418" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="13" font-weight="800" text-anchor="middle">REJECT</text>
+  </g>
+
+  <!-- Connectors -->
+  <path d="M 500 330 L 600 330" stroke="#f59e0b" stroke-width="3" stroke-dasharray="5" />
+  <polygon points="605,330 595,325 595,335" fill="#f59e0b" />
+
+  <!-- Right: Architecture Explanatory Cards -->
+  <g>
+    <rect x="600" y="140" width="480" height="105" rx="16" fill="#0f172a" stroke="#334155" stroke-width="2" />
+    <rect x="600" y="140" width="10" height="105" rx="5" fill="#f59e0b" />
+    <text x="630" y="175" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="16" font-weight="800">1. Cryptographic Human Intervention</text>
+    <text x="630" y="200" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">No high-risk side-effect can execute without human sign-off</text>
+    <text x="630" y="222" fill="#fef08a" font-family="monospace" font-size="11">Defense: Eliminates unauthorized financial and data transactions</text>
+  </g>
+
+  <g>
+    <rect x="600" y="275" width="480" height="105" rx="16" fill="#0f172a" stroke="#334155" stroke-width="2" />
+    <rect x="600" y="275" width="10" height="105" rx="5" fill="#10b981" />
+    <text x="630" y="310" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="16" font-weight="800">2. Time-To-Live Expiration Safety</text>
+    <text x="630" y="335" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">Stale approval requests expire automatically after 4 hours</text>
+    <text x="630" y="357" fill="#86efac" font-family="monospace" font-size="11">Lifecycle: Prevents out-of-date actions from executing weeks later</text>
+  </g>
+
+  <g>
+    <rect x="600" y="410" width="480" height="105" rx="16" fill="#0f172a" stroke="#334155" stroke-width="2" />
+    <rect x="600" y="410" width="10" height="105" rx="5" fill="#38bdf8" />
+    <text x="630" y="445" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="16" font-weight="800">3. Multi-Tier Role Privilege Isolation</text>
+    <text x="630" y="470" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">Level 1 (Operator) vs Level 2 (Owner Master Authority)</text>
+    <text x="630" y="492" fill="#38bdf8" font-family="monospace" font-size="11">Verification: Validated against active Argon2id session credentials</text>
+  </g>
+
+  <!-- Category Tag -->
+  <rect x="120" y="65" width="220" height="36" rx="18" fill="#451a03" stroke="#f59e0b" stroke-width="1.5" />
+  <circle cx="138" cy="83" r="5" fill="#fbbf24" />
+  <text x="152" y="88" fill="#fef08a" font-family="system-ui, sans-serif" font-size="12" font-weight="700" letter-spacing="1">GOVERNANCE &amp; APPROVALS</text>
+
+  <!-- Brand Mark -->
+  <text x="1080" y="585" fill="#475569" font-family="system-ui, sans-serif" font-size="13" font-weight="700" text-anchor="end">AIsoftware Engineering Library</text>
+</svg>

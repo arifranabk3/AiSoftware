@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgMerkle2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" rx="16" fill="url(#bgMerkle2)" stroke="#334155" stroke-width="2" />
+
+  <text x="40" y="50" fill="#818cf8" font-family="system-ui, sans-serif" font-size="14" font-weight="700" letter-spacing="1.5">FIGURE 2: AUDIT TRAIL TAMPER-DETECTION LIFECYCLE</text>
+  <text x="40" y="78" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="800">Deterministic Failure Propagation When a Log Entry is Altered</text>
+
+  <!-- Flow comparison: Normal vs Tampered -->
+  <!-- Row 1: Valid Chain -->
+  <rect x="40" y="125" width="720" height="120" rx="12" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+  <text x="60" y="152" fill="#86efac" font-family="system-ui, sans-serif" font-size="13" font-weight="800">SCENARIO A: UNALTERED AUDIT CHAIN (VALID)</text>
+
+  <rect x="60" y="165" width="180" height="60" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="1" />
+  <text x="75" y="190" fill="#f8fafc" font-family="monospace" font-size="11">Entry #101: Prompt</text>
+  <text x="75" y="208" fill="#86efac" font-family="monospace" font-size="9">Hash: a7b1c3...</text>
+
+  <line x1="240" y1="195" x2="280" y2="195" stroke="#10b981" stroke-width="2" />
+
+  <rect x="280" y="165" width="180" height="60" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="1" />
+  <text x="295" y="190" fill="#f8fafc" font-family="monospace" font-size="11">Entry #102: Inference</text>
+  <text x="295" y="208" fill="#86efac" font-family="monospace" font-size="9">prevHash: a7b1c3...</text>
+
+  <line x1="460" y1="195" x2="500" y2="195" stroke="#10b981" stroke-width="2" />
+
+  <rect x="500" y="165" width="230" height="60" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="1" />
+  <text x="515" y="190" fill="#f8fafc" font-family="monospace" font-size="11">Entry #103: Approval</text>
+  <text x="515" y="208" fill="#86efac" font-family="monospace" font-size="9">State: VALID (Hash Match)</text>
+
+  <!-- Row 2: Tampered Entry -->
+  <rect x="40" y="270" width="720" height="140" rx="12" fill="#450a0a" stroke="#ef4444" stroke-width="1.5" />
+  <text x="60" y="297" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="13" font-weight="800">SCENARIO B: TAMPERED ENTRY DETECTED (INVALIDATED)</text>
+
+  <rect x="60" y="310" width="180" height="75" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="1" />
+  <text x="75" y="335" fill="#f8fafc" font-family="monospace" font-size="11">Entry #101: Prompt</text>
+  <text x="75" y="352" fill="#86efac" font-family="monospace" font-size="9">Hash: a7b1c3...</text>
+  <text x="75" y="368" fill="#94a3b8" font-family="system-ui" font-size="9">Original State</text>
+
+  <line x1="240" y1="345" x2="280" y2="345" stroke="#ef4444" stroke-width="2" />
+
+  <!-- Altered Block -->
+  <rect x="280" y="310" width="180" height="75" rx="8" fill="#1e1b4b" stroke="#ef4444" stroke-width="2" />
+  <text x="295" y="335" fill="#fca5a5" font-family="monospace" font-size="11" font-weight="700">MODIFIED BY DBA</text>
+  <text x="295" y="352" fill="#ef4444" font-family="monospace" font-size="9">Payload Altered</text>
+  <text x="295" y="368" fill="#fca5a5" font-family="system-ui" font-size="9">New Hash != Recorded</text>
+
+  <line x1="460" y1="345" x2="500" y2="345" stroke="#ef4444" stroke-width="2" stroke-dasharray="4" />
+
+  <!-- Broken downstream -->
+  <rect x="500" y="310" width="230" height="75" rx="8" fill="#0f172a" stroke="#ef4444" stroke-width="2" />
+  <text x="515" y="335" fill="#fca5a5" font-family="monospace" font-size="11" font-weight="700">CHAIN INTEGRITY BROKEN</text>
+  <text x="515" y="352" fill="#fca5a5" font-family="monospace" font-size="9">brokenIndex: 1</text>
+  <text x="515" y="368" fill="#ef4444" font-family="system-ui" font-size="9" font-weight="700">Tampering Instantly Flagged</text>
+</svg>

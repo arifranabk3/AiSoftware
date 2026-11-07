@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgBoxArgon2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" rx="16" fill="url(#bgBoxArgon2)" stroke="#334155" stroke-width="2" />
+
+  <text x="40" y="50" fill="#818cf8" font-family="system-ui, sans-serif" font-size="14" font-weight="700" letter-spacing="1.5">FIGURE 2: WEB AUTHENTICATION &amp; REFRESH TOKEN LIFECYCLE</text>
+  <text x="40" y="78" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="800">Argon2id Master Verification with SHA-256 Hashed Refresh Revocation</text>
+
+  <!-- Login Step -->
+  <rect x="40" y="130" width="210" height="150" rx="12" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+  <rect x="40" y="130" width="210" height="6" rx="3" fill="#6366f1" />
+  <text x="55" y="160" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="700">1. Owner Login POST</text>
+  <text x="55" y="185" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Route: /api/v1/auth/login</text>
+  <text x="55" y="208" fill="#cbd5e1" font-family="monospace" font-size="10">• Plaintext pass received</text>
+  <text x="55" y="226" fill="#cbd5e1" font-family="monospace" font-size="10">• Argon2id verify against DB</text>
+  <text x="55" y="246" fill="#818cf8" font-family="monospace" font-size="10">• Time cost: ~120ms compute</text>
+  <text x="55" y="265" fill="#10b981" font-family="system-ui" font-size="10" font-weight="600">Timing-Attack Safe</text>
+
+  <!-- Arrow -->
+  <path d="M 250 205 L 295 205" stroke="#818cf8" stroke-width="2.5" />
+  <polygon points="300,205 290,200 290,210" fill="#818cf8" />
+
+  <!-- Dual Token Generation -->
+  <rect x="305" y="130" width="220" height="150" rx="12" fill="#0f172a" stroke="#6366f1" stroke-width="2" />
+  <text x="325" y="160" fill="#818cf8" font-family="system-ui, sans-serif" font-size="14" font-weight="700">2. Token Pair Minting</text>
+  <text x="325" y="185" fill="#f8fafc" font-family="monospace" font-size="11">AccessToken (JWT):</text>
+  <text x="325" y="202" fill="#94a3b8" font-family="monospace" font-size="10">Expires in 15m (Stateless)</text>
+  <text x="325" y="225" fill="#f8fafc" font-family="monospace" font-size="11">RefreshToken (Opaque):</text>
+  <text x="325" y="242" fill="#94a3b8" font-family="monospace" font-size="10">Expires in 7d (HttpOnly Cookie)</text>
+  <text x="325" y="265" fill="#38bdf8" font-family="monospace" font-size="10">Stored as SHA-256 Hash in DB</text>
+
+  <!-- Arrow -->
+  <path d="M 525 205 L 570 205" stroke="#10b981" stroke-width="2.5" />
+  <polygon points="575,205 565,200 565,210" fill="#10b981" />
+
+  <!-- Verification and Revocation -->
+  <rect x="580" y="130" width="180" height="150" rx="12" fill="#1e293b" stroke="#10b981" stroke-width="1.5" />
+  <rect x="580" y="130" width="180" height="6" rx="3" fill="#10b981" />
+  <text x="595" y="160" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="700">3. Instant Revocation</text>
+  <text x="595" y="185" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">Logout / Compromise</text>
+  <text x="595" y="208" fill="#94a3b8" font-family="monospace" font-size="10">• Delete token hash in DB</text>
+  <text x="595" y="226" fill="#94a3b8" font-family="monospace" font-size="10">• Immediate session drop</text>
+  <text x="595" y="246" fill="#fca5a5" font-family="monospace" font-size="10">• Re-auth required</text>
+  <text x="595" y="265" fill="#10b981" font-family="system-ui" font-size="10" font-weight="600">Complete Protection</text>
+
+  <!-- Implementation Notes -->
+  <rect x="40" y="310" width="720" height="100" rx="12" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+  <text x="60" y="338" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="13" font-weight="700">Production Implementation Guardrail:</text>
+  <text x="60" y="362" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Never store raw refresh tokens in persistent database tables. If the database read replica or backup snapshot is exposed, attackers cannot forge sessions because only cryptographic SHA-256 hashes of refresh tokens reside in storage.</text>
+  <text x="60" y="388" fill="#818cf8" font-family="monospace" font-size="11">&gt; import argon2 from 'argon2'; // Argon2id RFC 9106 recommended settings verified</text>
+</svg>

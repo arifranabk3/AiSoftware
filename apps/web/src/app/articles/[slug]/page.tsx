@@ -112,6 +112,9 @@ export default async function ArticleDetailPage({ params }: Props) {
               <span className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100">
                 {article.category}
               </span>
+              <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-medium border border-slate-200">
+                Status: {article.editorialStatus}
+              </span>
               <span className="flex items-center space-x-1">
                 <Calendar className="h-3.5 w-3.5 text-slate-400" />
                 <span>{article.publishDate}</span>

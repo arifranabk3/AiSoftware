@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGradSandbox" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#051923" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#003554" />
+    </linearGradient>
+    <filter id="shadowSandbox" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#0284c7" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bgGradSandbox)" />
+
+  <g stroke="#0c4a6e" stroke-width="1" opacity="0.3">
+    <line x1="0" y1="105" x2="1200" y2="105" />
+    <line x1="0" y1="210" x2="1200" y2="210" />
+    <line x1="0" y1="315" x2="1200" y2="315" />
+    <line x1="0" y1="420" x2="1200" y2="420" />
+    <line x1="0" y1="525" x2="1200" y2="525" />
+    <line x1="150" y1="0" x2="150" y2="630" />
+    <line x1="300" y1="0" x2="300" y2="630" />
+    <line x1="450" y1="0" x2="450" y2="630" />
+    <line x1="600" y1="0" x2="600" y2="630" />
+    <line x1="750" y1="0" x2="750" y2="630" />
+    <line x1="900" y1="0" x2="900" y2="630" />
+    <line x1="1050" y1="0" x2="1050" y2="630" />
+  </g>
+
+  <!-- Left: Isolated Container / Sandbox Cube -->
+  <g filter="url(#shadowSandbox)">
+    <rect x="120" y="140" width="380" height="380" rx="24" fill="#031828" stroke="#0284c7" stroke-width="2.5" />
+    <rect x="120" y="140" width="380" height="10" rx="5" fill="#38bdf8" />
+
+    <!-- Virtual Chamber Inner Border -->
+    <rect x="145" y="175" width="330" height="320" rx="16" fill="#082f49" stroke="#0369a1" stroke-width="1.5" stroke-dasharray="6" />
+
+    <!-- Linux Namespaces & Seccomp Badges -->
+    <rect x="170" y="205" width="280" height="50" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="1" />
+    <text x="190" y="235" fill="#f8fafc" font-family="monospace" font-size="12" font-weight="700">Linux PID &amp; Mount Namespaces</text>
+
+    <rect x="170" y="270" width="280" height="50" rx="8" fill="#0f172a" stroke="#ef4444" stroke-width="1" />
+    <text x="190" y="300" fill="#fca5a5" font-family="monospace" font-size="12" font-weight="700">Seccomp: Raw Sockets Blocked</text>
+
+    <rect x="170" y="335" width="280" height="50" rx="8" fill="#0f172a" stroke="#f59e0b" stroke-width="1" />
+    <text x="190" y="365" fill="#fde047" font-family="monospace" font-size="12" font-weight="700">cgroups v2: Max 512MB / 1 CPU</text>
+
+    <rect x="170" y="400" width="280" height="65" rx="8" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+    <text x="190" y="425" fill="#86efac" font-family="system-ui, sans-serif" font-size="12" font-weight="800">ISOLATION VERIFIED:</text>
+    <text x="190" y="448" fill="#f8fafc" font-family="monospace" font-size="11">Zero Host FS Access • Read-Only Root</text>
+  </g>
+
+  <!-- Flow to Explanation Cards -->
+  <path d="M 500 330 L 600 330" stroke="#38bdf8" stroke-width="3" stroke-dasharray="5" />
+  <polygon points="605,330 595,325 595,335" fill="#38bdf8" />
+
+  <!-- Right: Architecture Explanatory Cards -->
+  <g>
+    <rect x="600" y="140" width="480" height="105" rx="16" fill="#0f172a" stroke="#334155" stroke-width="2" />
+    <rect x="600" y="140" width="10" height="105" rx="5" fill="#0284c7" />
+    <text x="630" y="175" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="16" font-weight="800">1. Safe AI Code &amp; Tool Execution</text>
+    <text x="630" y="200" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">When agents generate and execute Python/Bash commands</text>
+    <text x="630" y="222" fill="#38bdf8" font-family="monospace" font-size="11">Host Guard: Strict multi-layer microVM / container barriers</text>
+  </g>
+
+  <g>
+    <rect x="600" y="275" width="480" height="105" rx="16" fill="#0f172a" stroke="#334155" stroke-width="2" />
+    <rect x="600" y="275" width="10" height="105" rx="5" fill="#ef4444" />
+    <text x="630" y="310" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="16" font-weight="800">2. Egress &amp; Ingress Network Filtering</text>
+    <text x="630" y="335" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">Blocks unauthorized lateral network probing and data exfiltration</text>
+    <text x="630" y="357" fill="#fca5a5" font-family="monospace" font-size="11">Network: Air-gapped internal Docker bridge without NAT route</text>
+  </g>
+
+  <g>
+    <rect x="600" y="410" width="480" height="105" rx="16" fill="#0f172a" stroke="#334155" stroke-width="2" />
+    <rect x="600" y="410" width="10" height="105" rx="5" fill="#10b981" />
+    <text x="630" y="445" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="16" font-weight="800">3. Ephemeral Scratch Storage</text>
+    <text x="630" y="470" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">Disposable tmpfs file mounts destroyed immediately post-run</text>
+    <text x="630" y="492" fill="#86efac" font-family="monospace" font-size="11">Security: Malicious payloads evaporate upon process exit</text>
+  </g>
+
+  <!-- Category Tag -->
+  <rect x="120" y="65" width="220" height="36" rx="18" fill="#082f49" stroke="#0284c7" stroke-width="1.5" />
+  <circle cx="138" cy="83" r="5" fill="#38bdf8" />
+  <text x="152" y="88" fill="#bae6fd" font-family="system-ui, sans-serif" font-size="12" font-weight="700" letter-spacing="1">SANDBOXING &amp; RUNTIME</text>
+
+  <!-- Brand Mark -->
+  <text x="1080" y="585" fill="#475569" font-family="system-ui, sans-serif" font-size="13" font-weight="700" text-anchor="end">AIsoftware Engineering Library</text>
+</svg>

