@@ -130,6 +130,22 @@ export async function buildServer(): Promise<FastifyInstance> {
     return payload;
   });
 
+  // Preserve raw HTTP request body for cryptographically verified webhook routes
+  app.addContentTypeParser(
+    'application/json',
+    { parseAs: 'buffer' },
+    (req: FastifyRequest, body: Buffer, done) => {
+      try {
+        (req as any).rawBody = body;
+        const json = JSON.parse(body.toString('utf8'));
+        done(null, json);
+      } catch (err: any) {
+        err.statusCode = 400;
+        done(err, undefined);
+      }
+    }
+  );
+
   await app.register(fastifyCookie, {
     secret: env.JWT_SECRET
   });

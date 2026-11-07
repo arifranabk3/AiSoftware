@@ -1119,7 +1119,8 @@ export async function registerCeoRoutes(
       }
 
       const signatureHeader = req.headers['x-signature'] as string | undefined;
-      const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+      // Use the exact raw HTTP request body buffer from the raw-body content parser if available
+      const rawBody = (req as any).rawBody || (typeof req.body === 'string' ? req.body : JSON.stringify(req.body));
 
       const verification = verifyWebhookSignature(rawBody, signatureHeader, secret);
       if (!verification.isValid) {
@@ -1132,22 +1133,35 @@ export async function registerCeoRoutes(
 
       const payload = req.body as any;
       const eventName = payload?.meta?.event_name || 'unknown';
+      const eventIdHeader = req.headers['x-event-id'] as string | undefined;
       const orderData = payload?.data;
       const orderId = orderData?.id ? String(orderData.id) : undefined;
       const attributes = orderData?.attributes || {};
 
-      const eventId = `ls_evt_${orderId || randomUUID()}_${eventName}`;
+      // Deterministic event identification: support platform event ID or granular refund tracking
+      let eventId: string;
+      if (eventIdHeader) {
+        eventId = `ls_evt_${eventIdHeader}`;
+      } else if (eventName === 'order_refunded') {
+        const refundedAmountCents = attributes.refunded_amount || 0;
+        eventId = `ls_evt_${orderId || randomUUID()}_refund_${refundedAmountCents}_${attributes.updated_at || new Date().toISOString()}`;
+      } else {
+        eventId = `ls_evt_${orderId || randomUUID()}_${eventName}`;
+      }
+
       const { storefrontRepo, revenueRepo } = getRepos();
 
       // Convert cents to dollars if currency is USD
       const totalCents = attributes.total || attributes.subtotal || 0;
       const grossUSD = totalCents / 100;
-      // Standard Lemon Squeezy MoR fee model: 5% + $0.50
+      // Standard Lemon Squeezy MoR fee model: 5% + $0.50 (estimated platform fee)
       const feeUSD = grossUSD > 0 ? (grossUSD * 0.05) + 0.50 : 0;
       const netUSD = Math.max(0, grossUSD - feeUSD);
       const isTestOrder = Boolean(attributes.test_mode);
 
       const isRefund = eventName === 'order_refunded' || attributes.refunded === true;
+      const refundCents = attributes.refunded_amount || totalCents;
+      const refundUSD = isRefund ? refundCents / 100 : 0;
       const status = isRefund ? 'REFUNDED' : 'CONFIRMED';
 
       const emailRaw = attributes.user_email || attributes.customer_email;
@@ -1159,9 +1173,9 @@ export async function registerCeoRoutes(
         eventName,
         externalOrderId: orderId,
         status,
-        grossAmountUSD: grossUSD,
+        grossAmountUSD: isRefund ? refundUSD : grossUSD,
         feeUSD,
-        netAmountUSD: netUSD,
+        netAmountUSD: isRefund ? 0 : netUSD,
         currency: attributes.currency || 'USD',
         customerEmailMasked,
         isTest: isTestOrder,
@@ -1182,9 +1196,9 @@ export async function registerCeoRoutes(
         await revenueRepo.recordTransaction({
           transactionId: `tx_${eventId}`,
           channel: 'DIGITAL_PRODUCT' as any,
-          grossAmountUSD: grossUSD,
+          grossAmountUSD: isRefund ? refundUSD : grossUSD,
           feeUSD,
-          netAmountUSD: netUSD,
+          netAmountUSD: isRefund ? 0 : netUSD,
           status: isRefund ? 'REFUNDED' : 'CONFIRMED',
           source: 'Lemon Squeezy',
           externalReference: orderId,
