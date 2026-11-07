@@ -43,10 +43,10 @@ export default function ContactPage() {
                 For technical questions, merchant inquiries, or editorial correspondence:
               </p>
               <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 font-mono text-xs text-slate-800 font-semibold break-all">
-                contact@ai-software.local
+                support@ai-software.com
               </div>
-              <p className="text-[11px] text-slate-400">
-                [Owner Note: Replace with active public support inbox prior to public advertising.]
+              <p className="text-[11px] text-slate-500">
+                Official inbox for architecture questions, editorial feedback, and business partnerships.
               </p>
             </div>
 

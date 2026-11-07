@@ -87,7 +87,7 @@ export default function TermsPage() {
               <Link href="/contact" className="text-indigo-600 underline">
                 Contact Page
               </Link>{' '}
-              or email <code>contact@ai-software.local</code>.
+              or email <code>support@ai-software.com</code>.
             </p>
           </section>
         </div>
