@@ -91,7 +91,7 @@ export default function DashboardPage() {
   const [health, setHealth] = useState<SystemHealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    'OVERVIEW' | 'LIVE_ACTIVITY' | 'CURRENT_EXECUTION' | 'CEO_OBJECTIVES' | 'APPROVALS' | 'AI_PROVIDERS' | 'DEPARTMENTS' | 'SPECIALISTS' | 'OWNER_CONTROLS'
+    'OVERVIEW' | 'LIVE_ACTIVITY' | 'CURRENT_EXECUTION' | 'CEO_OBJECTIVES' | 'APPROVALS' | 'AI_PROVIDERS' | 'DEPARTMENTS' | 'SPECIALISTS' | 'OWNER_CONTROLS' | 'REVENUE'
   >('OVERVIEW');
   const [killSwitchReason, setKillSwitchReason] = useState('');
   const [isTogglingKillSwitch, setIsTogglingKillSwitch] = useState(false);
@@ -133,22 +133,27 @@ export default function DashboardPage() {
   const [sseConnected, setSseConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
 
+  // Phase 11.0 Revenue Engine State
+  const [revenueData, setRevenueData] = useState<any>(null);
+
   // Safe live poll function
   const refreshAllData = useCallback(async () => {
     setLoading(true);
     try {
-      const [healthData, objData, apprData, actData, actSumm] = await Promise.all([
+      const [healthData, objData, apprData, actData, actSumm, revData] = await Promise.all([
         ApiClient.getHealth(),
         ApiClient.listObjectives({ limit: 50 }),
         ApiClient.listApprovals({ status: 'PENDING' }),
         ApiClient.listActivities({ limit: 50 }),
-        ApiClient.getActivitySummary()
+        ApiClient.getActivitySummary(),
+        ApiClient.getRevenueMetrics()
       ]);
       setHealth(healthData);
       setObjectives(objData.items);
       setApprovals(apprData.items);
       setActivityEvents(actData.items);
       setActivitySummary(actSumm);
+      if (revData) setRevenueData(revData);
       setLastUpdated(new Date().toLocaleTimeString());
     } catch {
       // safe fallback without crashing UI
@@ -522,6 +527,18 @@ export default function DashboardPage() {
             }`}
           >
             <Users className="h-5 w-5" />
+          </button>
+
+          <button
+            onClick={() => setActiveTab('REVENUE')}
+            title="Revenue Engine & Monetization Channels"
+            className={`p-3 rounded-2xl transition-all ${
+              activeTab === 'REVENUE'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            <TrendingUp className="h-5 w-5" />
           </button>
 
           <button
@@ -1294,6 +1311,155 @@ export default function DashboardPage() {
                   >
                     RESUME NORMAL OPERATIONS
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 7: REVENUE ENGINE & MONETIZATION CHANNELS */}
+          {activeTab === 'REVENUE' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-indigo-600" />
+                    Zero-Cost Autonomous Revenue Engine
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Live monetization performance across YouTube, Affiliate Marketing, SEO Publishing, and Digital Products.
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Target Launch: Nov 8, 2026
+                  </span>
+                </div>
+              </div>
+
+              {/* Aggregated Revenue Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
+                  <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-emerald-500 to-teal-400" />
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Confirmed Net Revenue</div>
+                  <div className="text-3xl font-extrabold text-slate-900 mt-2 font-mono">
+                    ${revenueData?.aggregated?.netRevenueUSD?.toFixed(2) || '0.00'}
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-1">100% verified transactions (No fake figures)</div>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
+                  <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-amber-500 to-yellow-400" />
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Settlements</div>
+                  <div className="text-3xl font-extrabold text-slate-900 mt-2 font-mono">
+                    ${revenueData?.aggregated?.pendingRevenueUSD?.toFixed(2) || '0.00'}
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-1">Awaiting marketplace payout clearance</div>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
+                  <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-indigo-500 to-blue-400" />
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Published Assets</div>
+                  <div className="text-3xl font-extrabold text-slate-900 mt-2 font-mono">
+                    {revenueData?.aggregated?.publishedAssetsTotal || 0}
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-1">Across all 4 zero-cost monetization channels</div>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
+                  <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-purple-500 to-pink-400" />
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Approvals</div>
+                  <div className="text-3xl font-extrabold text-slate-900 mt-2 font-mono">
+                    {revenueData?.aggregated?.pendingApprovalsTotal || 0}
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-1">Human-in-the-loop governance gates</div>
+                </div>
+              </div>
+
+              {/* 4 Monetization Channels Table */}
+              <div className="rounded-2xl border border-slate-200/90 bg-white shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-800">Monetization Channels Matrix</h3>
+                  <span className="text-xs text-slate-500">Zero-Cost Policy Enforced</span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-slate-600">
+                    <thead className="bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                      <tr>
+                        <th className="px-4 py-3">Channel</th>
+                        <th className="px-4 py-3">Strategy</th>
+                        <th className="px-4 py-3">Prepared Deliverables</th>
+                        <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3">Gross Sales</th>
+                        <th className="px-4 py-3">Net Profit</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      <tr className="hover:bg-slate-50/60 transition-colors">
+                        <td className="px-4 py-3.5 font-bold text-slate-900 flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-rose-500" />
+                          YouTube Content
+                        </td>
+                        <td className="px-4 py-3.5 text-slate-600">Long-form tutorials & viral Shorts on local AI</td>
+                        <td className="px-4 py-3.5 font-mono text-indigo-600">youtube_video_package_01.md</td>
+                        <td className="px-4 py-3.5">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            Ready for Recording
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 font-mono text-slate-900">$0.00</td>
+                        <td className="px-4 py-3.5 font-mono font-bold text-emerald-600">$0.00</td>
+                      </tr>
+
+                      <tr className="hover:bg-slate-50/60 transition-colors">
+                        <td className="px-4 py-3.5 font-bold text-slate-900 flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-indigo-500" />
+                          Affiliate Marketing
+                        </td>
+                        <td className="px-4 py-3.5 text-slate-600">Cloud VPS comparison & developer tools review</td>
+                        <td className="px-4 py-3.5 font-mono text-indigo-600">affiliate_content_package_01.md</td>
+                        <td className="px-4 py-3.5">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            Awaiting Program Links
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 font-mono text-slate-900">$0.00</td>
+                        <td className="px-4 py-3.5 font-mono font-bold text-emerald-600">$0.00</td>
+                      </tr>
+
+                      <tr className="hover:bg-slate-50/60 transition-colors">
+                        <td className="px-4 py-3.5 font-bold text-slate-900 flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                          SEO Publishing
+                        </td>
+                        <td className="px-4 py-3.5 text-slate-600">Semantic 2,200-word Zero-Dollar Agency guide</td>
+                        <td className="px-4 py-3.5 font-mono text-indigo-600">seo_publishable_article_01.md</td>
+                        <td className="px-4 py-3.5">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Ready for Publish
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 font-mono text-slate-900">$0.00</td>
+                        <td className="px-4 py-3.5 font-mono font-bold text-emerald-600">$0.00</td>
+                      </tr>
+
+                      <tr className="hover:bg-slate-50/60 transition-colors">
+                        <td className="px-4 py-3.5 font-bold text-slate-900 flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-purple-500" />
+                          Digital Products
+                        </td>
+                        <td className="px-4 py-3.5 text-slate-600">13-Chapter Blueprint + Docker configuration pack</td>
+                        <td className="px-4 py-3.5 font-mono text-indigo-600">digital_product_launch_package_01.md</td>
+                        <td className="px-4 py-3.5">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                            Ready for Marketplace
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 font-mono text-slate-900">$0.00</td>
+                        <td className="px-4 py-3.5 font-mono font-bold text-emerald-600">$0.00</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>

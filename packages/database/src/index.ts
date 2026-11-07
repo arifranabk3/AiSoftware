@@ -4,6 +4,7 @@ export * from './seed.js';
 export * from './models.js';
 export * from './repositories.js';
 export * from './activity.repository.js';
+export * from './revenue.repository.js';
 
 
 // Backward compatibility alias for legacy test runners

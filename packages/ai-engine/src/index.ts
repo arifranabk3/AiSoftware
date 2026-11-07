@@ -5,3 +5,4 @@ export * from './bi-engine.js';
 export * from './prompt-registry.js';
 export * from './dispatchers.js';
 export * from './ceo-orchestrator.js';
+export * from './revenue-orchestrator.js';

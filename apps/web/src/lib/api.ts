@@ -389,5 +389,18 @@ export class ApiClient {
       };
     }
   }
+
+  public static async getRevenueMetrics(): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE}/api/ceo/revenue/metrics`, {
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      return json.data;
+    } catch {
+      return null;
+    }
+  }
 }
 

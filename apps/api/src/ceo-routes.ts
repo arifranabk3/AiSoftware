@@ -6,6 +6,7 @@ import {
   OrchestratorTaskRepository,
   ApprovalRepository,
   ActivityRepository,
+  RevenueRepository,
   ObjectiveStatus,
   TaskStatus,
   ApprovalStatus,
@@ -60,7 +61,8 @@ export async function registerCeoRoutes(
       objectiveRepo: new ObjectiveRepository(db),
       taskRepo: new OrchestratorTaskRepository(db),
       approvalRepo: new ApprovalRepository(db),
-      activityRepo: new ActivityRepository(db)
+      activityRepo: new ActivityRepository(db),
+      revenueRepo: new RevenueRepository(db)
     };
   }
 
@@ -1033,6 +1035,43 @@ export async function registerCeoRoutes(
 
       req.raw.on('close', cleanup);
       req.raw.on('end', cleanup);
+    }
+  );
+
+  // -------------------------------------------------------------
+  // PHASE 11.0: REVENUE ENGINE ENDPOINTS
+  // -------------------------------------------------------------
+
+  /**
+   * GET /api/ceo/revenue/metrics
+   * Channel-wise performance, verified confirmed revenue, and expenses
+   */
+  app.get(
+    '/api/ceo/revenue/metrics',
+    {
+      preHandler: [authenticate, requirePermission('read', 'activity')]
+    },
+    async (_req: FastifyRequest, reply: FastifyReply) => {
+      const { revenueRepo } = getRepos();
+      const metrics = await revenueRepo.getAllChannelMetrics();
+      const latestPlan = await revenueRepo.getLatestExecutionPlan();
+
+      return reply.status(200).send({
+        success: true,
+        data: {
+          channels: metrics,
+          latestExecutionPlan: latestPlan,
+          aggregated: {
+            grossRevenueUSD: metrics.reduce((acc, m) => acc + (m.confirmedRevenueUSD + m.receivedPaymentsUSD), 0),
+            pendingRevenueUSD: metrics.reduce((acc, m) => acc + m.pendingRevenueUSD, 0),
+            receivedPaymentsUSD: metrics.reduce((acc, m) => acc + m.receivedPaymentsUSD, 0),
+            refundsUSD: metrics.reduce((acc, m) => acc + m.refundsUSD, 0),
+            netRevenueUSD: metrics.reduce((acc, m) => acc + m.netRevenueUSD, 0),
+            publishedAssetsTotal: metrics.reduce((acc, m) => acc + m.publishedAssets, 0),
+            pendingApprovalsTotal: metrics.reduce((acc, m) => acc + m.pendingApprovals, 0)
+          }
+        }
+      });
     }
   );
 }
