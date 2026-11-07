@@ -1057,12 +1057,14 @@ export async function registerCeoRoutes(
       const { revenueRepo } = getRepos();
       const metrics = await revenueRepo.getAllChannelMetrics();
       const latestPlan = await revenueRepo.getLatestExecutionPlan();
+      const channelAssets = await revenueRepo.listChannelAssets();
 
       return reply.status(200).send({
         success: true,
         data: {
           channels: metrics,
           latestExecutionPlan: latestPlan,
+          channelAssets,
           aggregated: {
             grossRevenueUSD: metrics.reduce((acc, m) => acc + (m.confirmedRevenueUSD + m.receivedPaymentsUSD), 0),
             pendingRevenueUSD: metrics.reduce((acc, m) => acc + m.pendingRevenueUSD, 0),

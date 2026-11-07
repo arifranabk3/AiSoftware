@@ -4,18 +4,47 @@ import {
   RevenueOpportunity,
   ChannelPerformanceMetrics,
   DailyExecutionPlan,
-  RevenueTransaction
+  RevenueTransaction,
+  ChannelExecutionAsset,
+  ContentLifecycleState
 } from '@ai-command-center/shared';
 
 export class RevenueRepository {
   private opportunitiesColl: Collection<RevenueOpportunity>;
   private plansColl: Collection<DailyExecutionPlan>;
   private transactionsColl: Collection<RevenueTransaction>;
+  private channelAssetsColl: Collection<ChannelExecutionAsset>;
 
   constructor(private db: Db) {
     this.opportunitiesColl = db.collection<RevenueOpportunity>('revenue_opportunities');
     this.plansColl = db.collection<DailyExecutionPlan>('daily_execution_plans');
     this.transactionsColl = db.collection<RevenueTransaction>('revenue_transactions');
+    this.channelAssetsColl = db.collection<ChannelExecutionAsset>('channel_execution_assets');
+  }
+
+  // --- Channel Execution Assets ---
+  public async upsertChannelAsset(asset: ChannelExecutionAsset): Promise<ChannelExecutionAsset> {
+    await this.channelAssetsColl.updateOne(
+      { assetId: asset.assetId },
+      { $set: { ...asset, _id: asset.assetId as any } },
+      { upsert: true }
+    );
+    return asset;
+  }
+
+  public async getChannelAssetById(assetId: string): Promise<ChannelExecutionAsset | null> {
+    const doc = await this.channelAssetsColl.findOne({ assetId });
+    if (!doc) return null;
+    const { _id, ...rest } = doc as any;
+    return rest as ChannelExecutionAsset;
+  }
+
+  public async listChannelAssets(filter: Partial<ChannelExecutionAsset> = {}): Promise<ChannelExecutionAsset[]> {
+    const docs = await this.channelAssetsColl.find(filter).sort({ createdAt: -1 }).toArray();
+    return docs.map((doc) => {
+      const { _id, ...rest } = doc as any;
+      return rest as ChannelExecutionAsset;
+    });
   }
 
   // --- Opportunities ---

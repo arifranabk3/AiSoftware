@@ -3,7 +3,10 @@ import {
   RevenueOpportunity,
   RevenueOpportunityStatus,
   DailyExecutionPlan,
-  DepartmentId
+  DepartmentId,
+  ChannelExecutionAsset,
+  ContentLifecycleState,
+  AffiliateProgramStatus
 } from '@ai-command-center/shared';
 import { RevenueRepository, mongoDbService } from '@ai-command-center/database';
 
@@ -17,6 +20,75 @@ export class RevenueOrchestrator {
       RevenueOrchestrator.instance = new RevenueOrchestrator();
     }
     return RevenueOrchestrator.instance;
+  }
+
+  /**
+   * Initializes or returns the standard operational asset catalog across all four channels.
+   * Every channel has defined artifacts, lifecycle states, explicit blockers, and next actions.
+   */
+  public getInitialOperationalAssets(): ChannelExecutionAsset[] {
+    const now = new Date().toISOString();
+    return [
+      // Channel 1: Digital Product
+      {
+        assetId: 'ASSET-DIGPROD-001',
+        channel: MonetizationChannel.DIGITAL_PRODUCT,
+        title: 'The Zero-Cost Autonomous Agency Blueprint (15-Chapter Master Guide)',
+        lifecycleState: ContentLifecycleState.APPROVED,
+        filePath: 'deliverables/products/zero-cost-agency-blueprint/final/zero-cost-autonomous-agency-blueprint-v1.0.pdf',
+        blockerReason: 'Awaiting owner manual seller account creation on Lemon Squeezy and live URL publication.',
+        nextRequiredAction: 'Owner logs into Lemon Squeezy, inputs Pakistan bank IBAN, uploads PDF, and publishes listing.',
+        metrics: { views: 0, clicks: 0, confirmedOrders: 0, grossRevenueUSD: 0, netRevenueUSD: 0 },
+        createdAt: now,
+        updatedAt: now
+      },
+      // Channel 2: SEO Publishing
+      {
+        assetId: 'ASSET-SEO-001',
+        channel: MonetizationChannel.SEO_PUBLISHING,
+        title: 'How We Built a 7-Department Autonomous AI Agency with Fastify, BullMQ & Local LLMs ($0 Token Bills)',
+        targetKeywords: ['autonomous ai agency', 'local llm engineering', 'bullmq fastify ai', 'zero cost ai infrastructure'],
+        lifecycleState: ContentLifecycleState.APPROVED,
+        filePath: 'deliverables/revenue/MKT-2026-REV-001/seo/seo_pillar_open_source_ai_ops.md',
+        blockerReason: 'Awaiting owner manual copy-paste and publication on Dev.to and Medium.',
+        nextRequiredAction: 'Owner publishes article to Dev.to and Medium with backlink to digital product storefront.',
+        metrics: { views: 0, clicks: 0, confirmedOrders: 0, grossRevenueUSD: 0, netRevenueUSD: 0 },
+        createdAt: now,
+        updatedAt: now
+      },
+      // Channel 3: YouTube Content
+      {
+        assetId: 'ASSET-YT-001',
+        channel: MonetizationChannel.YOUTUBE,
+        title: 'Zero-Cost Autonomous AI Agency: Fastify + BullMQ + Ollama Architecture (Full Walkthrough)',
+        lifecycleState: ContentLifecycleState.APPROVED,
+        filePath: 'deliverables/revenue/MKT-2026-REV-001/youtube/full_production_script.md',
+        blockerReason: 'Video narration and screen recording require owner recording using free OBS Studio / Loom.',
+        nextRequiredAction: 'Owner records screen walkthrough of Ollama and GYB UI using staged teleprompter script.',
+        metrics: { views: 0, clicks: 0, confirmedOrders: 0, grossRevenueUSD: 0, netRevenueUSD: 0 },
+        createdAt: now,
+        updatedAt: now
+      },
+      // Channel 4: Affiliate Marketing
+      {
+        assetId: 'ASSET-AFF-001',
+        channel: MonetizationChannel.AFFILIATE,
+        title: 'Zero-Dollar Cloud Infrastructure Matrix (DigitalOcean & Hetzner Free Credits)',
+        lifecycleState: ContentLifecycleState.DRAFT,
+        filePath: 'deliverables/revenue/MKT-2026-REV-001/affiliate/ethical_disclosure_guidelines.md',
+        blockerReason: 'Content remains in DRAFT until owner applies for and receives verified referral/affiliate links.',
+        nextRequiredAction: 'Owner applies for free developer cloud referral programs and replaces link placeholders.',
+        affiliateProgram: {
+          programName: 'DigitalOcean Referral Program',
+          officialUrl: 'https://www.digitalocean.com/referral-program',
+          commissionStructure: '$25 credit or cash bonus per paying referral ($200 60-day credit for referee)',
+          status: AffiliateProgramStatus.RESEARCHED
+        },
+        metrics: { views: 0, clicks: 0, confirmedOrders: 0, grossRevenueUSD: 0, netRevenueUSD: 0 },
+        createdAt: now,
+        updatedAt: now
+      }
+    ];
   }
 
   /**
@@ -128,6 +200,12 @@ export class RevenueOrchestrator {
       await repo.upsertOpportunity(opp);
     }
     await repo.saveExecutionPlan(plan);
+
+    // Also sync the four core channel execution assets
+    const assets = this.getInitialOperationalAssets();
+    for (const asset of assets) {
+      await repo.upsertChannelAsset(asset);
+    }
   }
 }
 

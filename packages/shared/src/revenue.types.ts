@@ -8,6 +8,49 @@ export enum MonetizationChannel {
   DIGITAL_PRODUCT = 'DIGITAL_PRODUCT'
 }
 
+export enum ContentLifecycleState {
+  DRAFT = 'DRAFT',
+  REVIEW = 'REVIEW',
+  APPROVED = 'APPROVED',
+  PUBLISHED = 'PUBLISHED',
+  BLOCKED = 'BLOCKED'
+}
+
+export enum AffiliateProgramStatus {
+  RESEARCHED = 'RESEARCHED',
+  APPLICATION_SUBMITTED = 'APPLICATION_SUBMITTED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED'
+}
+
+export interface ChannelExecutionAsset {
+  assetId: string;
+  channel: MonetizationChannel;
+  title: string;
+  targetKeywords?: string[];
+  lifecycleState: ContentLifecycleState;
+  filePath: string;
+  blockerReason?: string;
+  nextRequiredAction: string;
+  externalUrl?: string;
+  affiliateProgram?: {
+    programName: string;
+    officialUrl: string;
+    commissionStructure: string;
+    status: AffiliateProgramStatus;
+    affiliateLink?: string;
+  };
+  metrics: {
+    views: number;
+    clicks: number;
+    confirmedOrders: number;
+    grossRevenueUSD: number;
+    netRevenueUSD: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export enum RevenueOpportunityStatus {
   IDENTIFIED = 'IDENTIFIED',
   RANKED = 'RANKED',
