@@ -10,12 +10,13 @@ import {
   ApprovalStatus
 } from '@ai-command-center/database';
 import { ceoOrchestrator, CEOState } from '@ai-command-center/ai-engine';
-import { DepartmentId } from '@ai-command-center/shared';
+import { DepartmentId, ActivityEventType } from '@ai-command-center/shared';
 import {
   redisManager,
   CommandQueueName,
   BaseTaskPayload,
-  workerRecoveryManager
+  workerRecoveryManager,
+  activityService
 } from '@ai-command-center/automation';
 
 export interface ProcessorExecutionResult {
@@ -46,14 +47,71 @@ export class CeoQueueProcessor {
       }
     );
 
+    this.worker.on('active', (job) => {
+      activityService.emitEvent({
+        correlationId: job.data.objectiveId || job.data.taskId,
+        taskId: job.data.taskId,
+        jobId: job.id,
+        queueName: CommandQueueName.CEO_TASKS,
+        departmentId: job.data.departmentId,
+        agentId: job.data.specialistId,
+        eventType: ActivityEventType.JOB_STARTED,
+        action: job.data.action,
+        status: 'active',
+        message: `Worker picked up job ${job.id} for task ${job.data.taskId}`
+      }).catch(() => {});
+    });
+
+    this.worker.on('completed', (job, result) => {
+      activityService.emitEvent({
+        correlationId: job.data.objectiveId || job.data.taskId,
+        taskId: job.data.taskId,
+        jobId: job.id,
+        queueName: CommandQueueName.CEO_TASKS,
+        departmentId: job.data.departmentId,
+        agentId: job.data.specialistId,
+        eventType: ActivityEventType.TASK_COMPLETED,
+        action: job.data.action,
+        status: 'completed',
+        message: `Worker successfully completed task ${job.data.taskId}`,
+        metadata: { result }
+      }).catch(() => {});
+    });
+
     this.worker.on('failed', (job, err) => {
       console.error(`[CeoQueueProcessor] Job ${job?.id} permanently failed: ${err.message}`);
+      if (job) {
+        activityService.emitEvent({
+          correlationId: job.data.objectiveId || job.data.taskId,
+          taskId: job.data.taskId,
+          jobId: job.id,
+          queueName: CommandQueueName.CEO_TASKS,
+          departmentId: job.data.departmentId,
+          agentId: job.data.specialistId,
+          eventType: ActivityEventType.TASK_FAILED,
+          action: job.data.action,
+          status: 'failed',
+          message: `Worker failed executing task ${job.data.taskId}: ${err.message}`,
+          errorCode: 'WORKER_JOB_FAILED',
+          metadata: { error: err.message, attemptsMade: job.attemptsMade }
+        }).catch(() => {});
+      }
     });
 
     this.worker.on('error', (err) => {
       console.warn(`[CeoQueueProcessor] Worker internal error: ${err.message}`);
+      activityService.emitEvent({
+        correlationId: 'system',
+        eventType: ActivityEventType.SYSTEM_ERROR,
+        action: 'WORKER_INTERNAL_ERROR',
+        status: 'error',
+        message: `BullMQ Worker error: ${err.message}`,
+        errorCode: 'WORKER_INTERNAL_ERROR',
+        metadata: { error: err.message }
+      }).catch(() => {});
     });
   }
+
 
   public async processJob(
     job: Job<BaseTaskPayload, ProcessorExecutionResult>

@@ -41,10 +41,28 @@ export const RejectApprovalSchema = z.object({
   reason: z.string().min(3, 'Rejection reason must be at least 3 characters').max(500, 'Reason cannot exceed 500 characters')
 });
 
+export const ListActivityQuerySchema = z.object({
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  taskId: z.string().optional(),
+  jobId: z.string().optional(),
+  departmentId: z.string().optional(),
+  agentId: z.string().optional(),
+  eventType: z.string().optional(),
+  status: z.string().optional(),
+  correlationId: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+  skip: z.coerce.number().int().min(0).default(0),
+  sortBy: z.enum(['timestamp', 'createdAt']).default('timestamp'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc')
+});
+
 export type CreateObjectiveInput = z.infer<typeof CreateObjectiveSchema>;
 export type ListObjectivesQueryInput = z.infer<typeof ListObjectivesQuerySchema>;
 export type ExecuteObjectiveInput = z.infer<typeof ExecuteObjectiveSchema>;
 export type ListApprovalsQueryInput = z.infer<typeof ListApprovalsQuerySchema>;
 export type ApproveApprovalInput = z.infer<typeof ApproveApprovalSchema>;
 export type RejectApprovalInput = z.infer<typeof RejectApprovalSchema>;
+export type ListActivityQueryInput = z.infer<typeof ListActivityQuerySchema>;
+
 

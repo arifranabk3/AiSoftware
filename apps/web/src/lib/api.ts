@@ -316,4 +316,78 @@ export class ApiClient {
       return { success: false, error: (err as Error).message };
     }
   }
+
+  // -------------------------------------------------------------
+  // PHASE 10.3: REAL-TIME ACTIVITY & TELEMETRY
+  // -------------------------------------------------------------
+  public static async listActivities(params?: {
+    startDate?: string;
+    endDate?: string;
+    taskId?: string;
+    jobId?: string;
+    departmentId?: string;
+    agentId?: string;
+    eventType?: string;
+    status?: string;
+    limit?: number;
+    skip?: number;
+  }): Promise<{ items: any[]; total: number }> {
+    try {
+      const query = new URLSearchParams();
+      if (params?.startDate) query.set('startDate', params.startDate);
+      if (params?.endDate) query.set('endDate', params.endDate);
+      if (params?.taskId) query.set('taskId', params.taskId);
+      if (params?.jobId) query.set('jobId', params.jobId);
+      if (params?.departmentId) query.set('departmentId', params.departmentId);
+      if (params?.agentId) query.set('agentId', params.agentId);
+      if (params?.eventType) query.set('eventType', params.eventType);
+      if (params?.status) query.set('status', params.status);
+      if (params?.limit) query.set('limit', String(params.limit));
+      if (params?.skip) query.set('skip', String(params.skip));
+
+      const res = await fetch(`${API_BASE}/api/ceo/activity?${query.toString()}`, {
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      return {
+        items: json.items || [],
+        total: json.total || 0
+      };
+    } catch {
+      return { items: [], total: 0 };
+    }
+  }
+
+  public static async getActivitySummary(): Promise<{
+    totalEvents: number;
+    activeJobsCount: number;
+    failedJobsCount: number;
+    completedTasksCount: number;
+    recentEvents: any[];
+  }> {
+    try {
+      const res = await fetch(`${API_BASE}/api/ceo/activity/summary`, {
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      return json.data || {
+        totalEvents: 0,
+        activeJobsCount: 0,
+        failedJobsCount: 0,
+        completedTasksCount: 0,
+        recentEvents: []
+      };
+    } catch {
+      return {
+        totalEvents: 0,
+        activeJobsCount: 0,
+        failedJobsCount: 0,
+        completedTasksCount: 0,
+        recentEvents: []
+      };
+    }
+  }
 }
+

@@ -5,20 +5,23 @@ import {
   ObjectiveRepository,
   OrchestratorTaskRepository,
   ApprovalRepository,
+  ActivityRepository,
   ObjectiveStatus,
   TaskStatus,
   ApprovalStatus,
   BusinessObjectiveDocument
 } from '@ai-command-center/database';
 import { checkPermission, calculateAuditHash, ChainedAuditLogEntry, distributedKillSwitch } from '@ai-command-center/security';
-import { taskDispatcherService, BaseTaskPayload } from '@ai-command-center/automation';
+import { taskDispatcherService, BaseTaskPayload, activityService } from '@ai-command-center/automation';
+import { ActivityEventType } from '@ai-command-center/shared';
 import {
   CreateObjectiveSchema,
   ListObjectivesQuerySchema,
   ExecuteObjectiveSchema,
   ListApprovalsQuerySchema,
   ApproveApprovalSchema,
-  RejectApprovalSchema
+  RejectApprovalSchema,
+  ListActivityQuerySchema
 } from './ceo-schemas.js';
 
 export interface CeoRoutesOptions {
@@ -56,7 +59,8 @@ export async function registerCeoRoutes(
     return {
       objectiveRepo: new ObjectiveRepository(db),
       taskRepo: new OrchestratorTaskRepository(db),
-      approvalRepo: new ApprovalRepository(db)
+      approvalRepo: new ApprovalRepository(db),
+      activityRepo: new ActivityRepository(db)
     };
   }
 
@@ -129,6 +133,22 @@ export async function registerCeoRoutes(
           }
         });
       }
+
+      // Phase 10.3 Centralized Activity Logging
+      activityService.emitEvent({
+        correlationId: objectiveId,
+        userId: user.userId,
+        departmentId: data.departmentIds[0],
+        eventType: ActivityEventType.TASK_CREATED,
+        action: 'CREATE_BUSINESS_OBJECTIVE',
+        status: 'waiting',
+        message: `New objective '${created.title}' created by ${user.email}`,
+        metadata: {
+          objectiveId,
+          priority: created.priority,
+          departmentIds: created.departmentIds
+        }
+      }).catch(() => {});
 
       return reply.status(201).send({
         success: true,
@@ -424,6 +444,25 @@ export async function registerCeoRoutes(
         });
       }
 
+      // Phase 10.3 Centralized Activity Logging for Dispatch
+      activityService.emitEvent({
+        correlationId: id,
+        userId: user.userId,
+        taskId: initialTaskId,
+        jobId: dispatchResult.jobId,
+        departmentId: primaryDepartment,
+        agentId: 'spec_ceo_orchestrator',
+        eventType: ActivityEventType.TASK_DISPATCHED,
+        action: 'EXECUTE_OBJECTIVE',
+        status: dispatchResult.dispatched ? 'waiting' : 'failed',
+        message: `Task ${initialTaskId} dispatched to queue for execution. JobId: ${dispatchResult.jobId || 'N/A'}`,
+        metadata: {
+          objectiveId: id,
+          idempotencyKey,
+          dispatchedToQueue: dispatchResult.dispatched
+        }
+      }).catch(() => {});
+
       // Case A: First request with key K -> Return 202 Accepted
       return reply.status(202).send({
         success: true,
@@ -716,6 +755,26 @@ export async function registerCeoRoutes(
         });
       }
 
+      // Phase 10.3 Centralized Activity Logging for Approval Granted
+      activityService.emitEvent({
+        correlationId: task.objectiveId,
+        userId: user.userId,
+        taskId: task.taskId,
+        jobId: dispatchResult.jobId,
+        departmentId: task.departmentId,
+        agentId: task.specialistId,
+        approvalId: id,
+        eventType: ActivityEventType.APPROVAL_GRANTED,
+        action: 'APPROVE_HIGH_RISK_ACTION',
+        status: 'completed',
+        message: `Approval request ${id} GRANTED by ${user.email}. Task ${task.taskId} resumed.`,
+        metadata: {
+          approvalId: id,
+          reason: parseResult.data.reason,
+          resumedQueueDispatched: dispatchResult.dispatched
+        }
+      }).catch(() => {});
+
       return reply.status(200).send({
         success: true,
         message: 'Approval granted and task safely queued for autonomous resumption',
@@ -832,6 +891,22 @@ export async function registerCeoRoutes(
         });
       }
 
+      // Phase 10.3 Centralized Activity Logging for Approval Rejection
+      activityService.emitEvent({
+        correlationId: approval.objectiveId,
+        userId: user.userId,
+        taskId: approval.taskId,
+        approvalId: id,
+        eventType: ActivityEventType.APPROVAL_REJECTED,
+        action: 'REJECT_HIGH_RISK_ACTION',
+        status: 'cancelled',
+        message: `Approval request ${id} REJECTED by ${user.email}. Task ${approval.taskId} permanently stopped.`,
+        metadata: {
+          approvalId: id,
+          reason: parseResult.data.reason
+        }
+      }).catch(() => {});
+
       return reply.status(200).send({
         success: true,
         message: 'Approval rejected and task safely stopped',
@@ -847,4 +922,102 @@ export async function registerCeoRoutes(
       });
     }
   );
+
+  // -------------------------------------------------------------
+  // PHASE 10.3: CENTRALIZED ACTIVITY & TELEMETRY ENDPOINTS
+  // -------------------------------------------------------------
+
+  /**
+   * GET /api/ceo/activity
+   * Paginated, filtered list of permanent activity events
+   */
+  app.get(
+    '/api/ceo/activity',
+    {
+      preHandler: [authenticate, requirePermission('read', 'activity')]
+    },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const parseResult = ListActivityQuerySchema.safeParse(req.query);
+      if (!parseResult.success) {
+        return reply.status(400).send({
+          error: 'BAD_REQUEST',
+          message: 'Invalid activity query parameters',
+          details: parseResult.error.format()
+        });
+      }
+
+      const { activityRepo } = getRepos();
+      const results = await activityRepo.listEvents(parseResult.data as any);
+      return reply.status(200).send(results);
+    }
+  );
+
+  /**
+   * GET /api/ceo/activity/summary
+   * Aggregated real telemetry statistics (counts, errors, active workers)
+   */
+  app.get(
+    '/api/ceo/activity/summary',
+    {
+      preHandler: [authenticate, requirePermission('read', 'activity')]
+    },
+    async (_req: FastifyRequest, reply: FastifyReply) => {
+      const { activityRepo } = getRepos();
+      const summary = await activityRepo.getTelemetrySummary();
+      return reply.status(200).send({
+        success: true,
+        data: summary
+      });
+    }
+  );
+
+  /**
+   * GET /api/ceo/activity/stream (Server-Sent Events Real-Time Telemetry)
+   */
+  app.get(
+    '/api/ceo/activity/stream',
+    {
+      preHandler: [authenticate, requirePermission('read', 'activity')]
+    },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      // Set SSE headers
+      reply.raw.setHeader('Content-Type', 'text/event-stream');
+      reply.raw.setHeader('Cache-Control', 'no-cache, no-transform');
+      reply.raw.setHeader('Connection', 'keep-alive');
+      reply.raw.setHeader('X-Accel-Buffering', 'no');
+
+      // Send initial batch of recent in-memory events on connect/reconnect
+      const initialEvents = activityService.getRecentMemoryEvents(25);
+      reply.raw.write(`event: init\ndata: ${JSON.stringify(initialEvents)}\n\n`);
+
+      // Heartbeat ping interval
+      const pingInterval = setInterval(() => {
+        try {
+          reply.raw.write(`event: ping\ndata: {"time":"${new Date().toISOString()}"}\n\n`);
+        } catch {
+          clearInterval(pingInterval);
+        }
+      }, 15000);
+
+      // Event listener
+      const onActivity = (event: any) => {
+        try {
+          reply.raw.write(`event: activity\ndata: ${JSON.stringify(event)}\n\n`);
+        } catch {
+          cleanup();
+        }
+      };
+
+      activityService.on('activity', onActivity);
+
+      const cleanup = () => {
+        clearInterval(pingInterval);
+        activityService.removeListener('activity', onActivity);
+      };
+
+      req.raw.on('close', cleanup);
+      req.raw.on('end', cleanup);
+    }
+  );
 }
+

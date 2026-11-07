@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Activity,
   Layers,
@@ -31,14 +31,20 @@ import {
   FileText,
   BarChart2,
   Check,
-  UserCheck
+  UserCheck,
+  Radio,
+  Filter,
+  Terminal,
+  Zap,
+  RotateCcw
 } from 'lucide-react';
 import {
   ApiClient,
   SystemHealthResponse,
   BusinessObjectiveItem,
   ApprovalRequestItem,
-  AIProviderStatusItem
+  AIProviderStatusItem,
+  API_BASE
 } from '@/lib/api';
 import { DEPARTMENTS, SPECIALIST_PROFILES } from '@ai-command-center/shared';
 
@@ -85,7 +91,7 @@ export default function DashboardPage() {
   const [health, setHealth] = useState<SystemHealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    'OVERVIEW' | 'CEO_OBJECTIVES' | 'APPROVALS' | 'AI_PROVIDERS' | 'DEPARTMENTS' | 'SPECIALISTS' | 'OWNER_CONTROLS'
+    'OVERVIEW' | 'LIVE_ACTIVITY' | 'CURRENT_EXECUTION' | 'CEO_OBJECTIVES' | 'APPROVALS' | 'AI_PROVIDERS' | 'DEPARTMENTS' | 'SPECIALISTS' | 'OWNER_CONTROLS'
   >('OVERVIEW');
   const [killSwitchReason, setKillSwitchReason] = useState('');
   const [isTogglingKillSwitch, setIsTogglingKillSwitch] = useState(false);
@@ -109,18 +115,40 @@ export default function DashboardPage() {
   const [approvalReason, setApprovalReason] = useState('');
   const [isProcessingApproval, setIsProcessingApproval] = useState(false);
 
+  // Phase 10.3 Real Activity Events & Telemetry State
+  const [activityEvents, setActivityEvents] = useState<any[]>([]);
+  const [activitySummary, setActivitySummary] = useState<{
+    totalEvents: number;
+    activeJobsCount: number;
+    failedJobsCount: number;
+    completedTasksCount: number;
+    recentEvents: any[];
+  }>({
+    totalEvents: 0,
+    activeJobsCount: 0,
+    failedJobsCount: 0,
+    completedTasksCount: 0,
+    recentEvents: []
+  });
+  const [sseConnected, setSseConnected] = useState(false);
+  const eventSourceRef = useRef<EventSource | null>(null);
+
   // Safe live poll function
   const refreshAllData = useCallback(async () => {
     setLoading(true);
     try {
-      const [healthData, objData, apprData] = await Promise.all([
+      const [healthData, objData, apprData, actData, actSumm] = await Promise.all([
         ApiClient.getHealth(),
         ApiClient.listObjectives({ limit: 50 }),
-        ApiClient.listApprovals({ status: 'PENDING' })
+        ApiClient.listApprovals({ status: 'PENDING' }),
+        ApiClient.listActivities({ limit: 50 }),
+        ApiClient.getActivitySummary()
       ]);
       setHealth(healthData);
       setObjectives(objData.items);
       setApprovals(apprData.items);
+      setActivityEvents(actData.items);
+      setActivitySummary(actSumm);
       setLastUpdated(new Date().toLocaleTimeString());
     } catch {
       // safe fallback without crashing UI
@@ -129,10 +157,66 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // Real-Time SSE Stream Hook
   useEffect(() => {
     refreshAllData();
-    const interval = setInterval(refreshAllData, 10000); // 10s live poll
-    return () => clearInterval(interval);
+
+    // Setup Server-Sent Events (SSE) Stream
+    try {
+      const es = new EventSource(`${API_BASE}/api/ceo/activity/stream`, {
+        withCredentials: true
+      });
+      eventSourceRef.current = es;
+
+      es.onopen = () => {
+        setSseConnected(true);
+      };
+
+      es.addEventListener('init', (e: MessageEvent) => {
+        try {
+          const initData = JSON.parse(e.data);
+          if (Array.isArray(initData) && initData.length > 0) {
+            setActivityEvents((prev) => {
+              const combined = [...initData, ...prev];
+              // Unique by eventId
+              const seen = new Set();
+              return combined.filter((item) => {
+                const k = item.eventId;
+                return seen.has(k) ? false : seen.add(k);
+              });
+            });
+          }
+        } catch {}
+      });
+
+      es.addEventListener('activity', (e: MessageEvent) => {
+        try {
+          const newEvent = JSON.parse(e.data);
+          setActivityEvents((prev) => [newEvent, ...prev.filter((p) => p.eventId !== newEvent.eventId)]);
+          // Also bump summary counter
+          setActivitySummary((prev) => ({
+            ...prev,
+            totalEvents: prev.totalEvents + 1,
+            activeJobsCount: newEvent.status === 'active' ? prev.activeJobsCount + 1 : prev.activeJobsCount,
+            completedTasksCount: newEvent.eventType === 'TASK_COMPLETED' ? prev.completedTasksCount + 1 : prev.completedTasksCount
+          }));
+        } catch {}
+      });
+
+      es.onerror = () => {
+        setSseConnected(false);
+      };
+    } catch {
+      setSseConnected(false);
+    }
+
+    const interval = setInterval(refreshAllData, 10000); // 10s poll fallback
+    return () => {
+      clearInterval(interval);
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
   }, [refreshAllData]);
 
   // Kill Switch Action
@@ -229,12 +313,14 @@ export default function DashboardPage() {
     setIsProcessingApproval(false);
   };
 
-  // Calculated Metrics
+  // Honest Real Metrics — Zero fake numbers
   const totalObjectives = objectives.length;
   const activeObjectives = objectives.filter((o) => o.status === 'ACTIVE').length;
   const completedObjectives = objectives.filter((o) => o.status === 'COMPLETED').length;
   const failedObjectives = objectives.filter((o) => o.status === 'FAILED').length;
   const pendingApprovalsCount = approvals.filter((a) => a.status === 'PENDING').length;
+  const realActiveWorkersCount = activitySummary.activeJobsCount;
+  const realCompletedTasksCount = completedObjectives + activitySummary.completedTasksCount;
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f8fafc] text-slate-800 antialiased font-sans selection:bg-indigo-100">
@@ -246,9 +332,10 @@ export default function DashboardPage() {
             <span className="text-xl font-extrabold tracking-wider bg-gradient-to-r from-slate-900 to-indigo-700 bg-clip-text text-transparent font-mono">
               GYB AGENT
             </span>
-            <span className="hidden sm:inline-block text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">
-              LIGHT
-            </span>
+            <div className="flex items-center space-x-1.5 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-semibold text-slate-600">
+              <span className={`h-2 w-2 rounded-full ${sseConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
+              <span>{sseConnected ? 'LIVE SSE' : 'POLLING'}</span>
+            </div>
           </div>
         </div>
 
@@ -260,7 +347,7 @@ export default function DashboardPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search agents, workflows, or tasks..."
+              placeholder="Search real events, tasks, or agents..."
               className="w-full pl-9 pr-4 py-2 text-xs rounded-full border border-slate-200/90 bg-slate-50/70 text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100/60 transition-all shadow-sm"
             />
           </div>
@@ -268,7 +355,6 @@ export default function DashboardPage() {
 
         {/* Top Navigation Tabs & User Profile */}
         <div className="flex items-center space-x-2 sm:space-x-3">
-          {/* Main Top Nav Pills */}
           <nav className="flex items-center bg-slate-100/80 p-1 rounded-full border border-slate-200/70 text-xs font-semibold">
             <button
               onClick={() => setActiveTab('OVERVIEW')}
@@ -281,6 +367,17 @@ export default function DashboardPage() {
               Dashboard
             </button>
             <button
+              onClick={() => setActiveTab('LIVE_ACTIVITY')}
+              className={`px-3 py-1.5 rounded-full transition-all flex items-center space-x-1 ${
+                activeTab === 'LIVE_ACTIVITY'
+                  ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-sm shadow-indigo-200'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Radio className="h-3 w-3" />
+              <span>Activity Log</span>
+            </button>
+            <button
               onClick={() => setActiveTab('CEO_OBJECTIVES')}
               className={`px-3 py-1.5 rounded-full transition-all ${
                 activeTab === 'CEO_OBJECTIVES'
@@ -288,21 +385,11 @@ export default function DashboardPage() {
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Agents
-            </button>
-            <button
-              onClick={() => setActiveTab('AI_PROVIDERS')}
-              className={`px-3 py-1.5 rounded-full transition-all ${
-                activeTab === 'AI_PROVIDERS'
-                  ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-sm shadow-indigo-200'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Analytics
+              Objectives
             </button>
           </nav>
 
-          {/* Quick Action Icons */}
+          {/* Quick Refresh Icon */}
           <button
             onClick={refreshAllData}
             title="Refresh Live Data"
@@ -311,7 +398,7 @@ export default function DashboardPage() {
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-indigo-600' : ''}`} />
           </button>
 
-          {/* Notifications Pill */}
+          {/* Notifications / Approvals Pill */}
           <div className="relative">
             <button
               onClick={() => setActiveTab('APPROVALS')}
@@ -363,7 +450,7 @@ export default function DashboardPage() {
 
       {/* 2. BODY LAYOUT: SLIM DOCK SIDEBAR + MAIN CONTENT */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Vertical Dock (Reference Design) */}
+        {/* Left Vertical Dock */}
         <aside className="w-16 border-r border-slate-200/80 bg-white flex flex-col items-center py-5 space-y-6 shrink-0">
           <button
             onClick={() => setActiveTab('OVERVIEW')}
@@ -378,8 +465,20 @@ export default function DashboardPage() {
           </button>
 
           <button
+            onClick={() => setActiveTab('LIVE_ACTIVITY')}
+            title="Live Centralized Activity Feed"
+            className={`p-3 rounded-2xl transition-all ${
+              activeTab === 'LIVE_ACTIVITY'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            <Terminal className="h-5 w-5" />
+          </button>
+
+          <button
             onClick={() => setActiveTab('CEO_OBJECTIVES')}
-            title="AI Agents & Objectives"
+            title="CEO Business Objectives"
             className={`p-3 rounded-2xl transition-all ${
               activeTab === 'CEO_OBJECTIVES'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
@@ -391,7 +490,7 @@ export default function DashboardPage() {
 
           <button
             onClick={() => setActiveTab('DEPARTMENTS')}
-            title="Departments Registry"
+            title="7 Corporate Departments"
             className={`p-3 rounded-2xl transition-all ${
               activeTab === 'DEPARTMENTS'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
@@ -442,10 +541,10 @@ export default function DashboardPage() {
 
           <div className="flex-1" />
 
-          {/* Kill Switch Toggle / Settings */}
+          {/* Kill Switch Toggle */}
           <button
             onClick={() => setActiveTab('OWNER_CONTROLS')}
-            title="Owner Controls & Kill Switch"
+            title="Owner Controls & Emergency Halt"
             className={`p-3 rounded-2xl transition-all ${
               activeTab === 'OWNER_CONTROLS'
                 ? 'bg-rose-600 text-white shadow-md shadow-rose-200'
@@ -460,299 +559,182 @@ export default function DashboardPage() {
 
         {/* Main Body Canvas */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
-          {/* TAB 1: OVERVIEW (EXACT LAYOUT OF REFERENCE SCREENSHOT IN LIGHT PALETTE) */}
+          {/* TAB 1: OVERVIEW */}
           {activeTab === 'OVERVIEW' && (
             <div className="space-y-6">
-              {/* 4 STAT CARDS ROW */}
+              {/* 4 REAL STAT CARDS (HONEST BACKEND METRICS ONLY) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* 1. Active Agents */}
-                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                {/* 1. Active Objectives */}
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm relative overflow-hidden">
                   <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-indigo-500 to-indigo-400" />
                   <div className="flex items-center justify-between mb-3">
                     <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
                       <Bot className="h-5 w-5" />
                     </div>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                      ↑ 12%
-                    </span>
+                    <span className="text-xs font-mono font-bold text-slate-500">Live</span>
                   </div>
                   <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                    {activeObjectives > 0 ? activeObjectives : 12}
+                    {activeObjectives}
                   </div>
-                  <div className="text-xs font-medium text-slate-500 mt-1">Active Agents</div>
+                  <div className="text-xs font-medium text-slate-500 mt-1">Active Objectives</div>
                 </div>
 
                 {/* 2. Completed Tasks */}
-                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm relative overflow-hidden">
                   <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-emerald-500 to-teal-400" />
                   <div className="flex items-center justify-between mb-3">
                     <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
                       <CheckCircle2 className="h-5 w-5" />
                     </div>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                      ↑ 24%
-                    </span>
+                    <span className="text-xs font-mono font-bold text-emerald-600">Verified</span>
                   </div>
                   <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                    {completedObjectives > 0 ? completedObjectives * 12 + 847 : 847}
+                    {realCompletedTasksCount}
                   </div>
                   <div className="text-xs font-medium text-slate-500 mt-1">Completed Tasks</div>
                 </div>
 
-                {/* 3. Time Saved */}
-                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                {/* 3. Real Activity Events */}
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm relative overflow-hidden">
                   <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-amber-500 to-orange-400" />
                   <div className="flex items-center justify-between mb-3">
                     <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
-                      <Clock className="h-5 w-5" />
+                      <Terminal className="h-5 w-5" />
                     </div>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                      ↑ 31%
-                    </span>
+                    <span className="text-xs font-mono font-bold text-amber-600">Audit Trail</span>
                   </div>
-                  <div className="text-3xl font-extrabold text-slate-900 tracking-tight">156h</div>
-                  <div className="text-xs font-medium text-slate-500 mt-1">Time Saved</div>
+                  <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                    {activitySummary.totalEvents}
+                  </div>
+                  <div className="text-xs font-medium text-slate-500 mt-1">Persisted Events</div>
                 </div>
 
-                {/* 4. Active Workflows */}
-                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                {/* 4. Total Workflows / Objectives */}
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm relative overflow-hidden">
                   <div className="h-1 absolute top-0 left-0 right-0 bg-gradient-to-r from-violet-500 to-purple-400" />
                   <div className="flex items-center justify-between mb-3">
                     <div className="p-2.5 rounded-xl bg-violet-50 text-violet-600 border border-violet-100">
                       <Layers className="h-5 w-5" />
                     </div>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                      ↑ 8%
-                    </span>
+                    <span className="text-xs font-mono font-bold text-violet-600">Registry</span>
                   </div>
                   <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                    {totalObjectives > 0 ? totalObjectives : 5}
+                    {totalObjectives}
                   </div>
-                  <div className="text-xs font-medium text-slate-500 mt-1">Active Workflows</div>
+                  <div className="text-xs font-medium text-slate-500 mt-1">Total Objectives</div>
                 </div>
               </div>
 
-              {/* TWO COLUMN GRID: ACTIVE AI AGENTS (LEFT) & RECENT ACTIVITY (RIGHT) */}
+              {/* TWO COLUMN GRID: ACTIVE OBJECTIVES & LIVE REAL ACTIVITY FEED */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column: Active AI Agents (Takes 2 Cols) */}
-                <div className="lg:col-span-2 p-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-5">
+                {/* Left Column: Active Objectives */}
+                <div className="lg:col-span-2 p-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-base font-bold text-slate-900 tracking-tight">
-                      Active AI Agents
+                      Active AI Objectives
                     </h3>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={refreshAllData}
-                        title="Reload"
-                        className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 transition-colors"
-                      >
-                        <RefreshCw className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-100 text-xs font-semibold flex items-center space-x-1 transition-colors"
-                      >
-                        <PlusCircle className="h-3.5 w-3.5" />
-                        <span>Add</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Agent Card 1: Marketing Campaign Agent */}
-                  <div className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-slate-50 transition-all space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="h-10 w-10 rounded-xl bg-indigo-100/80 text-indigo-600 flex items-center justify-center font-bold text-sm shadow-sm">
-                          📢
-                        </div>
-                        <div>
-                          <div className="text-sm font-bold text-slate-900">
-                            Marketing Campaign Agent
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            Creating social media content and ad campaigns
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-lg font-extrabold text-indigo-600">87%</span>
-                        <div className="text-[11px] font-semibold text-emerald-600">Running</div>
-                      </div>
-                    </div>
-                    {/* Progress Bar (Indigo) */}
-                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                      <div className="bg-indigo-600 h-full rounded-full transition-all duration-700 w-[87%]" />
-                    </div>
-                  </div>
-
-                  {/* Agent Card 2: Content Creation Agent */}
-                  <div className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-slate-50 transition-all space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="h-10 w-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center font-bold text-sm shadow-sm">
-                          ✍️
-                        </div>
-                        <div>
-                          <div className="text-sm font-bold text-slate-900">
-                            Content Creation Agent
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            Writing blog posts and articles
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-lg font-extrabold text-indigo-600">94%</span>
-                        <div className="text-[11px] font-semibold text-emerald-600">Running</div>
-                      </div>
-                    </div>
-                    {/* Progress Bar (Indigo) */}
-                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                      <div className="bg-indigo-600 h-full rounded-full transition-all duration-700 w-[94%]" />
-                    </div>
-                  </div>
-
-                  {/* Agent Card 3: Data Analysis Agent */}
-                  <div className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-slate-50 transition-all space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="h-10 w-10 rounded-xl bg-amber-100/80 text-amber-600 flex items-center justify-center font-bold text-sm shadow-sm">
-                          📊
-                        </div>
-                        <div>
-                          <div className="text-sm font-bold text-slate-900">
-                            Data Analysis Agent
-                          </div>
-                          <div className="text-xs text-slate-500">
-                            Processing customer insights and metrics
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-lg font-extrabold text-indigo-600">72%</span>
-                        <div className="text-[11px] font-semibold text-emerald-600">Running</div>
-                      </div>
-                    </div>
-                    {/* Progress Bar (Indigo) */}
-                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                      <div className="bg-indigo-600 h-full rounded-full transition-all duration-700 w-[72%]" />
-                    </div>
-                  </div>
-
-                  {/* If custom objectives exist, render them here dynamically */}
-                  {objectives.slice(0, 3).map((obj) => (
-                    <div
-                      key={obj.objectiveId}
-                      className="p-4 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50 transition-all space-y-3"
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-100 text-xs font-semibold flex items-center space-x-1 transition-colors"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="h-10 w-10 rounded-xl bg-violet-100/80 text-violet-600 flex items-center justify-center font-bold text-sm shadow-sm">
-                            <Bot className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <div className="text-sm font-bold text-slate-900">{obj.title}</div>
-                            <div className="text-xs text-slate-500 line-clamp-1">{obj.description}</div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600">
-                            {obj.status}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Right Column: Recent Activity Timeline */}
-                <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-5">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-base font-bold text-slate-900 tracking-tight">
-                      Recent Activity
-                    </h3>
-                    <button className="text-slate-400 hover:text-slate-600">
-                      <MoreHorizontal className="h-4 w-4" />
+                      <PlusCircle className="h-3.5 w-3.5" />
+                      <span>New Objective</span>
                     </button>
                   </div>
 
-                  <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
-                    {/* Activity Item 1 */}
-                    <div className="relative">
-                      <div className="absolute -left-6 top-0 h-5 w-5 rounded-full bg-emerald-100 border-2 border-white flex items-center justify-center text-emerald-600 shadow-sm">
-                        <Check className="h-3 w-3 stroke-[3]" />
-                      </div>
-                      <div className="text-sm font-bold text-slate-900">Campaign Completed</div>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Marketing agent finished email campaign with 94% open rate
-                      </p>
-                      <div className="flex items-center space-x-1 text-[11px] text-slate-400 mt-1 font-medium">
-                        <Clock className="h-3 w-3" />
-                        <span>5 minutes ago</span>
-                      </div>
+                  {objectives.length === 0 ? (
+                    <div className="p-12 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                      No business objectives recorded. Create an objective above to dispatch real autonomous execution.
                     </div>
-
-                    {/* Activity Item 2 */}
-                    <div className="relative">
-                      <div className="absolute -left-6 top-0 h-5 w-5 rounded-full bg-indigo-100 border-2 border-white flex items-center justify-center text-indigo-600 shadow-sm">
-                        <Bot className="h-3 w-3" />
-                      </div>
-                      <div className="text-sm font-bold text-slate-900">Agent Started</div>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Content agent began generating blog articles
-                      </p>
-                      <div className="flex items-center space-x-1 text-[11px] text-slate-400 mt-1 font-medium">
-                        <Clock className="h-3 w-3" />
-                        <span>15 minutes ago</span>
-                      </div>
-                    </div>
-
-                    {/* Activity Item 3 */}
-                    <div className="relative">
-                      <div className="absolute -left-6 top-0 h-5 w-5 rounded-full bg-teal-100 border-2 border-white flex items-center justify-center text-teal-600 shadow-sm">
-                        <TrendingUp className="h-3 w-3" />
-                      </div>
-                      <div className="text-sm font-bold text-slate-900">Analysis Complete</div>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Data agent completed weekly performance report
-                      </p>
-                      <div className="flex items-center space-x-1 text-[11px] text-slate-400 mt-1 font-medium">
-                        <Clock className="h-3 w-3" />
-                        <span>1 hour ago</span>
-                      </div>
-                    </div>
-
-                    {/* Activity Item 4 */}
-                    <div className="relative">
-                      <div className="absolute -left-6 top-0 h-5 w-5 rounded-full bg-amber-100 border-2 border-white flex items-center justify-center text-amber-600 shadow-sm">
-                        <AlertTriangle className="h-3 w-3" />
-                      </div>
-                      <div className="text-sm font-bold text-slate-900">Approval Required</div>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {pendingApprovalsCount > 0
-                          ? `${pendingApprovalsCount} pending agent suggestions need your review`
-                          : '3 pending agent suggestions need your review'}
-                      </p>
-                      <button
-                        onClick={() => setActiveTab('APPROVALS')}
-                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 underline mt-1"
+                  ) : (
+                    objectives.slice(0, 5).map((obj) => (
+                      <div
+                        key={obj.objectiveId}
+                        onClick={() => handleSelectObjective(obj)}
+                        className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-white transition-all space-y-2 cursor-pointer shadow-sm"
                       >
-                        Review Queue →
-                      </button>
-                    </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-mono font-bold text-indigo-600">
+                            {obj.objectiveId}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                              obj.status === 'COMPLETED'
+                                ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                : obj.status === 'ACTIVE'
+                                  ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                  : 'bg-slate-100 text-slate-600'
+                            }`}
+                          >
+                            {obj.status}
+                          </span>
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900">{obj.title}</h4>
+                        <p className="text-xs text-slate-500 line-clamp-1">{obj.description}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Right Column: Live Recent Real Events (Honest Telemetry) */}
+                <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-bold text-slate-900 tracking-tight flex items-center space-x-1.5">
+                      <Terminal className="h-4 w-4 text-indigo-600" />
+                      <span>Live Telemetry Feed</span>
+                    </h3>
+                    <button
+                      onClick={() => setActiveTab('LIVE_ACTIVITY')}
+                      className="text-xs font-semibold text-indigo-600 hover:underline"
+                    >
+                      View All →
+                    </button>
                   </div>
+
+                  {activityEvents.length === 0 ? (
+                    <div className="p-10 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-xl">
+                      Waiting for live telemetry events from BullMQ workers...
+                    </div>
+                  ) : (
+                    <div className="relative pl-6 space-y-5 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 max-h-96 overflow-y-auto">
+                      {activityEvents.slice(0, 6).map((evt) => (
+                        <div key={evt.eventId} className="relative text-xs">
+                          <div className={`absolute -left-6 top-0.5 h-4 w-4 rounded-full border-2 border-white flex items-center justify-center ${
+                            evt.status === 'completed'
+                              ? 'bg-emerald-500'
+                              : evt.status === 'failed'
+                                ? 'bg-rose-500'
+                                : evt.status === 'active'
+                                  ? 'bg-indigo-500 animate-pulse'
+                                  : 'bg-amber-400'
+                          }`} />
+                          <div className="font-bold text-slate-900 flex items-center justify-between">
+                            <span>{evt.action}</span>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              {new Date(evt.timestamp).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          <p className="text-slate-500 mt-0.5 line-clamp-2">{evt.message}</p>
+                          <div className="mt-1 flex items-center space-x-2 text-[10px] font-mono text-slate-400">
+                            {evt.departmentId && <span>{evt.departmentId}</span>}
+                            {evt.taskId && <span>• {evt.taskId}</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Bottom Quick Card: BullMQ Topologies & Infrastructure */}
+              {/* Bottom Card: BullMQ Real Queue Topologies */}
               <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-slate-900 tracking-tight flex items-center space-x-2">
                     <Server className="h-4 w-4 text-indigo-600" />
-                    <span>Background Autonomous Queues (10 BullMQ Topologies)</span>
+                    <span>Real-Time BullMQ Queue Topologies & Worker Health</span>
                   </h3>
                   <span className="text-xs font-mono text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                    Active & Zero-Cost Guarded
+                    Zero-Cost Verified
                   </span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
@@ -784,7 +766,108 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* TAB 2: CEO OBJECTIVES */}
+          {/* TAB 2: LIVE CENTRALIZED ACTIVITY & AUDIT TRAIL */}
+          {activeTab === 'LIVE_ACTIVITY' && (
+            <div className="space-y-6">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+                    <Terminal className="h-5 w-5 text-indigo-600" />
+                    <span>Centralized Activity Logging & Audit Trail</span>
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Immutable append-only execution log. Permanently records every real BullMQ event, AI request, and owner approval.
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={refreshAllData}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center space-x-1.5"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin text-indigo-600' : ''}`} />
+                    <span>Refresh</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Event Stream Table */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Execution Events ({activityEvents.length})
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-500">
+                    Live Stream Status: {sseConnected ? 'Connected (SSE)' : 'Polling Fallback'}
+                  </span>
+                </div>
+
+                {activityEvents.length === 0 ? (
+                  <div className="p-12 text-center text-xs text-slate-400">
+                    No activity events recorded yet. Run a CEO objective or queue a task to see real events streamed live.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-semibold uppercase text-[10px]">
+                          <th className="py-3 px-4">Timestamp</th>
+                          <th className="py-3 px-4">Event Type</th>
+                          <th className="py-3 px-4">Action</th>
+                          <th className="py-3 px-4">Status</th>
+                          <th className="py-3 px-4">Department / Agent</th>
+                          <th className="py-3 px-4">Task / Job ID</th>
+                          <th className="py-3 px-4">Message</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {activityEvents.map((evt) => (
+                          <tr key={evt.eventId} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-3 px-4 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                              {new Date(evt.timestamp).toLocaleString()}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-50 text-indigo-600 border border-indigo-100">
+                                {evt.eventType}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 font-semibold text-slate-800">
+                              {evt.action}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                                  evt.status === 'completed'
+                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                    : evt.status === 'failed'
+                                      ? 'bg-rose-50 text-rose-600 border border-rose-100'
+                                      : evt.status === 'active'
+                                        ? 'bg-indigo-50 text-indigo-600 border border-indigo-100 animate-pulse'
+                                        : 'bg-amber-50 text-amber-600 border border-amber-100'
+                                }`}
+                              >
+                                {evt.status.toUpperCase()}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-slate-600 font-mono text-[11px]">
+                              {evt.departmentId || 'System'} {evt.agentId ? `(${evt.agentId})` : ''}
+                            </td>
+                            <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">
+                              {evt.taskId || evt.jobId || 'N/A'}
+                            </td>
+                            <td className="py-3 px-4 text-slate-700 max-w-xs truncate">
+                              {evt.message}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: CEO OBJECTIVES */}
           {activeTab === 'CEO_OBJECTIVES' && (
             <div className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/90 shadow-sm">
@@ -936,7 +1019,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* TAB 3: APPROVALS */}
+          {/* TAB 4: APPROVALS */}
           {activeTab === 'APPROVALS' && (
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-sm">
@@ -1051,7 +1134,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* TAB 4: AI PROVIDERS */}
+          {/* TAB 5: AI PROVIDERS */}
           {activeTab === 'AI_PROVIDERS' && (
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-sm">
@@ -1090,7 +1173,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* TAB 5: DEPARTMENTS */}
+          {/* TAB 6: DEPARTMENTS */}
           {activeTab === 'DEPARTMENTS' && (
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-sm">
@@ -1123,7 +1206,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* TAB 6: SPECIALISTS */}
+          {/* TAB 7: SPECIALISTS */}
           {activeTab === 'SPECIALISTS' && (
             <div className="space-y-4">
               <div className="p-5 rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center justify-between">
@@ -1168,7 +1251,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* TAB 7: OWNER CONTROLS */}
+          {/* TAB 8: OWNER CONTROLS */}
           {activeTab === 'OWNER_CONTROLS' && (
             <div className="p-6 rounded-2xl border border-slate-200 bg-white shadow-sm space-y-6">
               <div className="flex items-center space-x-3 text-rose-600">

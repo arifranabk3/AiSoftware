@@ -1,6 +1,8 @@
 import { Queue } from 'bullmq';
 import { redisManager } from './redis.js';
 import { CommandQueueName, DEFAULT_JOB_OPTIONS, BaseTaskPayload } from './queues.js';
+import { activityService } from './activity-service.js';
+import { ActivityEventType } from '@ai-command-center/shared';
 
 export interface DispatchResult {
   dispatched: boolean;
@@ -34,6 +36,7 @@ export class TaskDispatcherService {
 
   /**
    * Dispatches a task to BullMQ with a stable taskId as the BullMQ jobId (ensuring Redis-level idempotency).
+   * Emits telemetry events upon dispatch or failure.
    */
   public async dispatchCeoTask(payload: BaseTaskPayload): Promise<DispatchResult> {
     try {
@@ -46,18 +49,53 @@ export class TaskDispatcherService {
         removeOnFail: DEFAULT_JOB_OPTIONS.removeOnFail
       });
 
+      // Emit real telemetry event for JOB_QUEUED
+      await activityService.emitEvent({
+        correlationId: payload.objectiveId || payload.taskId,
+        taskId: payload.taskId,
+        jobId: job.id,
+        queueName: CommandQueueName.CEO_TASKS,
+        departmentId: payload.departmentId,
+        agentId: payload.specialistId,
+        eventType: ActivityEventType.JOB_QUEUED,
+        action: payload.action,
+        status: 'waiting',
+        message: `Task ${payload.taskId} queued in ${CommandQueueName.CEO_TASKS}`,
+        metadata: {
+          idempotencyKey: payload.idempotencyKey,
+          priority: payload.priority
+        }
+      });
+
       return {
         dispatched: true,
         jobId: job.id
       };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
+
+      // Emit system error event
+      await activityService.emitEvent({
+        correlationId: payload.objectiveId || payload.taskId,
+        taskId: payload.taskId,
+        queueName: CommandQueueName.CEO_TASKS,
+        departmentId: payload.departmentId,
+        agentId: payload.specialistId,
+        eventType: ActivityEventType.TASK_FAILED,
+        action: payload.action,
+        status: 'failed',
+        message: `Failed to dispatch task ${payload.taskId} to queue: ${msg}`,
+        errorCode: 'DISPATCH_ERROR',
+        metadata: { error: msg }
+      });
+
       return {
         dispatched: false,
         error: msg
       };
     }
   }
+
 
   public async closeAll(): Promise<void> {
     for (const [name, queue] of this.queues.entries()) {

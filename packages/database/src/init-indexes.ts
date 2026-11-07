@@ -109,5 +109,19 @@ export async function initializeDatabaseIndexes(
     indexesCreated: [uIdx1, uIdx2]
   });
 
+  // 11. activity_events collection (append-only centralized activity and telemetry trail)
+  const activityEvents = db.collection('activity_events');
+  const aeIdx1 = await activityEvents.createIndex({ eventId: 1 }, { unique: true });
+  const aeIdx2 = await activityEvents.createIndex({ timestamp: -1 });
+  const aeIdx3 = await activityEvents.createIndex({ taskId: 1, timestamp: -1 });
+  const aeIdx4 = await activityEvents.createIndex({ jobId: 1 });
+  const aeIdx5 = await activityEvents.createIndex({ eventType: 1, timestamp: -1 });
+  const aeIdx6 = await activityEvents.createIndex({ correlationId: 1 });
+  const aeIdx7 = await activityEvents.createIndex({ departmentId: 1, timestamp: -1 });
+  results.push({
+    collection: 'activity_events',
+    indexesCreated: [aeIdx1, aeIdx2, aeIdx3, aeIdx4, aeIdx5, aeIdx6, aeIdx7]
+  });
+
   return results;
 }

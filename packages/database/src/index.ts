@@ -3,6 +3,8 @@ export * from './init-indexes.js';
 export * from './seed.js';
 export * from './models.js';
 export * from './repositories.js';
+export * from './activity.repository.js';
+
 
 // Backward compatibility alias for legacy test runners
 export const dbService = {
