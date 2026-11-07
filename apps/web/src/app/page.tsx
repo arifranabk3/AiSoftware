@@ -19,15 +19,11 @@ import {
   Bookmark,
   FileCheck2,
   Compass,
-  CpuIcon,
   Server,
   Zap,
   ShieldAlert,
   Database,
-  Search,
-  ExternalLink,
-  Code2,
-  Workflow
+  Code2
 } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -40,16 +36,17 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  // Primary Lead Featured Article
+  // Primary Lead Featured Article (Hero)
   const leadArticle = ARTICLES[0]; // Zero-Cost Local LLM Architecture
 
   // Exactly 9 Article Showcase entries
   const showcaseArticles = ARTICLES.slice(0, 9);
 
-  // Editor's Picks (Curated real articles from existing set)
+  // Editor's Selected Field Guides (Task 1: 1 Featured on Left + 3 Stacked on Right)
   const editorsMain = ARTICLES[1]; // Human-in-the-Loop Safety Gates
   const editorsSecondary1 = ARTICLES[4]; // Merkle Trees & Audit Trails
   const editorsSecondary2 = ARTICLES[8]; // Sliding-Window Token Buffer Management
+  const editorsSecondary3 = ARTICLES[5]; // Sandboxed Execution for AI Agents
 
   // Distinct Categories derived from real articles
   const categoriesWithCounts = [
@@ -57,31 +54,26 @@ export default function HomePage() {
       name: 'Architecture',
       description: 'Sovereign agent memory, local quantized model hosting, and context buffer topologies.',
       count: ARTICLES.filter((a) => a.category === 'Architecture').length,
-      sampleSlug: 'zero-cost-local-llm-architecture'
     },
     {
       name: 'Security',
       description: 'MicroVM sandboxing, RFC 9106 Argon2id credential protection, and tamper-evident Merkle logs.',
       count: ARTICLES.filter((a) => a.category === 'Security').length,
-      sampleSlug: 'sandboxed-execution-ai-agents'
     },
     {
       name: 'Engineering',
       description: 'Fastify admission controllers, BullMQ distributed Redis streams, and real-time SSE telemetry.',
       count: ARTICLES.filter((a) => a.category === 'Engineering').length,
-      sampleSlug: 'distributed-queues-bullmq-agents'
     },
     {
       name: 'AI Safety',
       description: 'Dual-LLM quarantine pipelines, tool call parameter validation, and prompt injection mitigation.',
       count: ARTICLES.filter((a) => a.category === 'AI Safety').length,
-      sampleSlug: 'preventing-prompt-injection-tool-using-agents'
     },
     {
       name: 'Governance',
       description: 'Cryptographic multi-signature quorum gates, TTL expiration, and human-in-the-loop state machines.',
       count: ARTICLES.filter((a) => a.category === 'Governance').length,
-      sampleSlug: 'secure-human-approval-workflows-high-risk-ai-actions'
     }
   ];
 
@@ -90,9 +82,9 @@ export default function HomePage() {
       <PublicHeader />
 
       {/* ========================================================================= */}
-      {/* SECTION 1 — PREMIUM HERO                                                  */}
+      {/* SECTION 1 — PREMIUM HERO (DARK)                                           */}
       {/* ========================================================================= */}
-      <section className="relative overflow-hidden border-b border-slate-800/80 bg-gradient-to-b from-[#070b14] via-[#0d1322] to-[#070b14] py-16 sm:py-24">
+      <section className="relative overflow-hidden border-b border-slate-800/80 bg-gradient-to-b from-[#070b14] via-[#0d1322] to-[#070b14] py-16 sm:py-24 text-slate-200">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b0a_1px,transparent_1px),linear-gradient(to_bottom,#1e293b0a_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -209,19 +201,19 @@ export default function HomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* SECTION 2 — EXPLORE TOPICS                                                */}
+      {/* SECTION 2 — EXPLORE TOPICS (LIGHT)                                        */}
       {/* ========================================================================= */}
-      <section id="topics" className="py-20 bg-[#090e1b] border-b border-slate-800/80">
+      <section id="topics" className="py-20 bg-slate-50 border-b border-slate-200 text-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-12">
-            <span className="text-xs font-bold text-orange-500 tracking-wider uppercase flex items-center space-x-1.5">
+            <span className="text-xs font-bold text-orange-600 tracking-wider uppercase flex items-center space-x-1.5">
               <Bookmark className="h-3.5 w-3.5" />
               <span>Disciplines &amp; Research Areas</span>
             </span>
-            <h2 className="text-3xl font-extrabold text-white tracking-tight mt-1">
+            <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
               Explore Our Core Engineering Disciplines
             </h2>
-            <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+            <p className="text-sm text-slate-600 mt-2 leading-relaxed">
               Every topic is grounded in verifiable code, RFC cryptographic standards, and production-tested topologies across sovereign infrastructure.
             </p>
           </div>
@@ -231,25 +223,25 @@ export default function HomePage() {
               <Link
                 key={cat.name}
                 href={`/articles?category=${encodeURIComponent(cat.name)}`}
-                className="group p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-orange-500/60 hover:bg-slate-900 transition-all flex flex-col justify-between shadow-md"
+                className="group p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-orange-500 hover:shadow-lg transition-all flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="w-8 h-8 rounded-lg bg-orange-950/60 border border-orange-800/60 text-orange-400 flex items-center justify-center font-bold text-xs">
+                    <span className="w-8 h-8 rounded-lg bg-orange-50 border border-orange-200 text-orange-700 flex items-center justify-center font-bold text-xs">
                       {cat.count}
                     </span>
                     <span className="text-[10px] text-slate-500 uppercase tracking-wider font-mono">
                       {cat.count === 1 ? '1 Guide' : `${cat.count} Guides`}
                     </span>
                   </div>
-                  <h3 className="text-base font-bold text-white group-hover:text-orange-400 transition-colors">
+                  <h3 className="text-base font-bold text-slate-900 group-hover:text-orange-600 transition-colors">
                     {cat.name}
                   </h3>
-                  <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
                     {cat.description}
                   </p>
                 </div>
-                <div className="pt-4 mt-4 border-t border-slate-800/80 flex items-center text-xs font-semibold text-orange-400 group-hover:text-orange-300">
+                <div className="pt-4 mt-4 border-t border-slate-100 flex items-center text-xs font-semibold text-orange-600 group-hover:text-orange-700">
                   <span>Browse Category</span>
                   <ChevronRight className="h-3.5 w-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -260,9 +252,9 @@ export default function HomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* SECTION 3 — LATEST ENGINEERING INSIGHTS (EXACTLY 9 CARDS)                 */}
+      {/* SECTION 3 — LATEST ENGINEERING INSIGHTS (DARK)                            */}
       {/* ========================================================================= */}
-      <section id="insights" className="py-24 bg-[#070b14] border-b border-slate-800/80">
+      <section id="insights" className="py-24 bg-[#070b14] border-b border-slate-800/80 text-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
             <div>
@@ -289,7 +281,7 @@ export default function HomePage() {
 
           {/* Exactly 9 Distinct Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {showcaseArticles.map((article, idx) => (
+            {showcaseArticles.map((article) => (
               <article
                 key={article.slug}
                 className="group rounded-2xl bg-[#0f172a] border border-slate-800/90 hover:border-orange-500/50 hover:bg-slate-900/90 transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-lg"
@@ -357,116 +349,175 @@ export default function HomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* SECTION 4 — EDITOR'S PICKS                                                */}
+      {/* SECTION 4 — EDITOR'S SELECTED FIELD GUIDES (LIGHT: 1 LEFT + 3 RIGHT)      */}
       {/* ========================================================================= */}
-      <section className="py-20 bg-[#090e1b] border-b border-slate-800/80">
+      <section className="py-20 bg-slate-100/80 border-b border-slate-200 text-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-12">
-            <span className="text-xs font-bold text-orange-500 tracking-wider uppercase flex items-center space-x-1.5">
+            <span className="text-xs font-bold text-orange-600 tracking-wider uppercase flex items-center space-x-1.5">
               <Zap className="h-3.5 w-3.5" />
               <span>Editorial Curation</span>
             </span>
-            <h2 className="text-3xl font-extrabold text-white tracking-tight mt-1">
+            <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
               Editor’s Selected Field Guides
             </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-2 leading-relaxed">
-              Selected by our systems engineering editors for their immediate architectural impact on securing and scaling autonomous software environments.
+            <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+              Curated by our systems architecture staff for their immediate practical impact on securing, isolating, and budgeting autonomous software systems.
             </p>
           </div>
 
+          {/* Two-Column Editorial Grid: Left Large Featured + Right Exactly 3 Stacked */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            {/* Main Featured Editorial (Large 7 Cols) */}
-            <div className="lg:col-span-7 rounded-2xl bg-slate-900 border border-slate-800 p-6 sm:p-8 flex flex-col justify-between hover:border-orange-500/50 transition-all shadow-xl">
+            {/* LEFT COLUMN: One large featured article card (7 Cols) */}
+            <div className="lg:col-span-7 rounded-2xl bg-white border border-slate-200/90 p-6 sm:p-8 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-orange-300 transition-all">
               <div>
-                <div className="flex items-center justify-between text-xs font-semibold text-orange-400 mb-4">
+                <div className="flex items-center justify-between text-xs font-semibold text-orange-600 mb-4">
                   <span className="uppercase tracking-wider">PRIMARY ARCHITECTURAL SELECTION</span>
-                  <span className="text-slate-400">{editorsMain.readTime}</span>
+                  <span className="text-slate-500 font-medium">{editorsMain.readTime}</span>
                 </div>
-                <Link href={`/articles/${editorsMain.slug}`} className="block overflow-hidden rounded-xl border border-slate-700/60 mb-6 bg-slate-950">
+                <Link href={`/articles/${editorsMain.slug}`} className="block overflow-hidden rounded-xl border border-slate-200 mb-6 bg-slate-950">
                   <img
                     src={editorsMain.featuredImage.src}
                     alt={editorsMain.featuredImage.alt}
                     className="w-full aspect-[1200/630] object-cover hover:scale-105 transition-transform duration-500"
                   />
                 </Link>
-                <span className="px-2.5 py-0.5 rounded bg-slate-800 text-orange-400 text-xs font-bold uppercase tracking-wider">
-                  {editorsMain.category}
-                </span>
-                <h3 className="text-2xl font-extrabold text-white mt-3 hover:text-orange-400 transition-colors leading-snug">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="px-2.5 py-0.5 rounded bg-orange-50 text-orange-700 text-xs font-bold uppercase tracking-wider border border-orange-100">
+                    {editorsMain.category}
+                  </span>
+                  <span className="text-xs text-slate-500">{editorsMain.publishDate}</span>
+                </div>
+                <h3 className="text-2xl font-extrabold text-slate-900 mt-2 hover:text-orange-600 transition-colors leading-snug">
                   <Link href={`/articles/${editorsMain.slug}`}>
                     {editorsMain.title}
                   </Link>
                 </h3>
-                <p className="text-sm text-slate-300 mt-3 leading-relaxed">
+                <p className="text-sm text-slate-600 mt-3 leading-relaxed">
                   {editorsMain.description}
                 </p>
               </div>
 
-              <div className="pt-6 mt-6 border-t border-slate-800 flex items-center justify-between">
-                <span className="text-xs text-slate-400">By {editorsMain.author}</span>
+              <div className="pt-6 mt-6 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-xs text-slate-500">By {editorsMain.author}</span>
                 <Link
                   href={`/articles/${editorsMain.slug}`}
-                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs transition-all"
+                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs transition-all shadow-sm"
                 >
-                  <span>Read Complete Blueprint</span>
+                  <span>Read Guide</span>
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
             </div>
 
-            {/* Supporting Editorials (2 Stacked Cards: 5 Cols) */}
-            <div className="lg:col-span-5 flex flex-col justify-between gap-6">
-              {/* Supporting 1 */}
-              <div className="rounded-2xl bg-slate-900 border border-slate-800 p-6 flex flex-col justify-between hover:border-orange-500/50 transition-all shadow-md">
-                <div>
-                  <div className="flex items-center justify-between text-xs text-slate-400 mb-2 font-medium">
-                    <span className="text-orange-400 font-bold uppercase tracking-wider text-[11px]">{editorsSecondary1.category}</span>
-                    <span>{editorsSecondary1.readTime}</span>
-                  </div>
-                  <h4 className="text-lg font-bold text-white hover:text-orange-400 transition-colors leading-snug">
-                    <Link href={`/articles/${editorsSecondary1.slug}`}>
-                      {editorsSecondary1.title}
-                    </Link>
-                  </h4>
-                  <p className="text-xs text-slate-400 mt-2 line-clamp-3 leading-relaxed">
-                    {editorsSecondary1.description}
-                  </p>
-                </div>
-                <div className="pt-4 mt-4 border-t border-slate-800 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500">{editorsSecondary1.publishDate}</span>
+            {/* RIGHT COLUMN: Exactly THREE vertically stacked article cards (5 Cols) */}
+            <div className="lg:col-span-5 flex flex-col justify-between gap-4">
+              {/* Stacked Card 1: Merkle Trees & Audit Trails */}
+              <div className="flex-1 rounded-2xl bg-white border border-slate-200/90 p-5 flex flex-col justify-between shadow-sm hover:border-orange-300 hover:shadow-md transition-all">
+                <div className="flex items-start space-x-4">
                   <Link
                     href={`/articles/${editorsSecondary1.slug}`}
-                    className="text-xs font-bold text-orange-400 hover:text-orange-300 inline-flex items-center space-x-1"
+                    className="flex-shrink-0 w-28 sm:w-32 aspect-[1200/630] rounded-lg overflow-hidden border border-slate-200 bg-slate-950 block"
                   >
-                    <span>Examine Logic</span>
+                    <img
+                      src={editorsSecondary1.featuredImage.src}
+                      alt={editorsSecondary1.featuredImage.alt}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform"
+                    />
+                  </Link>
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-orange-600 font-bold uppercase tracking-wider">{editorsSecondary1.category}</span>
+                      <span className="text-slate-400">{editorsSecondary1.readTime}</span>
+                    </div>
+                    <h4 className="text-sm font-bold text-slate-900 hover:text-orange-600 transition-colors leading-snug line-clamp-2">
+                      <Link href={`/articles/${editorsSecondary1.slug}`}>
+                        {editorsSecondary1.title}
+                      </Link>
+                    </h4>
+                  </div>
+                </div>
+                <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="text-[11px] text-slate-400">{editorsSecondary1.publishDate}</span>
+                  <Link
+                    href={`/articles/${editorsSecondary1.slug}`}
+                    className="text-xs font-semibold text-orange-600 hover:text-orange-700 inline-flex items-center space-x-1"
+                  >
+                    <span>Read</span>
                     <ChevronRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
               </div>
 
-              {/* Supporting 2 */}
-              <div className="rounded-2xl bg-slate-900 border border-slate-800 p-6 flex flex-col justify-between hover:border-orange-500/50 transition-all shadow-md">
-                <div>
-                  <div className="flex items-center justify-between text-xs text-slate-400 mb-2 font-medium">
-                    <span className="text-orange-400 font-bold uppercase tracking-wider text-[11px]">{editorsSecondary2.category}</span>
-                    <span>{editorsSecondary2.readTime}</span>
-                  </div>
-                  <h4 className="text-lg font-bold text-white hover:text-orange-400 transition-colors leading-snug">
-                    <Link href={`/articles/${editorsSecondary2.slug}`}>
-                      {editorsSecondary2.title}
-                    </Link>
-                  </h4>
-                  <p className="text-xs text-slate-400 mt-2 line-clamp-3 leading-relaxed">
-                    {editorsSecondary2.description}
-                  </p>
-                </div>
-                <div className="pt-4 mt-4 border-t border-slate-800 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500">{editorsSecondary2.publishDate}</span>
+              {/* Stacked Card 2: Sliding-Window Token Buffer Management */}
+              <div className="flex-1 rounded-2xl bg-white border border-slate-200/90 p-5 flex flex-col justify-between shadow-sm hover:border-orange-300 hover:shadow-md transition-all">
+                <div className="flex items-start space-x-4">
                   <Link
                     href={`/articles/${editorsSecondary2.slug}`}
-                    className="text-xs font-bold text-orange-400 hover:text-orange-300 inline-flex items-center space-x-1"
+                    className="flex-shrink-0 w-28 sm:w-32 aspect-[1200/630] rounded-lg overflow-hidden border border-slate-200 bg-slate-950 block"
                   >
-                    <span>Examine Logic</span>
+                    <img
+                      src={editorsSecondary2.featuredImage.src}
+                      alt={editorsSecondary2.featuredImage.alt}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform"
+                    />
+                  </Link>
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-orange-600 font-bold uppercase tracking-wider">{editorsSecondary2.category}</span>
+                      <span className="text-slate-400">{editorsSecondary2.readTime}</span>
+                    </div>
+                    <h4 className="text-sm font-bold text-slate-900 hover:text-orange-600 transition-colors leading-snug line-clamp-2">
+                      <Link href={`/articles/${editorsSecondary2.slug}`}>
+                        {editorsSecondary2.title}
+                      </Link>
+                    </h4>
+                  </div>
+                </div>
+                <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="text-[11px] text-slate-400">{editorsSecondary2.publishDate}</span>
+                  <Link
+                    href={`/articles/${editorsSecondary2.slug}`}
+                    className="text-xs font-semibold text-orange-600 hover:text-orange-700 inline-flex items-center space-x-1"
+                  >
+                    <span>Read</span>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </div>
+
+              {/* Stacked Card 3: Sandboxed Execution for AI Agents */}
+              <div className="flex-1 rounded-2xl bg-white border border-slate-200/90 p-5 flex flex-col justify-between shadow-sm hover:border-orange-300 hover:shadow-md transition-all">
+                <div className="flex items-start space-x-4">
+                  <Link
+                    href={`/articles/${editorsSecondary3.slug}`}
+                    className="flex-shrink-0 w-28 sm:w-32 aspect-[1200/630] rounded-lg overflow-hidden border border-slate-200 bg-slate-950 block"
+                  >
+                    <img
+                      src={editorsSecondary3.featuredImage.src}
+                      alt={editorsSecondary3.featuredImage.alt}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform"
+                    />
+                  </Link>
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-orange-600 font-bold uppercase tracking-wider">{editorsSecondary3.category}</span>
+                      <span className="text-slate-400">{editorsSecondary3.readTime}</span>
+                    </div>
+                    <h4 className="text-sm font-bold text-slate-900 hover:text-orange-600 transition-colors leading-snug line-clamp-2">
+                      <Link href={`/articles/${editorsSecondary3.slug}`}>
+                        {editorsSecondary3.title}
+                      </Link>
+                    </h4>
+                  </div>
+                </div>
+                <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="text-[11px] text-slate-400">{editorsSecondary3.publishDate}</span>
+                  <Link
+                    href={`/articles/${editorsSecondary3.slug}`}
+                    className="text-xs font-semibold text-orange-600 hover:text-orange-700 inline-flex items-center space-x-1"
+                  >
+                    <span>Read</span>
                     <ChevronRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
@@ -477,9 +528,9 @@ export default function HomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* SECTION 5 — DEVELOPER KNOWLEDGE HUB                                       */}
+      {/* SECTION 5 — DEVELOPER KNOWLEDGE HUB (DARK)                                */}
       {/* ========================================================================= */}
-      <section className="py-20 bg-[#070b14] border-b border-slate-800/80">
+      <section className="py-20 bg-[#070b14] border-b border-slate-800/80 text-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-12">
             <span className="text-xs font-bold text-orange-500 tracking-wider uppercase flex items-center space-x-1.5">
@@ -601,52 +652,52 @@ export default function HomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* SECTION 6 — EDITORIAL STANDARDS                                           */}
+      {/* SECTION 6 — EDITORIAL STANDARDS (LIGHT)                                   */}
       {/* ========================================================================= */}
-      <section className="py-20 bg-[#090e1b] border-b border-slate-800/80">
+      <section className="py-20 bg-slate-50 border-b border-slate-200 text-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-12">
-            <span className="text-xs font-bold text-orange-500 tracking-wider uppercase flex items-center space-x-1.5">
+            <span className="text-xs font-bold text-orange-600 tracking-wider uppercase flex items-center space-x-1.5">
               <FileCheck2 className="h-3.5 w-3.5" />
               <span>Editorial Governance</span>
             </span>
-            <h2 className="text-3xl font-extrabold text-white tracking-tight mt-1">
+            <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
               Our Technical Editorial Standards
             </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-2 leading-relaxed">
+            <p className="text-sm text-slate-600 mt-2 leading-relaxed">
               We operate under strict publishing governance (`STD-ED-2026-01`). Every guide is evaluated against rigorous technical criteria before publication.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-              <span className="text-xs font-mono font-bold text-orange-400">01 / TOPIC SELECTION</span>
-              <h4 className="text-base font-bold text-white">Problem-Driven Engineering</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
+            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3">
+              <span className="text-xs font-mono font-bold text-orange-600">01 / TOPIC SELECTION</span>
+              <h4 className="text-base font-bold text-slate-900">Problem-Driven Engineering</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
                 Topics are selected exclusively to solve concrete engineering bottlenecks—memory overflow, token billing spikes, non-deterministic model failures, and socket timeouts.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-              <span className="text-xs font-mono font-bold text-orange-400">02 / CODE REPRODUCIBILITY</span>
-              <h4 className="text-base font-bold text-white">Verifiable Code Examples</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
+            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3">
+              <span className="text-xs font-mono font-bold text-orange-600">02 / CODE REPRODUCIBILITY</span>
+              <h4 className="text-base font-bold text-slate-900">Verifiable Code Examples</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
                 All code samples are syntactically valid TypeScript or Docker configurations tested against modern LTS versions (Node 22, Redis 7.2, Ollama 0.5+).
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-              <span className="text-xs font-mono font-bold text-orange-400">03 / NEGATIVE SCENARIOS</span>
-              <h4 className="text-base font-bold text-white">Explicit &quot;When NOT to Use&quot;</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
+            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3">
+              <span className="text-xs font-mono font-bold text-orange-600">03 / NEGATIVE SCENARIOS</span>
+              <h4 className="text-base font-bold text-slate-900">Explicit &quot;When NOT to Use&quot;</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
                 Every article contains an explicit section detailing when the architecture is inappropriate or counter-productive, preventing architectural over-engineering.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-              <span className="text-xs font-mono font-bold text-orange-400">04 / STATUS DISCLOSURE</span>
-              <h4 className="text-base font-bold text-white">Truthful Review Tagging</h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
+            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-3">
+              <span className="text-xs font-mono font-bold text-orange-600">04 / STATUS DISCLOSURE</span>
+              <h4 className="text-base font-bold text-slate-900">Truthful Review Tagging</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
                 Articles awaiting final human peer review are transparently tagged `AI-assisted, pending human review`. We never falsely claim human sign-off without actual review.
               </p>
             </div>
@@ -655,9 +706,9 @@ export default function HomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* SECTION 7 — ABOUT THE PUBLICATION                                         */}
+      {/* SECTION 7 — ABOUT THE PUBLICATION (DARK)                                  */}
       {/* ========================================================================= */}
-      <section className="py-20 bg-[#070b14] border-b border-slate-800/80">
+      <section className="py-20 bg-[#070b14] border-b border-slate-800/80 text-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl bg-slate-900/90 border border-slate-800 p-8 sm:p-12 shadow-xl">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
@@ -698,22 +749,22 @@ export default function HomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* SECTION 8 — EDITORIAL CTA & FIELD MANUAL DISCLOSURE                       */}
+      {/* SECTION 8 — ANNOUNCEMENT (LIGHT) & FOOTER (DARK)                           */}
       {/* ========================================================================= */}
-      <section className="py-20 bg-[#090e1b] border-b border-slate-800/80">
+      <section className="py-20 bg-slate-100/90 border-b border-slate-200 text-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-orange-950/40 to-slate-900 border border-slate-800 p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl">
+          <div className="rounded-3xl bg-white border border-slate-200/90 p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm">
             <div className="space-y-4 max-w-2xl">
-              <span className="px-3 py-1 rounded-full bg-orange-900/60 text-orange-300 border border-orange-700/60 text-xs font-semibold uppercase tracking-wider">
+              <span className="px-3 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200 text-xs font-semibold uppercase tracking-wider">
                 Comprehensive Technical Field Manual
               </span>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 The Zero-Cost Autonomous Agency Blueprint
               </h3>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
                 Our flagship 15-chapter architecture handbook detailing Docker Compose orchestrations, local quantized Ollama inference, Fastify-BullMQ async pipelines, and 55 specialist agent configurations.
               </p>
-              <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 pt-2 font-mono">
+              <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-2 font-mono">
                 <span>• 15 Complete Chapters</span>
                 <span>• Instant PDF + Markdown</span>
                 <span>• Verified Zero-Cost Topology</span>
@@ -723,7 +774,7 @@ export default function HomePage() {
             <div className="flex-shrink-0">
               <Link
                 href="/products"
-                className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm transition-all shadow-lg shadow-orange-950/50"
+                className="inline-flex items-center space-x-2 px-6 py-3.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm transition-all shadow-md shadow-orange-200"
               >
                 <span>Inspect The Blueprint</span>
                 <ArrowRight className="h-4 w-4" />
