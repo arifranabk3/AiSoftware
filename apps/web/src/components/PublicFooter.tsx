@@ -98,14 +98,6 @@ export default function PublicFooter() {
                   Support & Inquiries
                 </Link>
               </li>
-              <li>
-                <a
-                  href="/ads.txt"
-                  className="hover:text-white transition-colors font-mono text-[11px]"
-                >
-                  ads.txt
-                </a>
-              </li>
             </ul>
           </div>
         </div>

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+    <linearGradient id="boxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" rx="16" fill="url(#bgGrad)" />
+  <rect x="2" y="2" width="796" height="446" rx="14" fill="none" stroke="#334155" stroke-width="2" />
+
+  <!-- Header -->
+  <text x="40" y="50" fill="#10b981" font-family="system-ui, sans-serif" font-size="14" font-weight="700" letter-spacing="1.5">FIGURE 1: DETERMINISTIC HUMAN-IN-THE-LOOP STATE MACHINE</text>
+  <text x="40" y="78" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="800">State Transition Lifecycle for High-Risk Autonomous Operations</text>
+
+  <!-- State 1: DISPATCHED -->
+  <rect x="40" y="140" width="160" height="90" rx="12" fill="url(#boxGrad)" stroke="#475569" stroke-width="1.5" />
+  <text x="60" y="175" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="700">1. DISPATCHED</text>
+  <text x="60" y="200" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Agent generates payload</text>
+
+  <!-- Arrow 1 to 2 -->
+  <path d="M 200 185 L 250 185" stroke="#94a3b8" stroke-width="2" />
+  <polygon points="255,185 245,180 245,190" fill="#94a3b8" />
+
+  <!-- State 2: EVALUATING RISK -->
+  <rect x="260" y="140" width="160" height="90" rx="12" fill="url(#boxGrad)" stroke="#6366f1" stroke-width="1.5" />
+  <text x="280" y="175" fill="#818cf8" font-family="system-ui, sans-serif" font-size="14" font-weight="700">2. RISK CHECK</text>
+  <text x="280" y="200" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Side-effect classifier</text>
+
+  <!-- Arrow 2 to 3 (Down to Approval) -->
+  <path d="M 340 230 L 340 270" stroke="#f59e0b" stroke-width="2.5" />
+  <polygon points="340,275 335,265 345,265" fill="#f59e0b" />
+
+  <!-- State 3: PENDING_APPROVAL (The Gate) -->
+  <rect x="220" y="280" width="240" height="120" rx="14" fill="#1e1b4b" stroke="#f59e0b" stroke-width="2.5" />
+  <rect x="220" y="280" width="240" height="6" rx="3" fill="#f59e0b" />
+  <text x="240" y="315" fill="#fef08a" font-family="system-ui, sans-serif" font-size="15" font-weight="800">3. PENDING_APPROVAL</text>
+  <text x="240" y="340" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="12">Task Frozen in Storage</text>
+  <text x="240" y="362" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">• Worker execution paused</text>
+  <text x="240" y="380" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">• Awaiting Owner Decision</text>
+
+  <!-- Split arrows from PENDING_APPROVAL -->
+  <!-- Left to REJECTED -->
+  <path d="M 220 340 L 140 340" stroke="#ef4444" stroke-width="2.5" />
+  <polygon points="135,340 145,335 145,345" fill="#ef4444" />
+
+  <!-- State: REJECTED -->
+  <rect x="40" y="295" width="90" height="90" rx="12" fill="#450a0a" stroke="#ef4444" stroke-width="1.5" />
+  <text x="50" y="335" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="12" font-weight="800">REJECTED</text>
+  <text x="50" y="355" fill="#fecaca" font-family="system-ui, sans-serif" font-size="10">Permanent Halt</text>
+
+  <!-- Right to APPROVED -->
+  <path d="M 460 340 L 530 340" stroke="#10b981" stroke-width="2.5" />
+  <polygon points="535,340 525,335 525,345" fill="#10b981" />
+
+  <!-- State: APPROVED & EXECUTED -->
+  <rect x="540" y="280" width="220" height="120" rx="14" fill="#064e3b" stroke="#10b981" stroke-width="2.5" />
+  <text x="560" y="315" fill="#6ee7b7" font-family="system-ui, sans-serif" font-size="15" font-weight="800">4. AUTHORIZED &amp; RUN</text>
+  <text x="560" y="340" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="12">Signed Token Injected</text>
+  <text x="560" y="362" fill="#a7f3d0" font-family="system-ui, sans-serif" font-size="11">• Network adapter executed</text>
+  <text x="560" y="380" fill="#a7f3d0" font-family="system-ui, sans-serif" font-size="11">• State: COMPLETED</text>
+</svg>
+

@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import PublicHeader from '@/components/PublicHeader';
@@ -85,7 +86,7 @@ export default async function ArticleDetailPage({ params }: Props) {
           </Link>
         </div>
 
-        <article className="bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-12 shadow-sm space-y-8">
+        <article className="bg-white border border-slate-200/90 rounded-3xl p-8 sm:p-12 shadow-sm space-y-10">
           <header className="space-y-4 border-b border-slate-100 pb-8">
             <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
               <span className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100">
@@ -117,11 +118,36 @@ export default async function ArticleDetailPage({ params }: Props) {
             </div>
           </header>
 
-          <div className="prose prose-slate max-w-none text-sm sm:text-base leading-relaxed space-y-6 text-slate-700">
-            {article.content.map((paragraph, idx) => (
-              <p key={idx} className="leading-relaxed">
-                {paragraph}
-              </p>
+          <div className="space-y-12 text-slate-700">
+            {article.sections.map((section, sIdx) => (
+              <section key={sIdx} className="space-y-5">
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                  {section.heading}
+                </h2>
+
+                {section.image && (
+                  <figure className="my-6 rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 shadow-sm">
+                    {/* Responsive SVG diagram */}
+                    <img
+                      src={section.image.src}
+                      alt={section.image.alt}
+                      className="w-full h-auto block"
+                      loading="lazy"
+                    />
+                    <figcaption className="p-3.5 bg-slate-900/95 border-t border-slate-800 text-xs text-slate-400 text-center leading-relaxed font-sans">
+                      {section.image.caption}
+                    </figcaption>
+                  </figure>
+                )}
+
+                <div className="space-y-4 text-sm sm:text-base leading-relaxed">
+                  {section.paragraphs.map((p, pIdx) => (
+                    <p key={pIdx} className="leading-relaxed">
+                      {p}
+                    </p>
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
 
@@ -159,4 +185,3 @@ export default async function ArticleDetailPage({ params }: Props) {
     </div>
   );
 }
-

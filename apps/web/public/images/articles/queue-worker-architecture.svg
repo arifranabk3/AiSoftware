@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+    <linearGradient id="boxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" rx="16" fill="url(#bgGrad)" />
+  <rect x="2" y="2" width="796" height="446" rx="14" fill="none" stroke="#334155" stroke-width="2" />
+
+  <!-- Header -->
+  <text x="40" y="50" fill="#38bdf8" font-family="system-ui, sans-serif" font-size="14" font-weight="700" letter-spacing="1.5">FIGURE 1: ASYNCHRONOUS BULLMQ WORKER PIPELINE</text>
+  <text x="40" y="78" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="800">Decoupled Admission Layer, Redis Streams & Isolated Worker Execution</text>
+
+  <!-- Node 1: Fastify Ingestion Layer -->
+  <rect x="40" y="130" width="180" height="150" rx="12" fill="url(#boxGrad)" stroke="#475569" stroke-width="1.5" />
+  <rect x="40" y="130" width="180" height="6" rx="3" fill="#38bdf8" />
+  <text x="55" y="160" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="700">1. Fastify Gateway</text>
+  <text x="55" y="185" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Non-Blocking I/O</text>
+  <text x="55" y="208" fill="#cbd5e1" font-family="monospace" font-size="10">• Ingests objectives</text>
+  <text x="55" y="226" fill="#cbd5e1" font-family="monospace" font-size="10">• Generates idempotency key</text>
+  <text x="55" y="244" fill="#cbd5e1" font-family="monospace" font-size="10">• Returns 202 Accepted</text>
+  <text x="55" y="265" fill="#38bdf8" font-family="system-ui" font-size="10" font-weight="600">&lt; 5ms Latency</text>
+
+  <!-- Arrow 1 to 2 -->
+  <path d="M 220 205 L 280 205" stroke="#38bdf8" stroke-width="2.5" />
+  <polygon points="285,205 275,200 275,210" fill="#38bdf8" />
+
+  <!-- Node 2: Redis BullMQ Stream -->
+  <rect x="290" y="130" width="220" height="150" rx="12" fill="url(#boxGrad)" stroke="#ef4444" stroke-width="2" />
+  <rect x="290" y="130" width="220" height="6" rx="3" fill="#ef4444" />
+  <text x="310" y="160" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="700">2. Redis BullMQ Queues</text>
+  <text x="310" y="185" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="11">In-Memory Persistence</text>
+  <text x="310" y="208" fill="#cbd5e1" font-family="monospace" font-size="10">• Queue: task_execution_queue</text>
+  <text x="310" y="226" fill="#cbd5e1" font-family="monospace" font-size="10">• Atomic lock management</text>
+  <text x="310" y="244" fill="#cbd5e1" font-family="monospace" font-size="10">• Exponential backoff retries</text>
+  <text x="310" y="265" fill="#ef4444" font-family="system-ui" font-size="10" font-weight="600">Zero Lost Messages</text>
+
+  <!-- Arrow 2 to 3 -->
+  <path d="M 510 205 L 570 205" stroke="#10b981" stroke-width="2.5" />
+  <polygon points="575,205 565,200 565,210" fill="#10b981" />
+
+  <!-- Node 3: Specialist Agent Workers -->
+  <rect x="580" y="130" width="180" height="150" rx="12" fill="url(#boxGrad)" stroke="#10b981" stroke-width="2" />
+  <rect x="580" y="130" width="180" height="6" rx="3" fill="#10b981" />
+  <text x="595" y="160" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="700">3. Worker Pool</text>
+  <text x="595" y="185" fill="#86efac" font-family="system-ui, sans-serif" font-size="11">Isolated Daemon Threads</text>
+  <text x="595" y="208" fill="#cbd5e1" font-family="monospace" font-size="10">• Autonomous execution</text>
+  <text x="595" y="226" fill="#cbd5e1" font-family="monospace" font-size="10">• Heartbeat monitoring</text>
+  <text x="595" y="244" fill="#cbd5e1" font-family="monospace" font-size="10">• Local Ollama reasoning</text>
+  <text x="595" y="265" fill="#10b981" font-family="system-ui" font-size="10" font-weight="600">Crash-Safe Recovery</text>
+
+  <!-- Bottom Panel: SSE Stream to Client Dashboard -->
+  <rect x="40" y="310" width="720" height="100" rx="12" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+  <text x="60" y="338" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="13" font-weight="700">Real-Time Client Updates via Server-Sent Events (SSE):</text>
+  <text x="60" y="362" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Clients maintain a single lightweight HTTP SSE connection to /api/v1/events/stream. Telemetry flows downstream instantly as workers report progress without expensive database polling loops.</text>
+  <text x="60" y="388" fill="#38bdf8" font-family="monospace" font-size="11">&gt; HTTP/1.1 200 OK | Content-Type: text/event-stream | Cache-Control: no-cache</text>
+</svg>
+
