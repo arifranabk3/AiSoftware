@@ -105,6 +105,22 @@ export async function registerCeoRoutes(
       const data = parseResult.data;
       const objectiveId = `obj_${randomUUID()}`;
 
+      // Emit COMMAND_RECEIVED when user submits command to create objective
+      activityService.emitEvent({
+        correlationId: objectiveId,
+        userId: user.userId,
+        departmentId: data.departmentIds[0],
+        eventType: ActivityEventType.COMMAND_RECEIVED,
+        action: 'SUBMIT_COMMAND',
+        status: 'info',
+        message: `Command received from ${user.email}: "${data.title}"`,
+        metadata: {
+          objectiveId,
+          priority: data.priority,
+          departmentIds: data.departmentIds
+        }
+      }).catch(() => {});
+
       const { objectiveRepo } = getRepos();
       const created = await objectiveRepo.create({
         objectiveId,

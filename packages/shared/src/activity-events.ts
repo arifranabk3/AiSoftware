@@ -55,6 +55,7 @@ export const ActivityEventSchema = z.object({
 export type ActivityEvent = z.infer<typeof ActivityEventSchema>;
 
 export interface ActivityFilterOptions {
+  eventId?: string;
   startDate?: string;
   endDate?: string;
   taskId?: string;

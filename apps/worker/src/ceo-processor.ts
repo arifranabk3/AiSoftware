@@ -165,6 +165,24 @@ export class CeoQueueProcessor {
     // 3. Transition Task to RUNNING atomically (increments attemptCount)
     await taskRepo.updateStatus(taskId, TaskStatus.RUNNING);
 
+    // Emit AGENT_WORKING telemetry event
+    activityService.emitEvent({
+      correlationId: task.objectiveId || taskId,
+      taskId,
+      jobId: job.id,
+      queueName: CommandQueueName.CEO_TASKS,
+      departmentId: payload.departmentId,
+      agentId: payload.specialistId || 'spec_ceo_orchestrator',
+      eventType: ActivityEventType.AGENT_WORKING,
+      action: payload.action || 'EXECUTE_OBJECTIVE',
+      status: 'active',
+      message: `Agent ${payload.specialistId || 'spec_ceo_orchestrator'} started working on task ${taskId}`,
+      metadata: {
+        attemptCount: task.attemptCount + 1,
+        title: task.title
+      }
+    }).catch(() => {});
+
     // 4. Execute via CEO Orchestrator
     try {
       const execResult = await ceoOrchestrator.executeObjective({
@@ -242,6 +260,42 @@ export class CeoQueueProcessor {
 
       // Transition Objective to COMPLETED
       await objectiveRepo.updateStatus(task.objectiveId, ObjectiveStatus.COMPLETED);
+
+      // Emit AI Execution Telemetry if AI call was made
+      if (execResult.aiExecution) {
+        if (execResult.aiExecution.error) {
+          activityService.emitEvent({
+            correlationId: task.objectiveId || taskId,
+            taskId,
+            jobId: job.id,
+            departmentId: payload.departmentId,
+            agentId: payload.specialistId || 'spec_ceo_orchestrator',
+            eventType: ActivityEventType.AI_REQUEST_FAILED,
+            action: 'GENERATE_AI_COMPLETION',
+            status: 'failed',
+            provider: execResult.aiExecution.provider || 'ollama',
+            model: execResult.aiExecution.model || 'qwen2.5:7b',
+            durationMs: execResult.aiExecution.latencyMs,
+            message: `AI request failed: ${execResult.aiExecution.error}`,
+            errorCode: 'AI_INFERENCE_ERROR'
+          }).catch(() => {});
+        } else {
+          activityService.emitEvent({
+            correlationId: task.objectiveId || taskId,
+            taskId,
+            jobId: job.id,
+            departmentId: payload.departmentId,
+            agentId: payload.specialistId || 'spec_ceo_orchestrator',
+            eventType: ActivityEventType.AI_REQUEST_COMPLETED,
+            action: 'GENERATE_AI_COMPLETION',
+            status: 'completed',
+            provider: execResult.aiExecution.provider || 'ollama',
+            model: execResult.aiExecution.model || 'qwen2.5:7b',
+            durationMs: execResult.aiExecution.latencyMs,
+            message: `AI completion finished via ${execResult.aiExecution.provider || 'ollama'} (${execResult.aiExecution.model || 'qwen2.5:7b'}) in ${execResult.aiExecution.latencyMs || 0}ms`
+          }).catch(() => {});
+        }
+      }
 
       console.log(`[CeoQueueProcessor] Successfully executed and completed task ${taskId}. Mode: ${execResult.aiExecution?.mode || 'MOCK'}`);
       return {

@@ -52,6 +52,7 @@ export class ActivityRepository {
 
     const query: Record<string, unknown> = {};
 
+    if (options.eventId) query.eventId = options.eventId;
     if (options.eventType) query.eventType = options.eventType;
     if (options.status) query.status = options.status;
     if (options.departmentId) query.departmentId = options.departmentId;

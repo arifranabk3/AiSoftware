@@ -11,7 +11,10 @@ import { mongoDbService, ActivityRepository } from '@ai-command-center/database'
 export class CentralizedActivityService extends EventEmitter {
   private static instance: CentralizedActivityService;
   private inMemoryOutbox: ActivityEvent[] = [];
+  private pendingRetryQueue: ActivityEvent[] = [];
   private readonly maxInMemoryHistory = 200;
+  private readonly maxPendingRetries = 500;
+  private isFlushingRetries = false;
 
   private constructor() {
     super();
@@ -23,6 +26,40 @@ export class CentralizedActivityService extends EventEmitter {
       CentralizedActivityService.instance = new CentralizedActivityService();
     }
     return CentralizedActivityService.instance;
+  }
+
+  /**
+   * Flushes any pending unpersisted events once MongoDB reconnects.
+   */
+  public async flushPendingRetries(): Promise<number> {
+    if (this.isFlushingRetries || this.pendingRetryQueue.length === 0) return 0;
+    if (!mongoDbService.getStatus().isConnected) return 0;
+
+    this.isFlushingRetries = true;
+    let flushedCount = 0;
+    try {
+      const db = mongoDbService.getDb();
+      const repo = new ActivityRepository(db);
+
+      while (this.pendingRetryQueue.length > 0 && mongoDbService.getStatus().isConnected) {
+        const event = this.pendingRetryQueue[0];
+        await repo.logEvent(event);
+        this.pendingRetryQueue.shift();
+        flushedCount++;
+      }
+    } catch (err: unknown) {
+      console.warn('[ActivityService] Retry flush paused due to connection error:', err);
+    } finally {
+      this.isFlushingRetries = false;
+    }
+    return flushedCount;
+  }
+
+  /**
+   * Returns current pending retry count.
+   */
+  public getPendingRetryCount(): number {
+    return this.pendingRetryQueue.length;
   }
 
   /**
@@ -75,15 +112,27 @@ export class CentralizedActivityService extends EventEmitter {
       this.inMemoryOutbox.pop();
     }
 
-    // 4. Persistent Storage (MongoDB)
+    // 4. Persistent Storage (MongoDB) with Outbox Resiliency
     try {
       if (mongoDbService.getStatus().isConnected) {
         const db = mongoDbService.getDb();
         const repo = new ActivityRepository(db);
         await repo.logEvent(sanitized);
+        // Also flush any queued retry events if DB is healthy
+        if (this.pendingRetryQueue.length > 0) {
+          void this.flushPendingRetries();
+        }
+      } else {
+        // Enqueue into pending retry queue if DB is disconnected
+        if (this.pendingRetryQueue.length < this.maxPendingRetries) {
+          this.pendingRetryQueue.push(sanitized);
+        }
       }
     } catch (err: unknown) {
-      console.warn('[ActivityService] Warning: Failed to persist event to MongoDB:', err);
+      console.warn('[ActivityService] Warning: Failed to persist event to MongoDB, queuing for retry:', err);
+      if (this.pendingRetryQueue.length < this.maxPendingRetries) {
+        this.pendingRetryQueue.push(sanitized);
+      }
     }
 
     // 5. Emit live event to real-time subscribers
