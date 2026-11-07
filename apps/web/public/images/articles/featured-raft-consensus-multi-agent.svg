@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-10" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0f1d" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+    <pattern id="grid-10" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.75" />
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg-10)" />
+  <rect width="1200" height="630" fill="url(#grid-10)" opacity="0.6" />
+  <rect x="30" y="30" width="1140" height="570" rx="16" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="8,6" />
+
+  <!-- Badge -->
+  <rect x="70" y="70" width="220" height="34" rx="17" fill="#1e293b" stroke="#f97316" stroke-width="1.5" />
+  <circle cx="90" cy="87" r="5" fill="#f97316" />
+  <text x="105" y="92" fill="#fed7aa" font-family="system-ui, sans-serif" font-size="12" font-weight="700" letter-spacing="1">DISTRIBUTED SYSTEMS</text>
+
+  <!-- Title & Subtitle -->
+  <text x="70" y="150" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="34" font-weight="800">State Machine Replication &amp; Raft Consensus</text>
+  <text x="70" y="195" fill="#f97316" font-family="system-ui, sans-serif" font-size="28" font-weight="700">Autonomous Multi-Agent Cluster Coordination</text>
+  <text x="70" y="235" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="16">Leader election, log replication, heartbeat leases, and split-brain defenses</text>
+
+  <!-- Raft Cluster Visual (Leader + Followers) -->
+  <g transform="translate(100, 280)">
+    <!-- Node 1: Leader -->
+    <rect x="350" y="20" width="260" height="150" rx="12" fill="#1e293b" stroke="#f97316" stroke-width="2.5" />
+    <rect x="350" y="20" width="260" height="32" rx="12" fill="#ea580c" />
+    <text x="480" y="42" fill="#ffffff" font-family="system-ui, sans-serif" font-size="13" font-weight="700" text-anchor="middle">LEADER NODE (Agent-01)</text>
+    <text x="370" y="80" fill="#fed7aa" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Term: 14 • Log Index: 1042</text>
+    <text x="370" y="105" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Heartbeat Lease: 150ms</text>
+    <text x="370" y="130" fill="#10b981" font-family="system-ui, sans-serif" font-size="11" font-weight="700">Status: AppendEntries Active</text>
+
+    <!-- Node 2: Follower A -->
+    <rect x="50" y="140" width="240" height="120" rx="12" fill="#1e293b" stroke="#3b82f6" stroke-width="2" />
+    <rect x="50" y="140" width="240" height="30" rx="12" fill="#2563eb" />
+    <text x="170" y="160" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">FOLLOWER A (Agent-02)</text>
+    <text x="70" y="195" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Commit Index: 1042</text>
+    <text x="70" y="220" fill="#10b981" font-family="system-ui, sans-serif" font-size="11">Synchronized [Quorum 2/3]</text>
+
+    <!-- Node 3: Follower B -->
+    <rect x="670" y="140" width="240" height="120" rx="12" fill="#1e293b" stroke="#3b82f6" stroke-width="2" />
+    <rect x="670" y="140" width="240" height="30" rx="12" fill="#2563eb" />
+    <text x="790" y="160" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">FOLLOWER B (Agent-03)</text>
+    <text x="690" y="195" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Commit Index: 1042</text>
+    <text x="690" y="220" fill="#10b981" font-family="system-ui, sans-serif" font-size="11">Synchronized [Quorum 3/3]</text>
+
+    <!-- Sync Lines -->
+    <path d="M 350 95 L 290 150" stroke="#f97316" stroke-width="2" stroke-dasharray="4,4" />
+    <path d="M 610 95 L 670 150" stroke="#f97316" stroke-width="2" stroke-dasharray="4,4" />
+  </g>
+
+  <text x="1110" y="580" fill="#475569" font-family="system-ui, sans-serif" font-size="13" font-weight="700" text-anchor="end">AIsoftware Engineering Library</text>
+</svg>

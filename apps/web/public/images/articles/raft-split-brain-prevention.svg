@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-brain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#bg-brain)" rx="12" />
+  <rect x="20" y="20" width="760" height="410" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,6" rx="8" />
+
+  <text x="400" y="55" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="700" text-anchor="middle">Network Partition &amp; Split-Brain Prevention Topology</text>
+  <text x="400" y="78" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle">Majority quorum requirement guarantees only one side can commit state transitions</text>
+
+  <!-- Partition Barrier -->
+  <line x1="400" y1="110" x2="400" y2="400" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="8,6" />
+  <rect x="340" y="235" width="120" height="30" rx="6" fill="#7f1d1d" stroke="#ef4444" stroke-width="1" />
+  <text x="400" y="255" fill="#fecaca" font-family="monospace" font-size="11" font-weight="700" text-anchor="middle">NETWORK CUT</text>
+
+  <!-- Majority Partition (Left: 3 nodes) -->
+  <g transform="translate(40, 110)">
+    <rect width="320" height="280" rx="10" fill="#0f172a" stroke="#10b981" stroke-width="2" />
+    <rect width="320" height="30" rx="10" fill="#065f46" />
+    <text x="160" y="20" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">MAJORITY PARTITION (3 / 5 Nodes)</text>
+    <text x="20" y="60" fill="#34d399" font-family="system-ui, sans-serif" font-size="11" font-weight="700">• Node A (Leader, Term 14)</text>
+    <text x="20" y="85" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="11">• Node B (Follower)</text>
+    <text x="20" y="110" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="11">• Node C (Follower)</text>
+    
+    <rect x="20" y="145" width="280" height="70" rx="6" fill="#1e293b" border="border-slate-700" />
+    <text x="35" y="172" fill="#10b981" font-family="monospace" font-size="11" font-weight="700">Quorum: 3 &gt;= (5/2)+1 [VALID]</text>
+    <text x="35" y="195" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Can accept writes &amp; commit transactions.</text>
+
+    <text x="160" y="255" fill="#10b981" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">ACTIVE READ/WRITE CLUSTER</text>
+  </g>
+
+  <!-- Minority Partition (Right: 2 nodes) -->
+  <g transform="translate(440, 110)">
+    <rect width="320" height="280" rx="10" fill="#0f172a" stroke="#ef4444" stroke-width="2" />
+    <rect width="320" height="30" rx="10" fill="#991b1b" />
+    <text x="160" y="20" fill="#ffffff" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">MINORITY PARTITION (2 / 5 Nodes)</text>
+    <text x="20" y="60" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="11" font-weight="700">• Node D (Candidate, Term 15)</text>
+    <text x="20" y="85" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="11">• Node E (Follower)</text>
+    
+    <rect x="20" y="145" width="280" height="70" rx="6" fill="#1e293b" border="border-slate-700" />
+    <text x="35" y="172" fill="#ef4444" font-family="monospace" font-size="11" font-weight="700">Quorum: 2 &lt; 3 [DENIED]</text>
+    <text x="35" y="195" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Cannot reach majority; election stalls.</text>
+
+    <text x="160" y="255" fill="#ef4444" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle">FROZEN (ZERO SPLIT-BRAIN)</text>
+  </g>
+</svg>
