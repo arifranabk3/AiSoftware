@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { ARTICLES } from '@/lib/articles';
+import { getPublishedArticles } from '@/lib/articles';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://ai-software-theta.vercel.app';
@@ -56,9 +56,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  const articleRoutes: MetadataRoute.Sitemap = ARTICLES.map((a) => ({
+  const articleRoutes: MetadataRoute.Sitemap = getPublishedArticles().map((a) => ({
     url: `${baseUrl}/articles/${a.slug}`,
-    lastModified: new Date(a.publishDate),
+    lastModified: new Date(a.publishedAt || a.publishDate),
     changeFrequency: 'monthly',
     priority: 0.85,
   }));

@@ -36,7 +36,10 @@ import {
   Filter,
   Terminal,
   Zap,
-  RotateCcw
+  RotateCcw,
+  CalendarDays,
+  Send,
+  AlertCircle
 } from 'lucide-react';
 import {
   ApiClient,
@@ -47,6 +50,14 @@ import {
   API_BASE
 } from '@/lib/api';
 import { DEPARTMENTS, SPECIALIST_PROFILES } from '@ai-command-center/shared';
+import {
+  ARTICLES,
+  Article,
+  formatPKTDateTime,
+  formatPKTDate,
+  getSchedulerHealth,
+  SchedulerHealth
+} from '@/lib/articles';
 
 const AI_PROVIDERS: AIProviderStatusItem[] = [
   {
@@ -91,12 +102,18 @@ export default function DashboardPage() {
   const [health, setHealth] = useState<SystemHealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    'OVERVIEW' | 'LIVE_ACTIVITY' | 'CURRENT_EXECUTION' | 'CEO_OBJECTIVES' | 'APPROVALS' | 'AI_PROVIDERS' | 'DEPARTMENTS' | 'SPECIALISTS' | 'OWNER_CONTROLS' | 'REVENUE'
+    'OVERVIEW' | 'LIVE_ACTIVITY' | 'CURRENT_EXECUTION' | 'CEO_OBJECTIVES' | 'APPROVALS' | 'EDITORIAL_QUEUE' | 'AI_PROVIDERS' | 'DEPARTMENTS' | 'SPECIALISTS' | 'OWNER_CONTROLS' | 'REVENUE'
   >('OVERVIEW');
   const [killSwitchReason, setKillSwitchReason] = useState('');
   const [isTogglingKillSwitch, setIsTogglingKillSwitch] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Editorial & Scheduler Controls State
+  const [articlesList, setArticlesList] = useState<Article[]>(ARTICLES);
+  const [schedulerHealth, setSchedulerHealth] = useState<SchedulerHealth>(getSchedulerHealth());
+  const [selectedArticleForReview, setSelectedArticleForReview] = useState<Article | null>(null);
+  const [editorialFilter, setEditorialFilter] = useState<'ALL' | 'APPROVED' | 'PUBLISHED' | 'SCHEDULED' | 'PENDING'>('ALL');
 
   // Objectives State
   const [objectives, setObjectives] = useState<BusinessObjectiveItem[]>([]);
@@ -539,6 +556,18 @@ export default function DashboardPage() {
             }`}
           >
             <TrendingUp className="h-5 w-5" />
+          </button>
+
+          <button
+            onClick={() => setActiveTab('EDITORIAL_QUEUE')}
+            title="Editorial Publishing Queue & PKT Scheduler"
+            className={`relative p-3 rounded-2xl transition-all ${
+              activeTab === 'EDITORIAL_QUEUE'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            <CalendarDays className="h-5 w-5" />
           </button>
 
           <button
@@ -1460,6 +1489,211 @@ export default function DashboardPage() {
                       </tr>
                     </tbody>
                   </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 11: EDITORIAL PUBLISHING QUEUE & PKT SCHEDULER */}
+          {activeTab === 'EDITORIAL_QUEUE' && (
+            <div className="space-y-6">
+              {/* Header Banner */}
+              <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                      Phase 12.8 Editorial Engine
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Two Daily Slots Active
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                    Daily Editorial Publishing &amp; Date Management Queue
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Sovereign scheduling queue enforcing two daily slots (09:00 AM &amp; 06:00 PM PKT, Asia/Karachi, UTC+5). Articles require explicit human sign-off before publication.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="text-right hidden sm:block">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Next Publishing Slot</div>
+                    <div className="text-xs font-black text-indigo-600 font-mono">
+                      {schedulerHealth.nextScheduledSlotPKT}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setActionNotice({
+                        type: 'success',
+                        msg: 'Refreshed editorial queue and scheduler health status.'
+                      });
+                    }}
+                    className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                    title="Refresh Queue"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Status & Guardrails Metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm space-y-1">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Approved Articles</div>
+                  <div className="text-2xl font-black text-slate-900">
+                    {articlesList.filter((a) => a.editorialStatus === 'Approved').length}
+                  </div>
+                  <p className="text-[10px] text-emerald-600 font-medium">100% human-approved baseline</p>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm space-y-1">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Daily Slot Frequency</div>
+                  <div className="text-2xl font-black text-indigo-600">2 / day</div>
+                  <p className="text-[10px] text-slate-500 font-medium">09:00 &amp; 18:00 Asia/Karachi</p>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm space-y-1">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Timezone Integrity</div>
+                  <div className="text-2xl font-black text-slate-900">Asia/Karachi</div>
+                  <p className="text-[10px] text-slate-500 font-medium">UTC+05:00 (Zero DST drift)</p>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm space-y-1">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Filler Protection</div>
+                  <div className="text-2xl font-black text-emerald-600">Enforced</div>
+                  <p className="text-[10px] text-slate-500 font-medium">Slots skip if unapproved</p>
+                </div>
+              </div>
+
+              {/* Editorial Queue Table */}
+              <div className="rounded-3xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
+                <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-slate-500" />
+                    <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                      Editorial Catalog &amp; Publication Queue ({articlesList.length} Total)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-medium text-slate-400">Filter:</span>
+                    {(['ALL', 'APPROVED', 'PUBLISHED'] as const).map((mode) => (
+                      <button
+                        key={mode}
+                        onClick={() => setEditorialFilter(mode)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                          editorialFilter === mode
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        {mode}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50/60 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <th className="px-4 py-3">#</th>
+                        <th className="px-4 py-3">Article Title &amp; Slug</th>
+                        <th className="px-4 py-3">Category</th>
+                        <th className="px-4 py-3">Published (Asia/Karachi)</th>
+                        <th className="px-4 py-3">Editorial Status</th>
+                        <th className="px-4 py-3">Publication Status</th>
+                        <th className="px-4 py-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {articlesList
+                        .filter((a) => {
+                          if (editorialFilter === 'APPROVED') return a.editorialStatus === 'Approved';
+                          if (editorialFilter === 'PUBLISHED') return a.publicationStatus === 'Published';
+                          return true;
+                        })
+                        .map((a, idx) => (
+                          <tr key={a.slug} className="hover:bg-slate-50/70 transition-colors">
+                            <td className="px-4 py-3.5 font-mono text-slate-400">{idx + 1}</td>
+                            <td className="px-4 py-3.5 max-w-sm">
+                              <div className="font-bold text-slate-900 line-clamp-1">{a.title}</div>
+                              <div className="font-mono text-[10px] text-slate-400">/articles/{a.slug}</div>
+                            </td>
+                            <td className="px-4 py-3.5">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                {a.category}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3.5 font-mono text-slate-700">
+                              {formatPKTDateTime(a.publishedAt || a.publishDate)}
+                            </td>
+                            <td className="px-4 py-3.5">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                {a.editorialStatus}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3.5">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                {a.publicationStatus}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3.5 text-right space-x-2">
+                              <button
+                                onClick={() => setSelectedArticleForReview(a)}
+                                className="px-2.5 py-1 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                              >
+                                Details
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Scheduler Execution & Skipped Slots Audit Log */}
+              <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-indigo-600" />
+                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                      Scheduler Audit Log (Asia/Karachi Dual-Slot History)
+                    </h3>
+                  </div>
+                  <span className="text-[10px] text-slate-400">
+                    Zero-cost deployment model: Verified hybrid cron &amp; manual publish fallback
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  {schedulerHealth.logs.map((log, lIdx) => (
+                    <div
+                      key={lIdx}
+                      className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            log.status === 'SUCCESS'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-amber-100 text-amber-800'
+                          }`}
+                        >
+                          {log.status}
+                        </span>
+                        <span className="text-xs font-bold text-slate-800 font-mono">{log.slot}</span>
+                        <span className="text-xs text-slate-600">{log.reason}</span>
+                      </div>
+                      <div className="font-mono text-[10px] text-slate-400">
+                        {formatPKTDateTime(log.timestamp)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

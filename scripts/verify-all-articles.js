@@ -4,8 +4,9 @@ const path = require('path');
 const artFile = path.resolve(__dirname, '../apps/web/src/lib/articles.ts');
 let code = fs.readFileSync(artFile, 'utf8');
 
-// Strip TS types
-code = code.replace(/export interface Article[\s\S]*?export const ARTICLES: Article\[\] =/, 'module.exports =');
+// Strip TS interfaces and exports
+code = code.replace(/^[\s\S]*?export const ARTICLES: Article\[\] =/, 'module.exports =');
+code = code.replace(/export function getPublishedArticles[\s\S]*$/, '');
 fs.writeFileSync(path.resolve(__dirname, 'temp-articles-eval.js'), code, 'utf8');
 
 const articles = require('./temp-articles-eval.js');

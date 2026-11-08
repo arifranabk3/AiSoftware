@@ -1,29 +1,7 @@
-export interface ArticleImage {
-  src: string;
-  alt: string;
-  caption: string;
-}
-
-export interface ArticleSection {
-  heading: string;
-  paragraphs: string[];
-  image?: ArticleImage;
-}
-
-export interface Article {
-  slug: string;
-  title: string;
-  description: string;
-  publishDate: string;
-  author: string;
-  authorRole: string;
-  readTime: string;
-  category: string;
-  keywords: string[];
-  editorialStatus: string;
-  featuredImage: ArticleImage;
-  sections: ArticleSection[];
-}
+import { Article, ArticleImage, ArticleSection, EditorialStatus, PublicationStatus } from './article-types';
+export * from './article-types';
+export * from './date-utils';
+export * from './publishing-scheduler';
 
 export const ARTICLES: Article[] = [
   {
@@ -32,11 +10,16 @@ export const ARTICLES: Article[] = [
     description:
       'A practical architectural guide to running sovereign multi-agent workflows using quantized local models and Ollama without recurring cloud API fees.',
     publishDate: '2026-11-05',
+    createdAt: '2026-11-05T02:30:00Z',
+    updatedAt: '2026-11-07T19:16:32Z',
+    publishedAt: '2026-11-05T04:00:00Z',
+    scheduledAt: null,
+    publicationStatus: 'Published',
     author: 'AIsoftware Technical Editorial Staff',
     authorRole: 'Systems Architecture',
     readTime: '12 min read',
     category: 'Architecture',
-    editorialStatus: 'Approved (Phase 12.1 Baseline)',
+    editorialStatus: 'Approved',
     keywords: [
       'local llm architecture',
       'zero cost ai agents',
@@ -114,11 +97,16 @@ export const ARTICLES: Article[] = [
     description:
       'How to implement non-bypassable human approval gateways and cryptographic audit trails to eliminate runaway agent risks in production.',
     publishDate: '2026-11-06',
+    createdAt: '2026-11-06T03:15:00Z',
+    updatedAt: '2026-11-07T19:16:32Z',
+    publishedAt: '2026-11-06T04:00:00Z',
+    scheduledAt: null,
+    publicationStatus: 'Published',
     author: 'AIsoftware Security Staff',
     authorRole: 'Safety & Governance',
     readTime: '11 min read',
     category: 'Security',
-    editorialStatus: 'Approved (Phase 12.1 Baseline)',
+    editorialStatus: 'Approved',
     keywords: [
       'human in the loop ai',
       'agent approval gateway',
@@ -199,11 +187,16 @@ export const ARTICLES: Article[] = [
     description:
       'Designing fault-tolerant, asynchronous multi-agent orchestration systems using Redis streams, BullMQ job queues, and real-time SSE telemetry.',
     publishDate: '2026-11-07',
+    createdAt: '2026-11-07T03:00:00Z',
+    updatedAt: '2026-11-07T19:16:32Z',
+    publishedAt: '2026-11-07T04:00:00Z',
+    scheduledAt: null,
+    publicationStatus: 'Published',
     author: 'AIsoftware Engineering Team',
     authorRole: 'Distributed Systems',
     readTime: '13 min read',
     category: 'Engineering',
-    editorialStatus: 'Approved (Phase 12.1 Baseline)',
+    editorialStatus: 'Approved',
     keywords: [
       'bullmq agent queue',
       'fastify sse telemetry',
@@ -282,11 +275,16 @@ export const ARTICLES: Article[] = [
   "title": "Argon2id Authentication: Secure Password Storage for Web Applications",
   "description": "A deep-dive technical guide into implementing RFC 9106 Argon2id password hashing, tuning memory and iteration parameters, and defending against GPU brute-force attacks in Node.js and TypeScript.",
   "publishDate": "2026-11-07",
+    createdAt: '2026-11-07T13:00:00Z',
+    updatedAt: '2026-11-07T20:38:51Z',
+    publishedAt: '2026-11-07T13:00:00Z',
+    scheduledAt: null,
+    publicationStatus: 'Published',
   "author": "AIsoftware Technical Editorial Staff",
   "authorRole": "Security & Cryptography",
   "readTime": "14 min read",
   "category": "Security",
-  "editorialStatus": "AI-assisted, pending human review",
+  "editorialStatus": "Approved",
   "keywords": [
     "argon2id authentication",
     "password hashing rfc 9106",
@@ -366,11 +364,16 @@ export const ARTICLES: Article[] = [
   "title": "Merkle Trees and Tamper-Evident Audit Trails: Verifiable Logging for AI Systems",
   "description": "A comprehensive architectural guide to constructing cryptographic Merkle trees, generating logarithmic inclusion proofs, and securing tamper-evident audit logs for autonomous AI actions.",
   "publishDate": "2026-11-07",
+    createdAt: '2026-11-07T14:00:00Z',
+    updatedAt: '2026-11-07T20:38:51Z',
+    publishedAt: '2026-11-07T13:00:00Z',
+    scheduledAt: null,
+    publicationStatus: 'Published',
   "author": "AIsoftware Technical Editorial Staff",
   "authorRole": "Distributed Systems & Cryptography",
   "readTime": "15 min read",
   "category": "Security",
-  "editorialStatus": "AI-assisted, pending human review",
+  "editorialStatus": "Approved",
   "keywords": [
     "merkle trees audit trail",
     "tamper evident logging",
@@ -449,11 +452,16 @@ export const ARTICLES: Article[] = [
   "title": "Sandboxed Execution for AI Agents: MicroVMs, gVisor, and Defense-in-Depth",
   "description": "An architectural field guide to securing code-interpreting and tool-executing AI agents using Firecracker microVMs, gVisor syscall filtering, and strict network isolation boundaries.",
   "publishDate": "2026-11-07",
+    createdAt: '2026-11-07T15:00:00Z',
+    updatedAt: '2026-11-07T20:38:51Z',
+    publishedAt: '2026-11-07T13:00:00Z',
+    scheduledAt: null,
+    publicationStatus: 'Published',
   "author": "AIsoftware Technical Editorial Staff",
   "authorRole": "Infrastructure & Container Security",
   "readTime": "15 min read",
   "category": "Security",
-  "editorialStatus": "AI-assisted, pending human review",
+  "editorialStatus": "Approved",
   "keywords": [
     "sandboxed execution ai agents",
     "firecracker microvm security",
@@ -540,11 +548,16 @@ export const ARTICLES: Article[] = [
   "title": "Preventing Prompt Injection in Tool-Using AI Agents: Architecture, Boundaries & Defense",
   "description": "A deep-dive technical blueprint for mitigating direct and indirect prompt injection attacks against autonomous tool-calling AI agents using dual-LLM architectures, strict schema validation, and privilege boundaries.",
   "publishDate": "2026-11-07",
+    createdAt: '2026-11-07T15:30:00Z',
+    updatedAt: '2026-11-07T20:38:51Z',
+    publishedAt: '2026-11-07T13:00:00Z',
+    scheduledAt: null,
+    publicationStatus: 'Published',
   "author": "AIsoftware Technical Editorial Staff",
   "authorRole": "AI Safety & Application Security",
   "readTime": "16 min read",
   "category": "AI Safety",
-  "editorialStatus": "AI-assisted, pending human review",
+  "editorialStatus": "Approved",
   "keywords": [
     "prompt injection defense",
     "tool using ai agents",
@@ -626,11 +639,16 @@ export const ARTICLES: Article[] = [
   "title": "Secure Human Approval Workflows for High-Risk AI Actions: Quorum, TTL & Cryptographic Proofs",
   "description": "An engineering blueprint for implementing secure Human-in-the-Loop (HITL) approval gates for high-consequence AI agent operations using multi-sig quorum, cryptographic action tokens, and deterministic TTL expiration.",
   "publishDate": "2026-11-07",
+    createdAt: '2026-11-07T15:45:00Z',
+    updatedAt: '2026-11-07T20:38:51Z',
+    publishedAt: '2026-11-07T13:00:00Z',
+    scheduledAt: null,
+    publicationStatus: 'Published',
   "author": "AIsoftware Technical Editorial Staff",
   "authorRole": "Enterprise Architecture & Governance",
   "readTime": "15 min read",
   "category": "Governance",
-  "editorialStatus": "AI-assisted, pending human review",
+  "editorialStatus": "Approved",
   "keywords": [
     "human approval workflows ai",
     "hitl security gates",
@@ -719,11 +737,16 @@ export const ARTICLES: Article[] = [
   "title": "Sliding-Window Token Buffer Management: Preventing Context Window Overflow in Multi-Turn AI Agents",
   "description": "An architectural engineering guide to designing deterministic sliding-window token buffers, recursive context compaction, and output headroom allocation for autonomous multi-turn LLM agents.",
   "publishDate": "2026-11-07",
+    createdAt: '2026-11-07T15:50:00Z',
+    updatedAt: '2026-11-07T20:51:48Z',
+    publishedAt: '2026-11-07T13:00:00Z',
+    scheduledAt: null,
+    publicationStatus: 'Published',
   "author": "AIsoftware Technical Editorial Staff",
   "authorRole": "Systems Architecture & LLM Engineering",
   "readTime": "15 min read",
   "category": "Architecture",
-  "editorialStatus": "AI-assisted, pending human review",
+  "editorialStatus": "Approved",
   "keywords": [
     "sliding window token buffer",
     "context window management",
@@ -805,11 +828,16 @@ export const ARTICLES: Article[] = [
   "title": "State Machine Replication and Raft Consensus for Autonomous Multi-Agent Clusters",
   "description": "An architectural engineering guide to implementing distributed state machine replication, leader election, and log consistency across autonomous agent worker swarms using the Raft consensus algorithm.",
   "publishDate": "2026-11-07",
+    createdAt: '2026-11-07T17:00:00Z',
+    updatedAt: '2026-11-07T22:53:37Z',
+    publishedAt: '2026-11-07T13:00:00Z',
+    scheduledAt: null,
+    publicationStatus: 'Published',
   "author": "AIsoftware Technical Editorial Staff",
   "authorRole": "Distributed Systems & Infrastructure",
   "readTime": "15 min read",
   "category": "Distributed Systems",
-  "editorialStatus": "AI-assisted, pending human review",
+  "editorialStatus": "Approved",
   "keywords": [
     "raft consensus multi agent",
     "state machine replication",
@@ -899,6 +927,11 @@ export const ARTICLES: Article[] = [
   "category": "Reliability & Resilience",
   "readTime": "11 min read",
   "publishDate": "2026-11-08",
+    createdAt: '2026-11-08T03:00:00Z',
+    updatedAt: '2026-11-08T08:20:38Z',
+    publishedAt: '2026-11-08T04:00:00Z',
+    scheduledAt: null,
+    publicationStatus: 'Published',
   "author": "AIsoftware Engineering Group",
   "authorRole": "Distributed Systems",
   "keywords": [
@@ -909,7 +942,7 @@ export const ARTICLES: Article[] = [
     "llm quota management",
     "ai backpressure"
   ],
-  "editorialStatus": "AI-assisted, pending human review",
+  "editorialStatus": "Approved",
   "featuredImage": {
     "src": "/images/articles/featured-distributed-rate-limiting.svg",
     "alt": "Distributed Rate Limiting and Token Bucket Architecture for Autonomous Multi-Agent Swarms",
@@ -977,3 +1010,18 @@ export const ARTICLES: Article[] = [
   ]
 }
 ];
+
+/**
+ * Filter utility returning only publicly visible approved articles
+ */
+export function getPublishedArticles(): Article[] {
+  const now = new Date();
+  return ARTICLES.filter((a) => {
+    if (a.publicationStatus !== 'Published' || a.editorialStatus !== 'Approved') {
+      return false;
+    }
+    if (!a.publishedAt) return false;
+    const pubTime = new Date(a.publishedAt).getTime();
+    return !isNaN(pubTime) && pubTime <= now.getTime();
+  });
+}

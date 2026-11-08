@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import PublicHeader from '@/components/PublicHeader';
 import PublicFooter from '@/components/PublicFooter';
-import { ARTICLES, Article } from '@/lib/articles';
+import { ARTICLES, Article, getPublishedArticles, formatPKTDateTime } from '@/lib/articles';
 import { ArrowLeft, Clock, Calendar, User, Tag, BookOpen, ShieldCheck } from 'lucide-react';
 
 interface Props {
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export async function generateStaticParams() {
-  return ARTICLES.map((article) => ({
+  return getPublishedArticles().map((article) => ({
     slug: article.slug
   }));
 }
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: article.description,
       type: 'article',
       url: `${baseUrl}/articles/${article.slug}`,
-      publishedTime: article.publishDate,
+      publishedTime: article.publishedAt || article.publishDate,
       authors: [article.author],
       images: [
         {
@@ -78,7 +78,7 @@ export default async function ArticleDetailPage({ params }: Props) {
       '@type': 'Organization',
       name: article.author
     },
-    datePublished: article.publishDate,
+    datePublished: article.publishedAt || article.publishDate,
     publisher: {
       '@type': 'Organization',
       name: 'AIsoftware',
@@ -117,7 +117,7 @@ export default async function ArticleDetailPage({ params }: Props) {
               </span>
               <span className="flex items-center space-x-1">
                 <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                <span>{article.publishDate}</span>
+                <span>{formatPKTDateTime(article.publishedAt || article.publishDate)}</span>
               </span>
               <span>•</span>
               <span className="flex items-center space-x-1">

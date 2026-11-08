@@ -3,7 +3,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import PublicHeader from '@/components/PublicHeader';
 import PublicFooter from '@/components/PublicFooter';
-import { ARTICLES } from '@/lib/articles';
+import { ARTICLES, getPublishedArticles, formatPKTDate } from '@/lib/articles';
 import { BookOpen, Clock, ArrowRight, Tag, Filter } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -22,10 +22,11 @@ interface Props {
 export default async function ArticlesIndexPage({ searchParams }: Props) {
   const { category } = await searchParams;
 
-  const categories = Array.from(new Set(ARTICLES.map((a) => a.category)));
+  const publishedArticles = getPublishedArticles();
+  const categories = Array.from(new Set(publishedArticles.map((a) => a.category)));
   const filteredArticles = category
-    ? ARTICLES.filter((a) => a.category.toLowerCase() === category.toLowerCase())
-    : ARTICLES;
+    ? publishedArticles.filter((a) => a.category.toLowerCase() === category.toLowerCase())
+    : publishedArticles;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col text-slate-800">
@@ -131,7 +132,7 @@ export default async function ArticlesIndexPage({ searchParams }: Props) {
                 <div className="pt-6 mt-6 border-t border-slate-100 flex items-center justify-between">
                   <div className="text-[11px] text-slate-500">
                     <div className="font-semibold text-slate-700">{article.author}</div>
-                    <div className="text-[10px] text-slate-400">{article.publishDate}</div>
+                    <div className="text-[10px] text-slate-400">{formatPKTDate(article.publishedAt || article.publishDate)}</div>
                   </div>
                   <Link
                     href={`/articles/${article.slug}`}

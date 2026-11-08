@@ -3,7 +3,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import PublicHeader from '@/components/PublicHeader';
 import PublicFooter from '@/components/PublicFooter';
-import { ARTICLES } from '@/lib/articles';
+import { ARTICLES, getPublishedArticles } from '@/lib/articles';
 import {
   Terminal,
   Shield,
@@ -36,17 +36,19 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
+  const publishedArticles = getPublishedArticles();
+
   // Primary Lead Featured Article (Hero)
-  const leadArticle = ARTICLES[0]; // Zero-Cost Local LLM Architecture
+  const leadArticle = publishedArticles[0] || ARTICLES[0]; // Zero-Cost Local LLM Architecture
 
   // Exactly 9 Article Showcase entries
-  const showcaseArticles = ARTICLES.slice(0, 9);
+  const showcaseArticles = publishedArticles.slice(0, 9);
 
   // Editor's Selected Field Guides (Task 1: 1 Featured on Left + 3 Stacked on Right)
-  const editorsMain = ARTICLES[1]; // Human-in-the-Loop Safety Gates
-  const editorsSecondary1 = ARTICLES[4]; // Merkle Trees & Audit Trails
-  const editorsSecondary2 = ARTICLES[8]; // Sliding-Window Token Buffer Management
-  const editorsSecondary3 = ARTICLES[5]; // Sandboxed Execution for AI Agents
+  const editorsMain = publishedArticles[1] || ARTICLES[1]; // Human-in-the-Loop Safety Gates
+  const editorsSecondary1 = publishedArticles[4] || ARTICLES[4]; // Merkle Trees & Audit Trails
+  const editorsSecondary2 = publishedArticles[8] || ARTICLES[8]; // Sliding-Window Token Buffer Management
+  const editorsSecondary3 = publishedArticles[5] || ARTICLES[5]; // Sandboxed Execution for AI Agents
 
   // Distinct Categories derived from real articles
   const categoriesWithCounts = [
