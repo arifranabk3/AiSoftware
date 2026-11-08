@@ -115,10 +115,7 @@ export default function PrivacyPolicyPage() {
               <Link href="/contact" className="text-indigo-600 underline">
                 Contact Page
               </Link>{' '}
-              or email <code>contact@ai-software.local</code>.
-            </p>
-            <p className="text-xs text-slate-400">
-              [Owner Note: Update entity mailing address or physical jurisdiction in this section when registered corporate documentation is finalized.]
+              or email directly at <a href="mailto:support@ai-software.com" className="text-indigo-600 underline font-mono">support@ai-software.com</a>.
             </p>
           </section>
         </div>

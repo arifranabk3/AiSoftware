@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#090d16" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#050811" />
+    </linearGradient>
+    <linearGradient id="cbGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#ef4444" />
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.75" stroke-opacity="0.6"/>
+    </pattern>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#grid)" />
+
+  <!-- Top Badge -->
+  <rect x="80" y="55" width="280" height="32" rx="16" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+  <circle cx="102" cy="71" r="5" fill="#10b981" filter="url(#glow)" />
+  <text x="118" y="76" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13" font-weight="600" letter-spacing="1.5">FAULT TOLERANCE & RECOVERY</text>
+
+  <!-- Main Title & Subtitle -->
+  <text x="80" y="130" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="34" font-weight="800" letter-spacing="-0.5">Circuit Breakers & Exponential Backoff for Tool Calls</text>
+  <text x="80" y="168" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="18" font-weight="400">Three-State Trip Topology, Full Jitter Formulas, and Fast-Fallback Mitigations in Agent Pipelines</text>
+
+  <!-- Central Canvas -->
+  <rect x="80" y="210" width="1040" height="360" rx="12" fill="#0b1120" stroke="#1e293b" stroke-width="2" />
+
+  <!-- State 1: CLOSED (Normal Operation) -->
+  <rect x="110" y="240" width="280" height="300" rx="8" fill="#0c1d19" stroke="#10b981" stroke-width="1.5" />
+  <rect x="110" y="240" width="280" height="36" rx="8" fill="#064e3b" />
+  <text x="130" y="264" fill="#34d399" font-family="system-ui, sans-serif" font-size="15" font-weight="700">1. CLOSED (Normal)</text>
+
+  <rect x="130" y="290" width="240" height="70" rx="6" fill="#091412" stroke="#1e293b" stroke-width="1" />
+  <text x="145" y="315" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Health: Optimal</text>
+  <text x="145" y="335" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Failure Rate &lt; 50% Threshold</text>
+  <text x="145" y="350" fill="#64748b" font-family="monospace" font-size="10">Passes all calls directly</text>
+
+  <text x="130" y="385" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Sliding Error Counter:</text>
+  <rect x="130" y="395" width="240" height="20" rx="4" fill="#1e293b" />
+  <rect x="130" y="395" width="40" height="20" rx="4" fill="#10b981" />
+  <text x="180" y="410" fill="#94a3b8" font-family="monospace" font-size="10">2 failures / 20 reqs</text>
+
+  <path d="M 130 435 L 370 435" stroke="#1e293b" stroke-dasharray="4,4" stroke-width="1" />
+  <text x="130" y="460" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Trip Trigger Condition:</text>
+  <text x="130" y="480" fill="#f87171" font-family="system-ui, sans-serif" font-size="11">5 consecutive upstream 5xx/timeouts</text>
+  <text x="130" y="500" fill="#fbbf24" font-family="monospace" font-size="11">→ Transitions to OPEN</text>
+
+  <!-- Transition Arrow Closed to Open -->
+  <path d="M 390 390 L 460 390" fill="none" stroke="#ef4444" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- State 2: OPEN (Fail-Fast Active) -->
+  <rect x="460" y="240" width="280" height="300" rx="8" fill="#241215" stroke="#ef4444" stroke-width="1.5" />
+  <rect x="460" y="240" width="280" height="36" rx="8" fill="#7f1d1d" />
+  <text x="480" y="264" fill="#f87171" font-family="system-ui, sans-serif" font-size="15" font-weight="700">2. OPEN (Fail-Fast)</text>
+
+  <rect x="480" y="290" width="240" height="70" rx="6" fill="#160a0c" stroke="#1e293b" stroke-width="1" />
+  <text x="495" y="315" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Zero Upstream Network Calls</text>
+  <text x="495" y="335" fill="#f87171" font-family="system-ui, sans-serif" font-size="11">Immediate Local Rejection</text>
+  <text x="495" y="350" fill="#94a3b8" font-family="monospace" font-size="10">Fast fallback: Cached / Heuristic</text>
+
+  <text x="480" y="385" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Cooldown Window (Sleep Timer):</text>
+  <rect x="480" y="395" width="240" height="20" rx="4" fill="#1e293b" />
+  <rect x="480" y="395" width="180" height="20" rx="4" fill="#ef4444" />
+  <text x="540" y="410" fill="#ffffff" font-family="monospace" font-size="10">Cooldown: 30.0s</text>
+
+  <path d="M 480 435 L 720 435" stroke="#1e293b" stroke-dasharray="4,4" stroke-width="1" />
+  <text x="480" y="460" fill="#fed7aa" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Recovery Trigger Condition:</text>
+  <text x="480" y="480" fill="#fcd34d" font-family="system-ui, sans-serif" font-size="11">Sleep window expires without traffic</text>
+  <text x="480" y="500" fill="#60a5fa" font-family="monospace" font-size="11">→ Transitions to HALF-OPEN</text>
+
+  <!-- Transition Arrow Open to Half-Open -->
+  <path d="M 740 390 L 810 390" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow)" />
+
+  <!-- State 3: HALF-OPEN (Canary Probing) -->
+  <rect x="810" y="240" width="280" height="300" rx="8" fill="#241c10" stroke="#f59e0b" stroke-width="1.5" />
+  <rect x="810" y="240" width="280" height="36" rx="8" fill="#78350f" />
+  <text x="830" y="264" fill="#fbbf24" font-family="system-ui, sans-serif" font-size="15" font-weight="700">3. HALF-OPEN (Canary)</text>
+
+  <rect x="830" y="290" width="240" height="70" rx="6" fill="#161008" stroke="#1e293b" stroke-width="1" />
+  <text x="845" y="315" fill="#fde68a" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Trial Canary Request</text>
+  <text x="845" y="335" fill="#fcd34d" font-family="system-ui, sans-serif" font-size="11">Allows 1 test call upstream</text>
+  <text x="845" y="350" fill="#94a3b8" font-family="monospace" font-size="10">Holds concurrent agent calls</text>
+
+  <text x="830" y="385" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Branching Verification:</text>
+  <rect x="830" y="395" width="240" height="30" rx="4" fill="#0f172a" stroke="#334155" stroke-width="1" />
+  <text x="840" y="415" fill="#4ade80" font-family="system-ui, sans-serif" font-size="11" font-weight="600">✓ Success: Reset to CLOSED</text>
+
+  <rect x="830" y="435" width="240" height="30" rx="4" fill="#0f172a" stroke="#334155" stroke-width="1" />
+  <text x="840" y="455" fill="#f87171" font-family="system-ui, sans-serif" font-size="11" font-weight="600">✗ Failure: Trip back to OPEN</text>
+
+  <text x="830" y="490" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="10">Exponential Backoff Factor:</text>
+  <text x="830" y="508" fill="#38bdf8" font-family="monospace" font-size="11">cooldown = min(max, base * 2^retries)</text>
+</svg>

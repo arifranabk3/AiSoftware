@@ -105,6 +105,17 @@ export default function AboutPage() {
               <li className="p-2 rounded bg-slate-50 border border-slate-200/60">• Ollama Local Engine</li>
             </ul>
           </section>
+
+          <section className="space-y-3 pt-4 border-t border-slate-100">
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+              Contact &amp; Editorial Inquiries
+            </h2>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              For research correspondence, feedback on published technical field guides, or partnership inquiries, reach out directly to our editorial staff at{' '}
+              <a href="mailto:support@ai-software.com" className="text-indigo-600 underline font-mono">support@ai-software.com</a> or visit our{' '}
+              <Link href="/contact" className="text-indigo-600 underline font-semibold">Contact Page</Link>.
+            </p>
+          </section>
         </div>
       </main>
 
