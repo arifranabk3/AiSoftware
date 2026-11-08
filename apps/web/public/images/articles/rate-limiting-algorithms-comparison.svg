@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 480" width="900" height="480">
+  <defs>
+    <linearGradient id="tokenGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="leakGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="windowGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#6d28d9" />
+    </linearGradient>
+  </defs>
+
+  <rect width="900" height="480" rx="10" fill="#0b1120" stroke="#1e293b" stroke-width="1.5" />
+  <text x="40" y="45" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="20" font-weight="700">Comparative Analysis: Rate Limiting Algorithms for Multi-Agent Architectures</text>
+  <text x="40" y="70" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="13">Trade-offs between Burst Tolerance, Memory Overhead, and Computational Cost</text>
+
+  <!-- Algorithm 1: Token Bucket -->
+  <rect x="40" y="100" width="255" height="340" rx="8" fill="#0f172a" stroke="#06b6d4" stroke-width="1.5" />
+  <rect x="40" y="100" width="255" height="35" rx="8" fill="url(#tokenGrad)" />
+  <text x="55" y="123" fill="#ffffff" font-family="system-ui, sans-serif" font-size="15" font-weight="700">1. Token Bucket</text>
+
+  <!-- Illustration Container -->
+  <rect x="55" y="150" width="225" height="110" rx="6" fill="#090d16" stroke="#1e293b" stroke-width="1" />
+  <path d="M 80 165 L 205 165 L 195 240 L 90 240 Z" fill="#132338" stroke="#38bdf8" stroke-width="1.5" />
+  <circle cx="120" cy="220" r="10" fill="#06b6d4" />
+  <circle cx="145" cy="220" r="10" fill="#06b6d4" />
+  <circle cx="170" cy="220" r="10" fill="#06b6d4" />
+  <circle cx="132" cy="200" r="10" fill="#06b6d4" />
+  <circle cx="158" cy="200" r="10" fill="#06b6d4" />
+  <text x="110" y="180" fill="#38bdf8" font-family="system-ui, sans-serif" font-size="10" font-weight="600">Refill: +R/sec</text>
+
+  <text x="55" y="280" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="13" font-weight="600">Key Characteristics:</text>
+  <text x="55" y="302" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">• Permits controlled burst traffic</text>
+  <text x="55" y="322" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">• O(1) time and memory overhead</text>
+  <text x="55" y="342" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">• Two Redis keys: count & last_time</text>
+  <text x="55" y="375" fill="#22c55e" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Ideal For: Autonomous LLM agents</text>
+  <text x="55" y="393" fill="#64748b" font-family="system-ui, sans-serif" font-size="11">Tool execution bursts without</text>
+  <text x="55" y="408" fill="#64748b" font-family="system-ui, sans-serif" font-size="11">violating monthly quota ceilings</text>
+
+  <!-- Algorithm 2: Leaky Bucket -->
+  <rect x="322" y="100" width="255" height="340" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="1.5" />
+  <rect x="322" y="100" width="255" height="35" rx="8" fill="url(#leakGrad)" />
+  <text x="337" y="123" fill="#ffffff" font-family="system-ui, sans-serif" font-size="15" font-weight="700">2. Leaky Bucket</text>
+
+  <!-- Illustration Container -->
+  <rect x="337" y="150" width="225" height="110" rx="6" fill="#090d16" stroke="#1e293b" stroke-width="1" />
+  <path d="M 370 165 L 475 165 L 465 230 L 430 230 L 430 250 L 415 250 L 415 230 L 380 230 Z" fill="#172554" stroke="#60a5fa" stroke-width="1.5" />
+  <rect x="382" y="195" width="81" height="30" fill="#3b82f6" opacity="0.6" />
+  <circle cx="422" cy="255" r="3" fill="#60a5fa" />
+  <text x="375" y="180" fill="#93c5fd" font-family="system-ui, sans-serif" font-size="10" font-weight="600">Strict Constant Drain</text>
+
+  <text x="337" y="280" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="13" font-weight="600">Key Characteristics:</text>
+  <text x="337" y="302" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">• Smooths traffic into constant rate</text>
+  <text x="337" y="322" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">• Discards bursts when queue is full</text>
+  <text x="337" y="342" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">• Adds latency during burst periods</text>
+  <text x="337" y="375" fill="#3b82f6" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Ideal For: Hardware / Edge APIs</text>
+  <text x="337" y="393" fill="#64748b" font-family="system-ui, sans-serif" font-size="11">Preventing memory spikes on</text>
+  <text x="337" y="408" fill="#64748b" font-family="system-ui, sans-serif" font-size="11">constrained local GPU servers</text>
+
+  <!-- Algorithm 3: Sliding Window Log -->
+  <rect x="605" y="100" width="255" height="340" rx="8" fill="#0f172a" stroke="#8b5cf6" stroke-width="1.5" />
+  <rect x="605" y="100" width="255" height="35" rx="8" fill="url(#windowGrad)" />
+  <text x="620" y="123" fill="#ffffff" font-family="system-ui, sans-serif" font-size="15" font-weight="700">3. Sliding Window Log</text>
+
+  <!-- Illustration Container -->
+  <rect x="620" y="150" width="225" height="110" rx="6" fill="#090d16" stroke="#1e293b" stroke-width="1" />
+  <line x1="635" y1="210" x2="830" y2="210" stroke="#475569" stroke-width="2" />
+  <rect x="710" y="180" width="105" height="60" rx="4" fill="#6d28d9" opacity="0.4" stroke="#a855f7" stroke-width="1.5" />
+  <circle cx="660" cy="210" r="4" fill="#64748b" />
+  <circle cx="685" cy="210" r="4" fill="#64748b" />
+  <circle cx="730" cy="210" r="5" fill="#a855f7" />
+  <circle cx="760" cy="210" r="5" fill="#a855f7" />
+  <circle cx="790" cy="210" r="5" fill="#a855f7" />
+  <text x="718" y="172" fill="#c084fc" font-family="system-ui, sans-serif" font-size="10" font-weight="600">Active Sliding Window</text>
+
+  <text x="620" y="280" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="13" font-weight="600">Key Characteristics:</text>
+  <text x="620" y="302" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">• 100% boundary accuracy</text>
+  <text x="620" y="322" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">• High memory overhead: O(N)</text>
+  <text x="620" y="342" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">• Redis Sorted Set (ZSET) per client</text>
+  <text x="620" y="375" fill="#a855f7" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Ideal For: Financial / Auth Security</text>
+  <text x="620" y="393" fill="#64748b" font-family="system-ui, sans-serif" font-size="11">Strict prevention of credential</text>
+  <text x="620" y="408" fill="#64748b" font-family="system-ui, sans-serif" font-size="11">stuffing and payment endpoint abuse</text>
+</svg>
