@@ -35,8 +35,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
-      </head>
-      <body className="bg-slate-50 text-slate-800 antialiased min-h-screen">
         {/* Google Tag Manager (noscript fallback) */}
         <noscript>
           <iframe
@@ -46,6 +44,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             style={{ display: 'none', visibility: 'hidden' }}
           />
         </noscript>
+      </head>
+      <body className="bg-slate-50 text-slate-800 antialiased min-h-screen">
+        
         {children}
       </body>
     </html>
