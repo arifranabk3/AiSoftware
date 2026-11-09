@@ -63,6 +63,20 @@ export const SCHEDULER_AUDIT_LOGS: SchedulerExecutionLog[] = [
     timestamp: '2026-11-08T13:00:00Z',
     status: 'SKIPPED',
     reason: 'Slot 2 skipped: Awaiting human technical review and sign-off on Article 12 draft. No unapproved filler published.'
+  },
+  {
+    slot: '09:00_PKT',
+    timestamp: '2026-11-09T04:00:00Z',
+    status: 'SUCCESS',
+    articleSlug: 'circuit-breakers-exponential-backoff-ai-agents',
+    reason: 'Published successfully in Slot 1 (09:00 AM PKT).'
+  },
+  {
+    slot: '18:00_PKT',
+    timestamp: '2026-11-09T13:00:00Z',
+    status: 'SUCCESS',
+    articleSlug: 'vllm-pagedattention-memory-management-sovereign-hardware',
+    reason: 'Published successfully in Slot 2 (06:00 PM PKT).'
   }
 ];
 
@@ -73,7 +87,7 @@ export function getSchedulerHealth(): SchedulerHealth {
     pktOffset: '+05:00',
     isAutomatedCronActive: true,
     manualPublishQueueAvailable: true,
-    nextScheduledSlotPKT: '06:00 PM PKT (Today)',
+    nextScheduledSlotPKT: '09:00 AM PKT (Tomorrow)',
     logs: SCHEDULER_AUDIT_LOGS
   };
 }

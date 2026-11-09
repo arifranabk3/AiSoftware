@@ -1,3 +1,4 @@
+import { ARTICLE_12, ARTICLE_13 } from './campaign-articles';
 import { Article, ArticleImage, ArticleSection, EditorialStatus, PublicationStatus } from './article-types';
 export * from './article-types';
 export * from './date-utils';
@@ -1023,5 +1024,9 @@ export function getPublishedArticles(): Article[] {
     if (!a.publishedAt) return false;
     const pubTime = new Date(a.publishedAt).getTime();
     return !isNaN(pubTime) && pubTime <= now.getTime();
+  }).sort((a, b) => {
+    const timeA = new Date(a.publishedAt || a.publishDate).getTime();
+    const timeB = new Date(b.publishedAt || b.publishDate).getTime();
+    return timeB - timeA; // Descending order: latest published article comes first
   });
 }
