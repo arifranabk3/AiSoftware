@@ -79,8 +79,8 @@
   <text x="525" y="428" fill="#38bdf8" font-family="monospace" font-size="11">EVALSHA token_bucket.lua</text>
 
   <!-- Decision Junction -->
-  <text x="515" y="485" fill="#22c55e" font-family="system-ui, sans-serif" font-size="12" font-weight="600">✓ Within Limit (Tokens Remaining)</text>
-  <text x="515" y="512" fill="#ef4444" font-family="system-ui, sans-serif" font-size="12" font-weight="600">✗ Limit Exhausted (HTTP 429 Retry)</text>
+  <text x="515" y="485" fill="#22c55e" font-family="system-ui, sans-serif" font-size="12" font-weight="600">&#10003; Within Limit (Tokens Remaining)</text>
+  <text x="515" y="512" fill="#ef4444" font-family="system-ui, sans-serif" font-size="12" font-weight="600">&#10007; Limit Exhausted (HTTP 429 Retry)</text>
 
   <!-- Path to Target APIs -->
   <path d="M 770 480 L 850 480" fill="none" stroke="#22c55e" stroke-width="2.5" />

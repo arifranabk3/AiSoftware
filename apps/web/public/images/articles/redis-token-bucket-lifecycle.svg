@@ -14,9 +14,9 @@
   <rect x="40" y="110" width="220" height="150" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
   <rect x="40" y="110" width="220" height="30" rx="8" fill="#1e293b" />
   <text x="55" y="130" fill="#38bdf8" font-family="system-ui, sans-serif" font-size="13" font-weight="700">1. Client Request Hook</text>
-  <text x="55" y="160" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="12">• Client ID / IP / API Key</text>
-  <text x="55" y="180" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="12">• Requested Tokens (W)</text>
-  <text x="55" y="200" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="12">• Current Timestamp (now)</text>
+  <text x="55" y="160" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="12">&#8226; Client ID / IP / API Key</text>
+  <text x="55" y="180" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="12">&#8226; Requested Tokens (W)</text>
+  <text x="55" y="200" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="12">&#8226; Current Timestamp (now)</text>
   <text x="55" y="235" fill="#64748b" font-family="monospace" font-size="11">EVALSHA token_bucket</text>
 
   <!-- Flow Arrow to Redis -->
@@ -36,9 +36,9 @@
   <rect x="335" y="255" width="250" height="40" rx="4" fill="#1e1e2e" stroke="#475569" stroke-width="1" />
   <text x="345" y="280" fill="#fbbf24" font-family="monospace" font-size="12">if tokens &gt;= requested then</text>
 
-  <text x="345" y="320" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Decrement: tokens = tokens - req</text>
-  <text x="345" y="340" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Set key: HMSET tokens, now</text>
-  <text x="345" y="360" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Set TTL: EXPIRE key 3600</text>
+  <text x="345" y="320" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Decrement: tokens = tokens - req</text>
+  <text x="345" y="340" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Set key: HMSET tokens, now</text>
+  <text x="345" y="360" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Set TTL: EXPIRE key 3600</text>
   <text x="345" y="390" fill="#22c55e" font-family="monospace" font-size="11">return {1, remaining, reset_sec}</text>
   <text x="345" y="410" fill="#ef4444" font-family="monospace" font-size="11">else return {0, remaining, retry_ms}</text>
 
@@ -49,14 +49,14 @@
   <!-- Step 3A: Allowed Outcome -->
   <rect x="670" y="145" width="190" height="110" rx="8" fill="#0f231d" stroke="#22c55e" stroke-width="1.5" />
   <text x="685" y="172" fill="#4ade80" font-family="system-ui, sans-serif" font-size="14" font-weight="700">3A. Allowed (200 OK)</text>
-  <text x="685" y="195" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">• Pass request to upstream</text>
-  <text x="685" y="215" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">• Add headers:</text>
+  <text x="685" y="195" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">&#8226; Pass request to upstream</text>
+  <text x="685" y="215" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">&#8226; Add headers:</text>
   <text x="685" y="235" fill="#86efac" font-family="monospace" font-size="10">X-RateLimit-Remaining: 74</text>
 
   <!-- Step 3B: Throttled Outcome -->
   <rect x="670" y="295" width="190" height="110" rx="8" fill="#251214" stroke="#ef4444" stroke-width="1.5" />
   <text x="685" y="322" fill="#f87171" font-family="system-ui, sans-serif" font-size="14" font-weight="700">3B. Throttled (429)</text>
-  <text x="685" y="345" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">• Fast-fail without LLM call</text>
-  <text x="685" y="365" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">• Add headers:</text>
+  <text x="685" y="345" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">&#8226; Fast-fail without LLM call</text>
+  <text x="685" y="365" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">&#8226; Add headers:</text>
   <text x="685" y="385" fill="#fca5a5" font-family="monospace" font-size="10">Retry-After: 3.2</text>
 </svg>
