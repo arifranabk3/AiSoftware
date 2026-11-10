@@ -73,7 +73,7 @@
     <rect x="540" y="270" width="10" height="110" rx="5" fill="#f59e0b" />
     <div xmlns="http://www.w3.org/1999/xhtml"></div>
     <text x="575" y="305" fill="#fef08a" font-family="system-ui, sans-serif" font-size="16" font-weight="900">2. PENDING_APPROVAL (Hardware Frozen)</text>
-    <text x="575" y="330" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="13">Worker daemon completely halted • Storage state locked</text>
+    <text x="575" y="330" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="13">Worker daemon completely halted &#8226; Storage state locked</text>
     <text x="575" y="355" fill="#cbd5e1" font-family="monospace" font-size="11">Argon2id Session Signature Required by Authenticated Owner</text>
   </g>
 

@@ -40,8 +40,8 @@
   <rect x="220" y="280" width="240" height="6" rx="3" fill="#f59e0b" />
   <text x="240" y="315" fill="#fef08a" font-family="system-ui, sans-serif" font-size="15" font-weight="800">3. PENDING_APPROVAL</text>
   <text x="240" y="340" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="12">Task Frozen in Storage</text>
-  <text x="240" y="362" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">• Worker execution paused</text>
-  <text x="240" y="380" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">• Awaiting Owner Decision</text>
+  <text x="240" y="362" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">&#8226; Worker execution paused</text>
+  <text x="240" y="380" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="11">&#8226; Awaiting Owner Decision</text>
 
   <!-- Split arrows from PENDING_APPROVAL -->
   <!-- Left to REJECTED -->
@@ -61,7 +61,7 @@
   <rect x="540" y="280" width="220" height="120" rx="14" fill="#064e3b" stroke="#10b981" stroke-width="2.5" />
   <text x="560" y="315" fill="#6ee7b7" font-family="system-ui, sans-serif" font-size="15" font-weight="800">4. AUTHORIZED &amp; RUN</text>
   <text x="560" y="340" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="12">Signed Token Injected</text>
-  <text x="560" y="362" fill="#a7f3d0" font-family="system-ui, sans-serif" font-size="11">• Network adapter executed</text>
-  <text x="560" y="380" fill="#a7f3d0" font-family="system-ui, sans-serif" font-size="11">• State: COMPLETED</text>
+  <text x="560" y="362" fill="#a7f3d0" font-family="system-ui, sans-serif" font-size="11">&#8226; Network adapter executed</text>
+  <text x="560" y="380" fill="#a7f3d0" font-family="system-ui, sans-serif" font-size="11">&#8226; State: COMPLETED</text>
 </svg>
 

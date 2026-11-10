@@ -15,9 +15,9 @@
   <rect x="40" y="125" width="180" height="130" rx="12" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
   <rect x="40" y="125" width="180" height="6" rx="3" fill="#6366f1" />
   <text x="55" y="155" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="700">Inputs &amp; Salting</text>
-  <text x="55" y="180" fill="#94a3b8" font-family="monospace" font-size="11">• Plaintext Password</text>
-  <text x="55" y="200" fill="#94a3b8" font-family="monospace" font-size="11">• 16-byte CSPRNG Salt</text>
-  <text x="55" y="220" fill="#94a3b8" font-family="monospace" font-size="11">• Associated Secret Key</text>
+  <text x="55" y="180" fill="#94a3b8" font-family="monospace" font-size="11">&#8226; Plaintext Password</text>
+  <text x="55" y="200" fill="#94a3b8" font-family="monospace" font-size="11">&#8226; 16-byte CSPRNG Salt</text>
+  <text x="55" y="220" fill="#94a3b8" font-family="monospace" font-size="11">&#8226; Associated Secret Key</text>
   <text x="55" y="240" fill="#818cf8" font-family="monospace" font-size="10">Blake2b Pre-Hashing</text>
 
   <!-- Arrow -->

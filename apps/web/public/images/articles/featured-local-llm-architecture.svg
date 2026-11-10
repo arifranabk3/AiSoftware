@@ -49,13 +49,13 @@
     <circle cx="215" cy="217" r="6" fill="#38bdf8" />
     <circle cx="235" cy="217" r="6" fill="#818cf8" />
     <text x="270" y="222" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="700">Ollama Local Daemon</text>
-    <text x="270" y="240" fill="#94a3b8" font-family="monospace" font-size="11">127.0.0.1:11434 • Online</text>
+    <text x="270" y="240" fill="#94a3b8" font-family="monospace" font-size="11">127.0.0.1:11434 &#8226; Online</text>
 
     <rect x="150" y="275" width="320" height="85" rx="10" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
     <rect x="175" y="295" width="45" height="45" rx="8" fill="#312e81" stroke="#6366f1" stroke-width="1.5" />
     <text x="187" y="324" fill="#818cf8" font-family="system-ui, sans-serif" font-size="14" font-weight="800">Q4</text>
     <text x="235" y="315" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="700">Qwen 2.5 7B / Llama 3.2</text>
-    <text x="235" y="335" fill="#10b981" font-family="monospace" font-size="11">Q4_K_M Quantized • 4.6 GB RAM</text>
+    <text x="235" y="335" fill="#10b981" font-family="monospace" font-size="11">Q4_K_M Quantized &#8226; 4.6 GB RAM</text>
 
     <!-- Marginal Cost $0.00 Badge -->
     <rect x="150" y="380" width="320" height="110" rx="12" fill="#064e3b" stroke="#10b981" stroke-width="2" />
@@ -94,7 +94,7 @@
     <circle cx="725" cy="417" r="22" fill="#0c4a6e" stroke="#38bdf8" stroke-width="1.5" />
     <text x="716" y="423" fill="#ffffff" font-family="monospace" font-size="14" font-weight="700">03</text>
     <text x="765" y="410" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="16" font-weight="700">Systems &amp; Reliability Auditor</text>
-    <text x="765" y="430" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">Zero cloud egress • 100% Sovereign data</text>
+    <text x="765" y="430" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">Zero cloud egress &#8226; 100% Sovereign data</text>
   </g>
 
   <!-- Top Hero Category Tag -->

@@ -39,19 +39,19 @@
 
   <g transform="translate(345, 170)">
     <rect x="0" y="0" width="210" height="50" rx="6" fill="#0c2642" stroke="#38bdf8" stroke-width="1" />
-    <text x="15" y="25" fill="#e0f2fe" font-family="monospace" font-size="11">Block 0 â†’ Frame 8</text>
+    <text x="15" y="25" fill="#e0f2fe" font-family="monospace" font-size="11">Block 0 &#8594; Frame 8</text>
     <text x="15" y="40" fill="#38bdf8" font-family="monospace" font-size="9">VRAM Base 0x7F08000</text>
 
     <rect x="0" y="65" width="210" height="50" rx="6" fill="#0c2642" stroke="#38bdf8" stroke-width="1" />
-    <text x="15" y="90" fill="#e0f2fe" font-family="monospace" font-size="11">Block 1 â†’ Frame 3</text>
+    <text x="15" y="90" fill="#e0f2fe" font-family="monospace" font-size="11">Block 1 &#8594; Frame 3</text>
     <text x="15" y="105" fill="#38bdf8" font-family="monospace" font-size="9">VRAM Base 0x7F03000</text>
 
     <rect x="0" y="130" width="210" height="50" rx="6" fill="#0c2642" stroke="#38bdf8" stroke-width="1" />
-    <text x="15" y="155" fill="#e0f2fe" font-family="monospace" font-size="11">Block 2 â†’ Frame 14</text>
+    <text x="15" y="155" fill="#e0f2fe" font-family="monospace" font-size="11">Block 2 &#8594; Frame 14</text>
     <text x="15" y="170" fill="#38bdf8" font-family="monospace" font-size="9">VRAM Base 0x7F0E000</text>
 
     <rect x="0" y="195" width="210" height="50" rx="6" fill="#0c2642" stroke="#38bdf8" stroke-width="1" />
-    <text x="15" y="220" fill="#e0f2fe" font-family="monospace" font-size="11">Block 3 â†’ Frame 1</text>
+    <text x="15" y="220" fill="#e0f2fe" font-family="monospace" font-size="11">Block 3 &#8594; Frame 1</text>
     <text x="15" y="235" fill="#38bdf8" font-family="monospace" font-size="9">VRAM Base 0x7F01000</text>
   </g>
 

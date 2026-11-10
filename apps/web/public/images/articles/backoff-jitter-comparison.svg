@@ -32,9 +32,9 @@
   <text x="55" y="305" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Formula:</text>
   <text x="55" y="325" fill="#f87171" font-family="monospace" font-size="12">t = min(max_delay, base * 2^attempt)</text>
   <text x="55" y="355" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">Why it fails in multi-agent swarms:</text>
-  <text x="55" y="375" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• 20 agents fail simultaneously at T=0</text>
-  <text x="55" y="395" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• All 20 agents wake up exactly at T=1.00s</text>
-  <text x="55" y="415" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="11">• Causes repeating periodic thundering herds</text>
+  <text x="55" y="375" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; 20 agents fail simultaneously at T=0</text>
+  <text x="55" y="395" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; All 20 agents wake up exactly at T=1.00s</text>
+  <text x="55" y="415" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="11">&#8226; Causes repeating periodic thundering herds</text>
 
   <!-- Right: Decorrelated Full Jitter Backoff (Smooth Dispersion) -->
   <rect x="470" y="100" width="390" height="340" rx="8" fill="#0f1d17" stroke="#10b981" stroke-width="1.5" />
@@ -61,7 +61,7 @@
   <text x="485" y="305" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Formula:</text>
   <text x="485" y="325" fill="#34d399" font-family="monospace" font-size="12">t = random(0, min(max_delay, base * 2^attempt))</text>
   <text x="485" y="355" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">Why it succeeds in multi-agent swarms:</text>
-  <text x="485" y="375" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• 20 agents fail simultaneously at T=0</text>
-  <text x="485" y="395" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Retries disperse continuously across [0, 1.0s]</text>
-  <text x="485" y="415" fill="#86efac" font-family="system-ui, sans-serif" font-size="11">• Zero spike correlation; instant upstream recovery</text>
+  <text x="485" y="375" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; 20 agents fail simultaneously at T=0</text>
+  <text x="485" y="395" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Retries disperse continuously across [0, 1.0s]</text>
+  <text x="485" y="415" fill="#86efac" font-family="system-ui, sans-serif" font-size="11">&#8226; Zero spike correlation; instant upstream recovery</text>
 </svg>

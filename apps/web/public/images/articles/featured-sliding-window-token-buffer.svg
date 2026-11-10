@@ -49,9 +49,9 @@
     <rect x="20" y="50" width="220" height="26" rx="8" fill="#2563eb" />
     <text x="130" y="68" fill="#ffffff" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">IMMUTABLE SYSTEM PROMPT</text>
     <text x="35" y="100" fill="#93c5fd" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Fixed Anchor: 1,500 Tok</text>
-    <text x="35" y="125" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Core System Directives</text>
-    <text x="35" y="145" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• JSON Tool Schemas</text>
-    <text x="35" y="165" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Behavioral Boundary Rules</text>
+    <text x="35" y="125" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Core System Directives</text>
+    <text x="35" y="145" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; JSON Tool Schemas</text>
+    <text x="35" y="165" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Behavioral Boundary Rules</text>
     <text x="35" y="200" fill="#10b981" font-family="monospace" font-size="10" font-weight="700">STATUS: PROTECTED (PINNED)</text>
 
     <!-- Zone 2: Rolling Summary Node (Compacted History) -->
@@ -59,9 +59,9 @@
     <rect x="260" y="50" width="240" height="26" rx="8" fill="#7c3aed" />
     <text x="380" y="68" fill="#ffffff" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">ROLLING CONTEXT SUMMARY</text>
     <text x="275" y="100" fill="#c4b5fd" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Compacted: 1,200 Tok</text>
-    <text x="275" y="125" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Turns 1-24 Summarized</text>
-    <text x="275" y="145" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Critical Key-Value State</text>
-    <text x="275" y="165" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Objective Milestones Met</text>
+    <text x="275" y="125" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Turns 1-24 Summarized</text>
+    <text x="275" y="145" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Critical Key-Value State</text>
+    <text x="275" y="165" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Objective Milestones Met</text>
     <text x="275" y="200" fill="#8b5cf6" font-family="monospace" font-size="10" font-weight="700">COMPRESSION RATIO: 6.2 : 1</text>
 
     <!-- Zone 3: Active Sliding Window (Recent Raw Turns) -->
@@ -69,9 +69,9 @@
     <rect x="520" y="50" width="280" height="26" rx="8" fill="#059669" />
     <text x="660" y="68" fill="#ffffff" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">ACTIVE SLIDING WINDOW</text>
     <text x="535" y="100" fill="#6ee7b7" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Recent Turns: 3,200 Tok</text>
-    <text x="535" y="125" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Raw Turn N-3 (User Input)</text>
-    <text x="535" y="145" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Raw Turn N-2 (Tool Call)</text>
-    <text x="535" y="165" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Raw Turn N-1 (Tool Execution)</text>
+    <text x="535" y="125" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Raw Turn N-3 (User Input)</text>
+    <text x="535" y="145" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Raw Turn N-2 (Tool Call)</text>
+    <text x="535" y="165" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Raw Turn N-1 (Tool Execution)</text>
     <text x="535" y="200" fill="#10b981" font-family="monospace" font-size="10" font-weight="700">RETENTION POLICY: FIFO</text>
 
     <!-- Zone 4: Reserved Generation Headroom -->
@@ -79,9 +79,9 @@
     <rect x="820" y="50" width="220" height="26" rx="8" fill="#ea580c" />
     <text x="930" y="68" fill="#ffffff" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">OUTPUT HEADROOM RESERVE</text>
     <text x="835" y="100" fill="#fdba74" font-family="system-ui, sans-serif" font-size="12" font-weight="600">Safety Buffer: 2,292 Tok</text>
-    <text x="835" y="125" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Guaranteed Model Output</text>
-    <text x="835" y="145" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Prevents Mid-Token OOM</text>
-    <text x="835" y="165" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">• Protects JSON Parsing</text>
+    <text x="835" y="125" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Guaranteed Model Output</text>
+    <text x="835" y="145" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Prevents Mid-Token OOM</text>
+    <text x="835" y="165" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">&#8226; Protects JSON Parsing</text>
     <text x="835" y="200" fill="#f97316" font-family="monospace" font-size="10" font-weight="700">HARD CEILING: NON-BREACHABLE</text>
   </g>
 

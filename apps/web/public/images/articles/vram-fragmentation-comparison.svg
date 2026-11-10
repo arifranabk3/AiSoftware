@@ -38,8 +38,8 @@
     <!-- Waste Metrics -->
     <rect x="0" y="180" width="360" height="75" rx="6" fill="#450a0a" stroke="#b91c1c" stroke-width="1" />
     <text x="14" y="205" fill="#fecaca" font-family="system-ui, sans-serif" font-size="12" font-weight="700">VRAM Overhead Metrics</text>
-    <text x="14" y="225" fill="#f87171" font-family="system-ui, sans-serif" font-size="11">â€¢ 60-80% VRAM wasted on unallocated space</text>
-    <text x="14" y="243" fill="#f87171" font-family="system-ui, sans-serif" font-size="11">â€¢ OOM crash risk when sequences exceed max length</text>
+    <text x="14" y="225" fill="#f87171" font-family="system-ui, sans-serif" font-size="11">&#8226; 60-80% VRAM wasted on unallocated space</text>
+    <text x="14" y="243" fill="#f87171" font-family="system-ui, sans-serif" font-size="11">&#8226; OOM crash risk when sequences exceed max length</text>
   </g>
 
   <!-- Right: PagedAttention Dynamic Frame Allocation -->
@@ -78,8 +78,8 @@
     <!-- Paged Metrics -->
     <rect x="0" y="180" width="360" height="75" rx="6" fill="#064e3b" stroke="#059669" stroke-width="1" />
     <text x="14" y="205" fill="#a7f3d0" font-family="system-ui, sans-serif" font-size="12" font-weight="700">Efficiency Improvements</text>
-    <text x="14" y="225" fill="#34d399" font-family="system-ui, sans-serif" font-size="11">â€¢ &lt;4% internal fragmentation across all sequences</text>
-    <text x="14" y="243" fill="#34d399" font-family="system-ui, sans-serif" font-size="11">â€¢ 2x â€“ 4x higher parallel inference throughput</text>
+    <text x="14" y="225" fill="#34d399" font-family="system-ui, sans-serif" font-size="11">&#8226; &lt;4% internal fragmentation across all sequences</text>
+    <text x="14" y="243" fill="#34d399" font-family="system-ui, sans-serif" font-size="11">&#8226; 2x &#8211; 4x higher parallel inference throughput</text>
   </g>
 </svg>
 

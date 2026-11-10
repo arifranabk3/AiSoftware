@@ -42,14 +42,14 @@
     <rect x="150" y="175" width="340" height="65" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
     <rect x="165" y="190" width="35" height="35" rx="8" fill="url(#redisRed)" />
     <text x="215" y="207" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="15" font-weight="800">Redis Stream Ingestion</text>
-    <text x="215" y="225" fill="#38bdf8" font-family="monospace" font-size="11">BullMQ Queue Engine • Port 6379</text>
+    <text x="215" y="225" fill="#38bdf8" font-family="monospace" font-size="11">BullMQ Queue Engine &#8226; Port 6379</text>
 
     <!-- Active In-Flight Job Pipeline -->
     <g>
       <rect x="150" y="260" width="340" height="50" rx="8" fill="#0f172a" stroke="#0284c7" stroke-width="1.5" />
       <circle cx="175" cy="285" r="8" fill="#10b981" />
       <text x="195" y="282" fill="#f8fafc" font-family="monospace" font-size="12" font-weight="700">job_1042_seo_cluster</text>
-      <text x="195" y="297" fill="#94a3b8" font-family="monospace" font-size="10">Active Worker Lock • Atomic NX</text>
+      <text x="195" y="297" fill="#94a3b8" font-family="monospace" font-size="10">Active Worker Lock &#8226; Atomic NX</text>
       <text x="440" y="290" fill="#86efac" font-family="monospace" font-size="11" font-weight="700">RUNNING</text>
     </g>
 
@@ -84,7 +84,7 @@
     <rect x="640" y="175" width="440" height="90" rx="14" fill="#0f172a" stroke="#334155" stroke-width="2" />
     <rect x="640" y="175" width="8" height="90" rx="4" fill="#38bdf8" />
     <text x="670" y="210" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="16" font-weight="800">Worker Process A (Daemon #1)</text>
-    <text x="670" y="232" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">Dedicated Process • Concurrency Limit: 1</text>
+    <text x="670" y="232" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">Dedicated Process &#8226; Concurrency Limit: 1</text>
     <text x="670" y="250" fill="#38bdf8" font-family="monospace" font-size="11">Local Ollama Qwen 2.5 7B Inference Pipeline</text>
   </g>
 
@@ -93,7 +93,7 @@
     <rect x="640" y="285" width="440" height="90" rx="14" fill="#0f172a" stroke="#10b981" stroke-width="2" />
     <rect x="640" y="285" width="8" height="90" rx="4" fill="#10b981" />
     <text x="670" y="320" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="16" font-weight="800">Worker Process B (I/O &amp; Scraping)</text>
-    <text x="670" y="342" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">High-Concurrency Pool • Backoff Exponential Retry</text>
+    <text x="670" y="342" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">High-Concurrency Pool &#8226; Backoff Exponential Retry</text>
     <text x="670" y="360" fill="#86efac" font-family="monospace" font-size="11">Atomic Redis SETNX Idempotency Lock Active</text>
   </g>
 
@@ -102,7 +102,7 @@
     <rect x="640" y="395" width="440" height="105" rx="14" fill="#032541" stroke="#0284c7" stroke-width="2" />
     <text x="670" y="430" fill="#e0f2fe" font-family="system-ui, sans-serif" font-size="15" font-weight="800">Real-Time Server-Sent Events (SSE)</text>
     <text x="670" y="452" fill="#93c5fd" font-family="system-ui, sans-serif" font-size="12">Streams progress to Executive Dashboard with 0 DB polling</text>
-    <text x="670" y="475" fill="#38bdf8" font-family="monospace" font-size="11">Route: /api/v1/events/stream • Live EventSource</text>
+    <text x="670" y="475" fill="#38bdf8" font-family="monospace" font-size="11">Route: /api/v1/events/stream &#8226; Live EventSource</text>
   </g>
 
   <!-- Top Hero Category Tag -->

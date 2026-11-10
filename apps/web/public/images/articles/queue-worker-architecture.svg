@@ -22,9 +22,9 @@
   <rect x="40" y="130" width="180" height="6" rx="3" fill="#38bdf8" />
   <text x="55" y="160" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="700">1. Fastify Gateway</text>
   <text x="55" y="185" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="11">Non-Blocking I/O</text>
-  <text x="55" y="208" fill="#cbd5e1" font-family="monospace" font-size="10">• Ingests objectives</text>
-  <text x="55" y="226" fill="#cbd5e1" font-family="monospace" font-size="10">• Generates idempotency key</text>
-  <text x="55" y="244" fill="#cbd5e1" font-family="monospace" font-size="10">• Returns 202 Accepted</text>
+  <text x="55" y="208" fill="#cbd5e1" font-family="monospace" font-size="10">&#8226; Ingests objectives</text>
+  <text x="55" y="226" fill="#cbd5e1" font-family="monospace" font-size="10">&#8226; Generates idempotency key</text>
+  <text x="55" y="244" fill="#cbd5e1" font-family="monospace" font-size="10">&#8226; Returns 202 Accepted</text>
   <text x="55" y="265" fill="#38bdf8" font-family="system-ui" font-size="10" font-weight="600">&lt; 5ms Latency</text>
 
   <!-- Arrow 1 to 2 -->
@@ -36,9 +36,9 @@
   <rect x="290" y="130" width="220" height="6" rx="3" fill="#ef4444" />
   <text x="310" y="160" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="700">2. Redis BullMQ Queues</text>
   <text x="310" y="185" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="11">In-Memory Persistence</text>
-  <text x="310" y="208" fill="#cbd5e1" font-family="monospace" font-size="10">• Queue: task_execution_queue</text>
-  <text x="310" y="226" fill="#cbd5e1" font-family="monospace" font-size="10">• Atomic lock management</text>
-  <text x="310" y="244" fill="#cbd5e1" font-family="monospace" font-size="10">• Exponential backoff retries</text>
+  <text x="310" y="208" fill="#cbd5e1" font-family="monospace" font-size="10">&#8226; Queue: task_execution_queue</text>
+  <text x="310" y="226" fill="#cbd5e1" font-family="monospace" font-size="10">&#8226; Atomic lock management</text>
+  <text x="310" y="244" fill="#cbd5e1" font-family="monospace" font-size="10">&#8226; Exponential backoff retries</text>
   <text x="310" y="265" fill="#ef4444" font-family="system-ui" font-size="10" font-weight="600">Zero Lost Messages</text>
 
   <!-- Arrow 2 to 3 -->
@@ -50,9 +50,9 @@
   <rect x="580" y="130" width="180" height="6" rx="3" fill="#10b981" />
   <text x="595" y="160" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="14" font-weight="700">3. Worker Pool</text>
   <text x="595" y="185" fill="#86efac" font-family="system-ui, sans-serif" font-size="11">Isolated Daemon Threads</text>
-  <text x="595" y="208" fill="#cbd5e1" font-family="monospace" font-size="10">• Autonomous execution</text>
-  <text x="595" y="226" fill="#cbd5e1" font-family="monospace" font-size="10">• Heartbeat monitoring</text>
-  <text x="595" y="244" fill="#cbd5e1" font-family="monospace" font-size="10">• Local Ollama reasoning</text>
+  <text x="595" y="208" fill="#cbd5e1" font-family="monospace" font-size="10">&#8226; Autonomous execution</text>
+  <text x="595" y="226" fill="#cbd5e1" font-family="monospace" font-size="10">&#8226; Heartbeat monitoring</text>
+  <text x="595" y="244" fill="#cbd5e1" font-family="monospace" font-size="10">&#8226; Local Ollama reasoning</text>
   <text x="595" y="265" fill="#10b981" font-family="system-ui" font-size="10" font-weight="600">Crash-Safe Recovery</text>
 
   <!-- Bottom Panel: SSE Stream to Client Dashboard -->

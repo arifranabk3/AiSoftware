@@ -28,9 +28,9 @@
   <rect x="315" y="130" width="230" height="150" rx="12" fill="#0f172a" stroke="#10b981" stroke-width="2" />
   <text x="335" y="160" fill="#10b981" font-family="system-ui, sans-serif" font-size="14" font-weight="800">2. Deterministic Guard</text>
   <text x="335" y="185" fill="#f8fafc" font-family="monospace" font-size="11">RBAC &amp; Schema Match:</text>
-  <text x="335" y="205" fill="#a7f3d0" font-family="monospace" font-size="10">• Specialist ID: spec_seo</text>
-  <text x="335" y="222" fill="#a7f3d0" font-family="monospace" font-size="10">• Allowed Tools: [fetchUrl, parse]</text>
-  <text x="335" y="240" fill="#fca5a5" font-family="monospace" font-size="10">• execQuery: DISALLOWED (Drop)</text>
+  <text x="335" y="205" fill="#a7f3d0" font-family="monospace" font-size="10">&#8226; Specialist ID: spec_seo</text>
+  <text x="335" y="222" fill="#a7f3d0" font-family="monospace" font-size="10">&#8226; Allowed Tools: [fetchUrl, parse]</text>
+  <text x="335" y="240" fill="#fca5a5" font-family="monospace" font-size="10">&#8226; execQuery: DISALLOWED (Drop)</text>
   <text x="335" y="262" fill="#10b981" font-family="system-ui" font-size="10" font-weight="700">Non-Bypassable TypeScript Check</text>
 
   <!-- Arrow -->
@@ -42,8 +42,8 @@
   <rect x="600" y="130" width="160" height="6" rx="3" fill="#10b981" />
   <text x="615" y="160" fill="#86efac" font-family="system-ui, sans-serif" font-size="13" font-weight="800">3. Safe Output</text>
   <text x="615" y="185" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="11">Result Delivered:</text>
-  <text x="615" y="208" fill="#d1fae5" font-family="monospace" font-size="10">• Only verified tools run</text>
-  <text x="615" y="226" fill="#d1fae5" font-family="monospace" font-size="10">• Sanitized response</text>
+  <text x="615" y="208" fill="#d1fae5" font-family="monospace" font-size="10">&#8226; Only verified tools run</text>
+  <text x="615" y="226" fill="#d1fae5" font-family="monospace" font-size="10">&#8226; Sanitized response</text>
   <text x="615" y="250" fill="#86efac" font-family="system-ui" font-size="10" font-weight="700">Zero Privilege Escalation</text>
 
   <!-- Bottom Panel -->

@@ -54,8 +54,8 @@
   <rect x="600" y="130" width="160" height="130" rx="12" fill="#450a0a" stroke="#ef4444" stroke-width="1.5" />
   <text x="615" y="160" fill="#fca5a5" font-family="system-ui" font-size="12" font-weight="800">DUPLICATE DETECTED</text>
   <text x="615" y="185" fill="#fecaca" font-family="system-ui" font-size="11">SETNX returns 0</text>
-  <text x="615" y="210" fill="#fecaca" font-family="system-ui" font-size="10">• Drops duplicate job</text>
-  <text x="615" y="228" fill="#fecaca" font-family="system-ui" font-size="10">• No double side-effect</text>
-  <text x="615" y="246" fill="#fecaca" font-family="system-ui" font-size="10">• Returns cached state</text>
+  <text x="615" y="210" fill="#fecaca" font-family="system-ui" font-size="10">&#8226; Drops duplicate job</text>
+  <text x="615" y="228" fill="#fecaca" font-family="system-ui" font-size="10">&#8226; No double side-effect</text>
+  <text x="615" y="246" fill="#fecaca" font-family="system-ui" font-size="10">&#8226; Returns cached state</text>
 </svg>
 
